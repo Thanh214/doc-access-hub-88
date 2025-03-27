@@ -9,6 +9,8 @@ import DocumentView from "./pages/DocumentView";
 import PricingPlans from "./pages/PricingPlans";
 import DocumentBrowser from "./pages/DocumentBrowser";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +25,8 @@ const App = () => (
           <Route path="/documents" element={<DocumentBrowser />} />
           <Route path="/document/:id" element={<DocumentView />} />
           <Route path="/pricing" element={<PricingPlans />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
