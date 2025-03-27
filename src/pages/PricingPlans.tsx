@@ -7,7 +7,7 @@ import SubscriptionCard from "@/components/SubscriptionCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentModal } from "@/components/PaymentModal";
-import { CheckIcon, AlertCircle } from "lucide-react";
+import { Check, AlertCircle } from "lucide-react";
 
 const PricingPlans = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -192,17 +192,17 @@ const PricingPlans = () => {
                   </tr>
                   <tr className="border-b">
                     <td className="py-4 px-6 text-muted-foreground">Free document downloads</td>
-                    <td className="py-4 px-6 text-center"><CheckIcon className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="py-4 px-6 text-center bg-primary/5 border-x border-primary/10"><CheckIcon className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="py-4 px-6 text-center"><CheckIcon className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="py-4 px-6 text-center"><CheckIcon className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center bg-primary/5 border-x border-primary/10"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-4 px-6 text-muted-foreground">Priority support</td>
                     <td className="py-4 px-6 text-center">-</td>
-                    <td className="py-4 px-6 text-center bg-primary/5 border-x border-primary/10"><CheckIcon className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="py-4 px-6 text-center"><CheckIcon className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="py-4 px-6 text-center"><CheckIcon className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center bg-primary/5 border-x border-primary/10"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-4 px-6 text-muted-foreground">Premium document discount</td>
@@ -267,21 +267,5 @@ const PricingPlans = () => {
     </div>
   );
 };
-
-// Helper component
-const CheckIcon = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M20 6L9 17l-5-5" />
-  </svg>
-);
 
 export default PricingPlans;

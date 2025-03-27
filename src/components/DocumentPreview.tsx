@@ -146,7 +146,7 @@ const DocumentPreview = ({
                     <span className="text-muted-foreground">Price:</span>
                     <span className="font-medium">
                       {isFree ? (
-                        <Badge variant="success" className="bg-green-500 text-white">Free</Badge>
+                        <Badge variant="secondary" className="bg-green-500 text-white">Free</Badge>
                       ) : (
                         formatPrice(price)
                       )}
