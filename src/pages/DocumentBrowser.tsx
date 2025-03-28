@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -40,14 +41,15 @@ const DocumentBrowser = () => {
         const response = await getAllDocuments();
         setDocuments(response.documents);
         
-        // Extract unique categories with proper typing
-        const uniqueCategories = Array.from(
-          new Set(
-            response.documents
-              .map(doc => doc.category)
-              .filter((category): category is string => typeof category === 'string')
-          )
-        );
+        // Fixed: Properly type the categories array
+        const allCategories = response.documents
+          .map(doc => doc.category)
+          .filter((category): category is string => 
+            typeof category === 'string' && category.trim() !== ''
+          );
+        
+        // Create a unique set of categories
+        const uniqueCategories: string[] = Array.from(new Set(allCategories));
         
         setCategories(uniqueCategories);
         setFilteredDocuments(response.documents);
@@ -201,6 +203,16 @@ const DocumentBrowser = () => {
                 <div>
                   <h3 className="font-medium mb-3">Danh Mục</h3>
                   <div className="space-y-2">
+                    <div 
+                      className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
+                        "Tất Cả Danh Mục" === selectedCategory
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "hover:bg-muted/60"
+                      }`}
+                      onClick={() => setSelectedCategory("Tất Cả Danh Mục")}
+                    >
+                      Tất Cả Danh Mục
+                    </div>
                     {categories.map((category) => (
                       <div 
                         key={category}
