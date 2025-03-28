@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import ProfileButton from "./ProfileButton";
 
 const Header = () => {
@@ -109,15 +108,6 @@ const Header = () => {
 
           {/* Actions - Desktop */}
           <div className="hidden md:flex items-center space-x-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Tìm tài liệu..."
-                className="w-[200px] pl-8 rounded-full bg-background"
-              />
-            </div>
-            
             <ProfileButton 
               isLoggedIn={isLoggedIn}
               userName={userData.name}
@@ -163,14 +153,7 @@ const Header = () => {
                 <span className="sr-only">Đóng menu</span>
               </Button>
             </div>
-            <div className="relative mb-8">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Tìm tài liệu..."
-                className="w-full pl-8"
-              />
-            </div>
+            
             <nav className="flex flex-col space-y-4">
               <Link
                 to="/"
