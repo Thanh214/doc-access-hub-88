@@ -12,8 +12,8 @@ CREATE TABLE users (
   password VARCHAR(255) NOT NULL,
   avatar VARCHAR(255) DEFAULT NULL,
   balance DECIMAL(10, 2) DEFAULT 0.00,
-  bank_info VARCHAR(255) DEFAULT NULL,
-  momo_number VARCHAR(20) DEFAULT NULL,
+  bank_info JSON DEFAULT NULL,
+  phone_number VARCHAR(20) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -66,27 +66,95 @@ CREATE TABLE document_access (
 -- Create table for transaction history
 CREATE TABLE transactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  transaction_id VARCHAR(50) UNIQUE,
   user_id INT NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
   transaction_type ENUM('deposit', 'purchase', 'sale', 'withdrawal', 'subscription') NOT NULL,
+  payment_method ENUM('bank_transfer', 'momo', 'zalopay', 'balance', 'credit_card') NOT NULL,
   reference_id INT DEFAULT NULL,
   description TEXT,
-  status ENUM('pending', 'completed', 'failed', 'cancelled') DEFAULT 'completed',
+  status ENUM('pending', 'processing', 'completed', 'failed', 'cancelled') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create bank accounts table
+CREATE TABLE bank_accounts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  bank_name VARCHAR(100) NOT NULL,
+  account_number VARCHAR(50) NOT NULL,
+  account_holder VARCHAR(255) NOT NULL,
+  branch VARCHAR(100),
+  is_primary BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY (user_id, account_number)
+);
+
+-- Create system bank accounts for receiving payments
+CREATE TABLE system_bank_accounts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  bank_name VARCHAR(100) NOT NULL,
+  account_number VARCHAR(50) NOT NULL,
+  account_holder VARCHAR(255) NOT NULL,
+  branch VARCHAR(100),
+  qr_code_url VARCHAR(255),
+  instructions TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create payment methods table
+CREATE TABLE payment_methods (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  logo_url VARCHAR(255),
+  is_active BOOLEAN DEFAULT TRUE,
+  payment_type ENUM('bank_transfer', 'e_wallet', 'credit_card', 'other') NOT NULL,
+  instructions TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create bank transfer requests table
+CREATE TABLE bank_transfer_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  transaction_id VARCHAR(50) NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  system_bank_account_id INT NOT NULL,
+  reference_code VARCHAR(50) NOT NULL,
+  transfer_note VARCHAR(255) NOT NULL,
+  proof_image_url VARCHAR(255),
+  status ENUM('pending', 'verified', 'rejected') DEFAULT 'pending',
+  admin_notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (system_bank_account_id) REFERENCES system_bank_accounts(id),
+  FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id)
 );
 
 -- Create withdrawal requests table
 CREATE TABLE withdrawal_requests (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
+  transaction_id VARCHAR(50) NOT NULL,
   amount DECIMAL(10, 2) NOT NULL,
-  payment_method ENUM('bank_transfer', 'momo') NOT NULL,
-  status ENUM('pending', 'completed', 'rejected') DEFAULT 'pending',
-  notes TEXT,
+  bank_account_id INT,
+  payment_method ENUM('bank_transfer', 'momo', 'zalopay') NOT NULL,
+  status ENUM('pending', 'processing', 'completed', 'rejected') DEFAULT 'pending',
+  admin_notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (bank_account_id) REFERENCES bank_accounts(id),
+  FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id)
 );
 
 -- Create table to track document uploads by subscription
@@ -111,9 +179,37 @@ CREATE TABLE system_settings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Create payment verification logs
+CREATE TABLE payment_verification_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  transaction_id VARCHAR(50),
+  verification_type ENUM('manual', 'api', 'webhook') NOT NULL,
+  request_data JSON,
+  response_data JSON,
+  is_successful BOOLEAN DEFAULT FALSE,
+  verification_notes TEXT,
+  verified_by VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id)
+);
+
 -- Create sample user data
 INSERT INTO users (name, email, password, balance) VALUES 
-('Admin User', 'admin@example.com', '$2b$10$6oXTmRIMI0AmCFVJfQWkreOZJezTvPXtDVlNJr/enIYk3UhJCkJ8e', 100000.00); -- Password: admin123
+('Admin User', 'admin@example.com', '$2b$10$6oXTmRIMI0AmCFVJfQWkreOZJezTvPXtDVlNJr/enIYk3UhJCkJ8e', 100000.00), -- Password: admin123
+('Test User', 'user@example.com', '$2b$10$6oXTmRIMI0AmCFVJfQWkreOZJezTvPXtDVlNJr/enIYk3UhJCkJ8e', 50000.00); -- Password: admin123
+
+-- Insert payment methods
+INSERT INTO payment_methods (name, description, payment_type, is_active) VALUES
+('Chuyển khoản ngân hàng', 'Chuyển khoản đến tài khoản ngân hàng của hệ thống', 'bank_transfer', TRUE),
+('Ví Momo', 'Thanh toán qua ứng dụng Ví Momo', 'e_wallet', TRUE),
+('ZaloPay', 'Thanh toán qua ứng dụng ZaloPay', 'e_wallet', TRUE),
+('Thẻ tín dụng/ghi nợ', 'Thanh toán bằng thẻ Visa, Mastercard, JCB', 'credit_card', TRUE);
+
+-- Insert system bank accounts
+INSERT INTO system_bank_accounts (bank_name, account_number, account_holder, branch, instructions) VALUES
+('Vietcombank', '1234567890', 'CÔNG TY TNHH TÀI LIỆU TRỰC TUYẾN', 'Chi nhánh Hà Nội', 'Vui lòng ghi rõ mã giao dịch trong nội dung chuyển khoản'),
+('Techcombank', '0987654321', 'CÔNG TY TNHH TÀI LIỆU TRỰC TUYẾN', 'Chi nhánh TP.HCM', 'Vui lòng ghi rõ mã giao dịch trong nội dung chuyển khoản'),
+('MB Bank', '1122334455', 'CÔNG TY TNHH TÀI LIỆU TRỰC TUYẾN', 'Chi nhánh Đà Nẵng', 'Vui lòng ghi rõ mã giao dịch trong nội dung chuyển khoản');
 
 -- Create sample documents
 INSERT INTO documents (title, description, user_id, is_featured, is_premium, category, price) VALUES 
@@ -141,9 +237,23 @@ INSERT INTO system_settings (setting_key, setting_value, description) VALUES
 ('service_fee_percentage', '10', 'Phần trăm phí dịch vụ khi bán tài liệu'),
 ('min_withdrawal_amount', '50000', 'Số tiền tối thiểu có thể rút'),
 ('max_file_size_mb', '50', 'Kích thước tối đa của file tài liệu (MB)'),
-('featured_document_count', '5', 'Số lượng tài liệu nổi bật hiển thị trên trang chủ');
+('featured_document_count', '5', 'Số lượng tài liệu nổi bật hiển thị trên trang chủ'),
+('bank_transfer_prefix', 'TAILIEUONLINE', 'Tiền tố cho mã chuyển khoản ngân hàng'),
+('payment_verification_mode', 'manual', 'Chế độ xác minh thanh toán: manual, api, hoặc webhook'),
+('bank_api_endpoint', '', 'API endpoint để kiểm tra giao dịch ngân hàng'),
+('bank_api_key', '', 'API key để xác thực với API ngân hàng');
 
 -- Add sample transactions
-INSERT INTO transactions (user_id, amount, transaction_type, description) VALUES
-(1, 100000.00, 'deposit', 'Nạp tiền khởi tạo tài khoản'),
-(1, 100000.00, 'subscription', 'Đăng ký gói Cao Cấp');
+INSERT INTO transactions (transaction_id, user_id, amount, transaction_type, payment_method, description, status) VALUES
+('TRX-12345678', 1, 100000.00, 'deposit', 'bank_transfer', 'Nạp tiền khởi tạo tài khoản', 'completed'),
+('TRX-23456789', 1, 100000.00, 'subscription', 'balance', 'Đăng ký gói Cao Cấp', 'completed'),
+('TRX-34567890', 2, 50000.00, 'deposit', 'momo', 'Nạp tiền qua Momo', 'completed');
+
+-- Add sample bank accounts
+INSERT INTO bank_accounts (user_id, bank_name, account_number, account_holder, branch, is_primary) VALUES
+(1, 'Vietcombank', '9876543210', 'Nguyễn Văn Admin', 'Chi nhánh Hà Nội', TRUE),
+(2, 'Techcombank', '5432167890', 'Trần Thị User', 'Chi nhánh TP.HCM', TRUE);
+
+-- Add sample bank transfer request
+INSERT INTO bank_transfer_requests (user_id, transaction_id, amount, system_bank_account_id, reference_code, transfer_note, status) VALUES
+(1, 'TRX-12345678', 100000.00, 1, 'REF-123456', 'TAILIEUONLINE NAP100K admin@example.com', 'verified');
