@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -41,7 +42,9 @@ const DocumentBrowser = () => {
         
         const processedDocuments = response.documents.map((doc: Document) => ({
           ...doc,
-          isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+          isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium,
+          previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+          thumbnail: doc.thumbnail || "/placeholder.svg"
         }));
         
         setDocuments(processedDocuments);
@@ -82,7 +85,9 @@ const DocumentBrowser = () => {
           const searchResults = await searchDocuments(searchTerm);
           filtered = searchResults.map((doc: Document) => ({
             ...doc,
-            isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+            isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium,
+            previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+            thumbnail: doc.thumbnail || "/placeholder.svg"
           }));
         }
         
@@ -93,7 +98,9 @@ const DocumentBrowser = () => {
             const categoryResults = await getDocumentsByCategory(selectedCategory);
             filtered = categoryResults.map((doc: Document) => ({
               ...doc,
-              isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+              isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium,
+              previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+              thumbnail: doc.thumbnail || "/placeholder.svg"
             }));
           }
         }
@@ -274,7 +281,16 @@ const DocumentBrowser = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: index * 0.05 }}
                     >
-                      <DocumentCard {...doc} />
+                      <DocumentCard
+                        id={doc.id}
+                        title={doc.title}
+                        description={doc.description}
+                        category={doc.category}
+                        thumbnail={doc.thumbnail}
+                        price={doc.price}
+                        isFree={doc.isFree}
+                        previewAvailable={doc.previewAvailable}
+                      />
                     </motion.div>
                   ))}
                 </motion.div>

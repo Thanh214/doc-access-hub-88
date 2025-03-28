@@ -18,7 +18,7 @@ export interface Document {
   updatedAt: string;
   thumbnail?: string;
   isFree?: boolean;
-  previewAvailable?: boolean;
+  previewAvailable: boolean; // Make this required with a default value
   is_premium?: boolean;
   is_featured?: boolean;
   user_id?: number;
@@ -51,7 +51,8 @@ export const getAllDocuments = async (): Promise<{ documents: Document[] }> => {
     const documents = response.data.documents.map((doc: Document) => ({
       ...doc,
       isFree: doc.isFree !== undefined ? doc.isFree : !doc.isPremium && !doc.is_premium,
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
     return { documents };
   } catch (error) {
@@ -69,7 +70,8 @@ export const getFeaturedDocuments = async (): Promise<Document[]> => {
     return response.data.map((doc: Document) => ({
       ...doc,
       isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
   } catch (error) {
     console.error('Error fetching featured documents:', error);
@@ -85,7 +87,8 @@ export const getDocumentById = async (id: string): Promise<Document | null> => {
     return {
       ...response.data,
       isFree: response.data.isFree !== undefined ? response.data.isFree : !(response.data.isPremium || response.data.is_premium),
-      previewAvailable: true,
+      previewAvailable: response.data.previewAvailable !== undefined ? response.data.previewAvailable : true,
+      thumbnail: response.data.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     };
   } catch (error) {
     console.error(`Error fetching document with ID ${id}:`, error);
@@ -109,7 +112,8 @@ export const getDocumentsByCategory = async (category: string): Promise<Document
     return response.data.map((doc: Document) => ({
       ...doc,
       isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
   } catch (error) {
     console.error(`Error fetching documents in category ${category}:`, error);
@@ -126,7 +130,8 @@ export const searchDocuments = async (query: string): Promise<Document[]> => {
     const documents = response.data.map((doc: Document) => ({
       ...doc,
       isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
     return documents;
   } catch (error) {
@@ -164,7 +169,8 @@ export const getDocuments = async (
     const documents = response.data.documents.map((doc: Document) => ({
       ...doc,
       isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
     
     return { documents, totalCount: response.data.totalCount || documents.length };
@@ -194,7 +200,8 @@ export const getPremiumDocuments = async (): Promise<Document[]> => {
     const documents = response.data.map((doc: Document) => ({
       ...doc,
       isFree: false,
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
     return documents;
   } catch (error) {
@@ -215,7 +222,8 @@ export const getFreeDocuments = async (): Promise<Document[]> => {
     const documents = response.data.map((doc: Document) => ({
       ...doc,
       isFree: true,
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
     return documents;
   } catch (error) {
@@ -236,7 +244,8 @@ export const getUserDocuments = async (userId?: number): Promise<Document[]> => 
     return response.data.map((doc: Document) => ({
       ...doc,
       isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
   } catch (error) {
     console.error(`Error fetching documents for user:`, error);
@@ -250,7 +259,8 @@ export const getPurchasedDocuments = async (): Promise<Document[]> => {
     return response.data.map((doc: Document) => ({
       ...doc,
       isFree: false, // Purchased documents are not free (they were paid for)
-      previewAvailable: true,
+      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
     }));
   } catch (error) {
     console.error('Error fetching purchased documents:', error);

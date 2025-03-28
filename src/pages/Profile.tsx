@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,7 +16,7 @@ import {
   getBalance, 
   addBalance 
 } from "@/services/auth.service";
-import { getUserDocuments } from "@/services/document.service";
+import { getUserDocuments, Document as DocumentType } from "@/services/document.service";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -140,8 +139,19 @@ const ProfilePage = () => {
     const fetchDocuments = async () => {
       try {
         const docs = await getUserDocuments();
-        setUploadedDocuments(docs.filter((_, index) => index % 2 === 0));
-        setDownloadedDocuments(docs.filter((_, index) => index % 2 !== 0));
+        const transformedDocs = docs.map(doc => ({
+          id: doc.id,
+          title: doc.title,
+          description: doc.description,
+          category: doc.category,
+          thumbnail: doc.thumbnail || "/placeholder.svg",
+          price: doc.price,
+          isFree: doc.isFree !== undefined ? doc.isFree : !doc.isPremium,
+          previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true
+        }));
+        
+        setUploadedDocuments(transformedDocs.filter((_, index) => index % 2 === 0));
+        setDownloadedDocuments(transformedDocs.filter((_, index) => index % 2 !== 0));
       } catch (error) {
         console.error("Lỗi khi lấy tài liệu:", error);
       }
