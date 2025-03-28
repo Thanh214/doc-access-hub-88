@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { register } from "@/services/auth.service";
+import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -17,11 +18,48 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Xử lý đăng ký ở đây
-    console.log("Đăng ký với:", { name, email, password, confirmPassword, acceptTerms });
+    
+    if (password !== confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Mật khẩu xác nhận không khớp",
+      });
+      return;
+    }
+
+    if (!acceptTerms) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng đồng ý với điều khoản sử dụng",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await register({ username: name, email, password });
+      toast({
+        title: "Đăng ký thành công",
+        description: "Tài khoản của bạn đã được tạo thành công",
+      });
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Đăng ký thất bại",
+        description: error.response?.data?.message || "Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -54,6 +92,7 @@ const Register = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -68,6 +107,7 @@ const Register = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -83,6 +123,7 @@ const Register = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -110,6 +151,7 @@ const Register = () => {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -131,6 +173,7 @@ const Register = () => {
                   checked={acceptTerms}
                   onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
                   required
+                  disabled={isLoading}
                 />
                 <label
                   htmlFor="terms"
@@ -147,8 +190,8 @@ const Register = () => {
                 </label>
               </div>
               
-              <Button type="submit" className="w-full" disabled={!acceptTerms}>
-                Đăng ký ngay
+              <Button type="submit" className="w-full" disabled={!acceptTerms || isLoading}>
+                {isLoading ? "Đang đăng ký..." : "Đăng ký ngay"}
               </Button>
             </form>
             
