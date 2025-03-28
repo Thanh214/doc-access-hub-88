@@ -41,10 +41,19 @@ exports.updateUser = async (req, res) => {
       }
     }
     
+    // Lấy thông tin người dùng hiện tại để giữ email nếu không cung cấp
+    const [currentUser] = await pool.query(
+      'SELECT email FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    const currentEmail = currentUser[0]?.email || '';
+    const emailToUpdate = email || currentEmail;
+    
     // Cập nhật thông tin người dùng
     await pool.query(
       'UPDATE users SET name = ?, email = ? WHERE id = ?',
-      [name, email, userId]
+      [name, emailToUpdate, userId]
     );
     
     res.status(200).json({ 
@@ -52,7 +61,7 @@ exports.updateUser = async (req, res) => {
       user: {
         id: userId,
         name,
-        email
+        email: emailToUpdate
       }
     });
   } catch (error) {
