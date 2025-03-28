@@ -3,13 +3,19 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, User, Menu, X, LogIn } from "lucide-react";
+import { Search, User, Menu, X, LogIn, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
+import { getCurrentUser, logout } from "@/services/auth.service";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
   const location = useLocation();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +29,21 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+  
+  // Check for current user on location change (for when logging in/out)
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, [location.pathname]);
+  
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null);
+    toast({
+      title: "Đăng xuất thành công",
+      description: "Bạn đã đăng xuất khỏi hệ thống.",
+    });
+    navigate("/");
+  };
   
   return (
     <header 
@@ -71,7 +92,17 @@ const Navbar = () => {
           </div>
           
           <div className="flex items-center space-x-2">
-            {location.pathname !== '/login' && location.pathname !== '/register' && (
+            {currentUser ? (
+              <div className="flex items-center space-x-2">
+                <div className="text-sm mr-2">
+                  Xin chào, <span className="font-medium">{currentUser.name}</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1">
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Đăng Xuất
+                </Button>
+              </div>
+            ) : (
               <>
                 <Button variant="ghost" asChild>
                   <Link to="/login" className="flex items-center gap-1">
@@ -139,7 +170,20 @@ const Navbar = () => {
               </Link>
               
               <div className="pt-2 border-t">
-                {location.pathname !== '/login' && location.pathname !== '/register' && (
+                {currentUser ? (
+                  <div className="flex flex-col space-y-2">
+                    <div className="text-sm mb-2">
+                      Xin chào, <span className="font-medium">{currentUser.name}</span>
+                    </div>
+                    <Button variant="outline" className="justify-start" onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Đăng Xuất
+                    </Button>
+                  </div>
+                ) : (
                   <div className="flex flex-col space-y-2">
                     <Button variant="ghost" asChild className="justify-start">
                       <Link 

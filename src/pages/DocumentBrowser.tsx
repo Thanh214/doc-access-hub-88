@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -37,21 +36,29 @@ const DocumentBrowser = () => {
     
     const fetchDocuments = async () => {
       try {
-        const data = await getAllDocuments();
-        setDocuments(data);
-        setFilteredDocuments(data);
+        setIsLoading(true);
+        const response = await getAllDocuments();
+        setDocuments(response.documents);
         
-        // Extract unique categories from the documents and ensure they are strings
-        const uniqueCategories = Array.from(new Set(data.map((doc: Document) => doc.category)));
-        setCategories(["Tất Cả Danh Mục", ...uniqueCategories.filter(category => typeof category === 'string')]);
+        // Extract unique categories with proper typing
+        const uniqueCategories = Array.from(
+          new Set(
+            response.documents
+              .map(doc => doc.category)
+              .filter((category): category is string => typeof category === 'string')
+          )
+        );
         
-        setIsLoading(false);
-      } catch (error: any) {
+        setCategories(uniqueCategories);
+        setFilteredDocuments(response.documents);
+      } catch (error) {
+        console.error("Error fetching documents:", error);
         toast({
           variant: "destructive",
           title: "Lỗi",
-          description: "Không thể tải dữ liệu tài liệu. Vui lòng thử lại sau.",
+          description: "Không thể tải danh sách tài liệu. Vui lòng thử lại sau.",
         });
+      } finally {
         setIsLoading(false);
       }
     };
@@ -102,7 +109,7 @@ const DocumentBrowser = () => {
         }
         
         setFilteredDocuments(filtered);
-      } catch (error: any) {
+      } catch (error) {
         toast({
           variant: "destructive",
           title: "Lỗi",
