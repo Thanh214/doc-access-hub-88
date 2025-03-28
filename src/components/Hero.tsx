@@ -40,8 +40,8 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            Access Premium Documents <br />
-            <span className="text-primary">For Your Needs</span>
+            Truy Cập Tài Liệu Chất Lượng <br />
+            <span className="text-primary">Phù Hợp Với Nhu Cầu Của Bạn</span>
           </motion.h1>
           
           <motion.p 
@@ -50,7 +50,7 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Browse through our vast collection of high-quality documents, research papers, and educational materials. Preview for free, download with a subscription.
+            Khám phá bộ sưu tập đa dạng các tài liệu chất lượng cao, nghiên cứu học thuật và tài liệu giáo dục. Xem trước miễn phí, tải xuống với gói đăng ký.
           </motion.p>
           
           <motion.div 
@@ -61,14 +61,14 @@ const Hero = () => {
           >
             <Button asChild size="lg" className="rounded-full px-6">
               <Link to="/documents">
-                Browse Documents
+                Khám Phá Tài Liệu
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             
             <Button asChild variant="outline" size="lg" className="rounded-full px-6">
               <Link to="/pricing">
-                View Pricing
+                Xem Bảng Giá
               </Link>
             </Button>
           </motion.div>
@@ -86,9 +86,9 @@ const Hero = () => {
                 <div className="bg-primary/10 inline-flex items-center justify-center p-4 rounded-full mb-6">
                   <Search className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-2xl font-semibold mb-3">Discover Thousands of Documents</h3>
+                <h3 className="text-2xl font-semibold mb-3">Khám Phá Hàng Ngàn Tài Liệu</h3>
                 <p className="text-muted-foreground max-w-lg mx-auto">
-                  Easily search, preview and download high-quality documents for your research, business, or educational needs.
+                  Dễ dàng tìm kiếm, xem trước và tải xuống tài liệu chất lượng cao cho nghiên cứu, kinh doanh, hoặc nhu cầu học tập của bạn.
                 </p>
               </div>
             </div>

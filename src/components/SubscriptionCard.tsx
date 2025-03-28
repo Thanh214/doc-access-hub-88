@@ -46,13 +46,13 @@ const SubscriptionCard = ({
       >
         {popular && (
           <div className="absolute top-5 right-0 bg-primary text-white text-xs px-3 py-1 rounded-l-full shadow-sm">
-            Best Value
+            Phổ Biến Nhất
           </div>
         )}
         
         <CardHeader className="pb-4">
           <h3 className="text-xl font-semibold mb-1">{title}</h3>
-          <p className="text-muted-foreground text-sm">Free document downloads</p>
+          <p className="text-muted-foreground text-sm">Tải xuống tài liệu miễn phí</p>
         </CardHeader>
         
         <CardContent className="flex-grow pb-6">
@@ -81,7 +81,7 @@ const SubscriptionCard = ({
             variant={popular ? "default" : "outline"}
             onClick={onSelect}
           >
-            Subscribe Now
+            Đăng Ký Ngay
           </Button>
         </CardFooter>
       </Card>

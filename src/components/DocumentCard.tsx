@@ -71,7 +71,7 @@ const DocumentCard = ({
             <Badge 
               className="absolute top-3 right-3 bg-green-500/80 text-white backdrop-blur-sm hover:bg-green-500"
             >
-              Free
+              Miễn Phí
             </Badge>
           )}
         </div>
@@ -94,7 +94,7 @@ const DocumentCard = ({
           >
             <Link to={`/document/${id}`}>
               <Eye className="mr-1 h-4 w-4" />
-              Preview
+              Xem Trước
             </Link>
           </Button>
           
@@ -106,7 +106,7 @@ const DocumentCard = ({
               onClick={() => setShowPaymentModal(true)}
             >
               <Download className="mr-1 h-4 w-4" />
-              Download
+              Tải Xuống
             </Button>
           ) : (
             <Button 
@@ -115,7 +115,7 @@ const DocumentCard = ({
               onClick={() => setShowPaymentModal(true)}
             >
               <Lock className="mr-1 h-4 w-4" />
-              Purchase
+              Mua Ngay
             </Button>
           )}
         </CardFooter>

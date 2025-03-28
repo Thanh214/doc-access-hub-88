@@ -9,154 +9,154 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Sample document data (in a real app, this would come from an API)
+// Dữ liệu mẫu cho tài liệu (trong ứng dụng thực tế, điều này sẽ đến từ API)
 const documentData = {
   "1": {
     id: "1",
-    title: "Research Paper: Modern Architecture Principles",
-    description: "A comprehensive analysis of contemporary architectural principles and their applications in urban design. This document explores innovative approaches to sustainable architecture, urban planning, and design philosophies that shape modern cities.",
-    category: "Architecture",
+    title: "Nghiên Cứu: Nguyên Tắc Kiến Trúc Hiện Đại",
+    description: "Phân tích toàn diện về các nguyên tắc kiến trúc đương đại và ứng dụng của chúng trong thiết kế đô thị. Tài liệu này khám phá những cách tiếp cận sáng tạo đối với kiến trúc bền vững, quy hoạch đô thị và các triết lý thiết kế định hình các thành phố hiện đại.",
+    category: "Kiến Trúc",
     thumbnail: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 50000,
     isFree: false,
     pages: 42,
     fileSize: "3.2 MB",
-    dateAdded: "2023-05-12",
+    dateAdded: "12/05/2023",
     previewContent: `
-      <h2>Abstract</h2>
-      <p>This research paper examines the fundamental principles that define modern architectural practice, with particular emphasis on sustainability, functionality, and aesthetic considerations. Through case studies of significant structures built within the last decade, the paper identifies recurring patterns and approaches that characterize successful contemporary design.</p>
+      <h2>Tóm Tắt</h2>
+      <p>Bài nghiên cứu này xem xét các nguyên tắc cơ bản định hình thực tiễn kiến trúc hiện đại, với trọng tâm đặc biệt là tính bền vững, chức năng và các cân nhắc thẩm mỹ. Thông qua các nghiên cứu trường hợp về các công trình đáng kể được xây dựng trong thập kỷ qua, bài viết xác định các mô hình và cách tiếp cận lặp đi lặp lại đặc trưng cho thiết kế đương đại thành công.</p>
       
-      <h2>1. Introduction</h2>
-      <p>Architecture stands as one of humanity's most enduring expressions of cultural and technological achievement. As society evolves, so too do the principles that guide architectural design and urban planning. This paper explores the key principles that define modern architecture in the 21st century, examining how contemporary architects balance aesthetic considerations with practical concerns such as sustainability, accessibility, and technological integration.</p>
+      <h2>1. Giới Thiệu</h2>
+      <p>Kiến trúc đứng như một trong những biểu hiện lâu bền nhất của thành tựu văn hóa và công nghệ của nhân loại. Khi xã hội phát triển, các nguyên tắc hướng dẫn thiết kế kiến trúc và quy hoạch đô thị cũng vậy. Bài viết này khám phá các nguyên tắc chính định nghĩa kiến trúc hiện đại trong thế kỷ 21, xem xét cách các kiến trúc sư đương đại cân bằng giữa các cân nhắc thẩm mỹ với những mối quan tâm thực tế như tính bền vững, khả năng tiếp cận và tích hợp công nghệ.</p>
       
-      <h2>2. Methodology</h2>
-      <p>This study employs a mixed-methods approach, combining qualitative analysis of architectural criticism with quantitative assessment of building performance metrics. Ten case studies were selected based on their recognition within the architectural community, geographic diversity, and completion within the past decade (2010-2020).</p>
+      <h2>2. Phương Pháp Luận</h2>
+      <p>Nghiên cứu này sử dụng phương pháp tiếp cận kết hợp, kết hợp phân tích định tính về phê bình kiến trúc với đánh giá định lượng về các số liệu hiệu suất công trình. Mười trường hợp nghiên cứu được chọn dựa trên sự công nhận của họ trong cộng đồng kiến trúc, đa dạng địa lý và hoàn thành trong thập kỷ qua (2010-2020).</p>
       
-      <h2>3. Key Principles of Modern Architecture</h2>
-      <p>Through our analysis, several core principles emerge as foundational to contemporary architectural practice:</p>
+      <h2>3. Các Nguyên Tắc Chính của Kiến Trúc Hiện Đại</h2>
+      <p>Thông qua phân tích của chúng tôi, một số nguyên tắc cốt lõi nổi lên là nền tảng cho thực hành kiến trúc đương đại:</p>
       
-      <h3>3.1 Sustainability</h3>
-      <p>Environmental consciousness has become perhaps the defining characteristic of modern architecture. This manifests through:</p>
+      <h3>3.1 Tính Bền Vững</h3>
+      <p>Ý thức môi trường có lẽ đã trở thành đặc điểm xác định của kiến trúc hiện đại. Điều này thể hiện qua:</p>
       <ul>
-        <li>Energy efficiency and reduced carbon footprint</li>
-        <li>Integration of renewable energy systems</li>
-        <li>Use of sustainable and locally-sourced materials</li>
-        <li>Water conservation and management systems</li>
+        <li>Hiệu quả năng lượng và giảm dấu chân carbon</li>
+        <li>Tích hợp các hệ thống năng lượng tái tạo</li>
+        <li>Sử dụng vật liệu bền vững và có nguồn gốc địa phương</li>
+        <li>Hệ thống bảo tồn và quản lý nước</li>
       </ul>
       
-      <h3>3.2 Technological Integration</h3>
-      <p>Modern buildings increasingly function as technological ecosystems, with architecture serving as the physical framework for complex digital systems:</p>
+      <h3>3.2 Tích Hợp Công Nghệ</h3>
+      <p>Các tòa nhà hiện đại ngày càng hoạt động như hệ sinh thái công nghệ, với kiến trúc đóng vai trò là khung vật lý cho các hệ thống kỹ thuật số phức tạp:</p>
       <ul>
-        <li>Smart building management systems</li>
-        <li>IoT integration for environmental control</li>
-        <li>Digital fabrication techniques enabling complex geometries</li>
-        <li>Augmented reality applications for spatial planning</li>
+        <li>Hệ thống quản lý tòa nhà thông minh</li>
+        <li>Tích hợp IoT để kiểm soát môi trường</li>
+        <li>Kỹ thuật chế tạo kỹ thuật số cho phép tạo ra hình học phức tạp</li>
+        <li>Ứng dụng thực tế tăng cường cho quy hoạch không gian</li>
       </ul>
       
-      <p>The remainder of this paper explores these principles in greater detail through our case studies...</p>
+      <p>Phần còn lại của bài viết này khám phá những nguyên tắc này chi tiết hơn thông qua các nghiên cứu trường hợp của chúng tôi...</p>
     `,
   },
   "2": {
     id: "2",
-    title: "Business Plan Template: Startup Guide",
-    description: "A detailed template for creating a compelling business plan for your startup with financial projections. This comprehensive guide includes all sections needed for a professional business plan that attracts investors.",
-    category: "Business",
+    title: "Mẫu Kế Hoạch Kinh Doanh: Hướng Dẫn Khởi Nghiệp",
+    description: "Mẫu chi tiết để tạo kế hoạch kinh doanh thuyết phục cho startup với dự báo tài chính. Hướng dẫn toàn diện này bao gồm tất cả các phần cần thiết cho một kế hoạch kinh doanh chuyên nghiệp thu hút nhà đầu tư.",
+    category: "Kinh Doanh",
     thumbnail: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 75000,
     isFree: false,
     pages: 28,
     fileSize: "1.8 MB",
-    dateAdded: "2023-06-25",
+    dateAdded: "25/06/2023",
     previewContent: `
-      <h2>Introduction: Creating an Effective Business Plan</h2>
+      <h2>Giới Thiệu: Tạo Kế Hoạch Kinh Doanh Hiệu Quả</h2>
       
-      <p>A well-crafted business plan serves as the foundation for any successful startup venture. This document not only clarifies your business vision and strategy but also serves as a crucial tool for securing funding from potential investors. The following template provides a comprehensive framework for developing a business plan that effectively communicates your value proposition, market opportunity, and growth strategy.</p>
+      <p>Một kế hoạch kinh doanh được soạn thảo tốt đóng vai trò nền tảng cho bất kỳ dự án khởi nghiệp thành công nào. Tài liệu này không chỉ làm rõ tầm nhìn và chiến lược kinh doanh của bạn mà còn đóng vai trò như một công cụ quan trọng để thu hút vốn từ các nhà đầu tư tiềm năng. Mẫu sau đây cung cấp một khuôn khổ toàn diện để phát triển kế hoạch kinh doanh truyền đạt hiệu quả đề xuất giá trị, cơ hội thị trường và chiến lược tăng trưởng của bạn.</p>
       
-      <h2>1. Executive Summary</h2>
+      <h2>1. Tóm Tắt Điều Hành</h2>
       
-      <p>The executive summary offers a concise overview of your business plan, highlighting the key points that will be elaborated upon in subsequent sections. Though appearing first in the document, this section is typically written last to ensure it accurately reflects the comprehensive details of your plan.</p>
+      <p>Tóm tắt điều hành cung cấp một tổng quan súc tích về kế hoạch kinh doanh của bạn, làm nổi bật những điểm chính sẽ được trình bày chi tiết trong các phần tiếp theo. Mặc dù xuất hiện đầu tiên trong tài liệu, phần này thường được viết sau cùng để đảm bảo nó phản ánh chính xác các chi tiết toàn diện của kế hoạch của bạn.</p>
       
-      <h3>Key Components:</h3>
+      <h3>Các Thành Phần Chính:</h3>
       <ul>
-        <li>Business concept: A brief description of your business, the products or services offered, and the problem they solve</li>
-        <li>Value proposition: What makes your offering unique in the marketplace</li>
-        <li>Target market: A summary of your ideal customer and market size</li>
-        <li>Business model: How you will generate revenue</li>
-        <li>Marketing and sales strategy: Your approach to customer acquisition</li>
-        <li>Financial projections: Brief overview of expected revenues, expenses, and profitability timeline</li>
-        <li>Funding requirements: The amount of capital needed and how it will be used</li>
+        <li>Ý tưởng kinh doanh: Mô tả ngắn gọn về doanh nghiệp của bạn, sản phẩm hoặc dịch vụ được cung cấp và vấn đề chúng giải quyết</li>
+        <li>Đề xuất giá trị: Điều gì làm cho sản phẩm của bạn độc đáo trên thị trường</li>
+        <li>Thị trường mục tiêu: Tóm tắt về khách hàng lý tưởng của bạn và quy mô thị trường</li>
+        <li>Mô hình kinh doanh: Cách bạn sẽ tạo ra doanh thu</li>
+        <li>Chiến lược tiếp thị và bán hàng: Cách tiếp cận của bạn để thu hút khách hàng</li>
+        <li>Dự báo tài chính: Tổng quan ngắn gọn về doanh thu, chi phí và thời gian sinh lời dự kiến</li>
+        <li>Yêu cầu tài trợ: Số vốn cần thiết và cách sử dụng</li>
       </ul>
       
-      <h2>2. Company Description</h2>
+      <h2>2. Mô Tả Công Ty</h2>
       
-      <p>This section provides a detailed overview of your company, including its mission, vision, and core values. Articulate the fundamental purpose of your business and the guiding principles that will shape its operations and culture.</p>
+      <p>Phần này cung cấp một tổng quan chi tiết về công ty của bạn, bao gồm sứ mệnh, tầm nhìn và giá trị cốt lõi. Trình bày mục đích cơ bản của doanh nghiệp và các nguyên tắc hướng dẫn sẽ định hình hoạt động và văn hóa của nó.</p>
       
-      <h3>Key Components:</h3>
+      <h3>Các Thành Phần Chính:</h3>
       <ul>
-        <li>Company history (if applicable)</li>
-        <li>Mission statement: The purpose of your business</li>
-        <li>Vision statement: Your long-term aspirations</li>
-        <li>Core values: The principles that guide your business operations</li>
-        <li>Business structure: Legal structure (LLC, corporation, etc.)</li>
-        <li>Location and facilities</li>
-        <li>Ownership structure</li>
+        <li>Lịch sử công ty (nếu có)</li>
+        <li>Tuyên bố sứ mệnh: Mục đích của doanh nghiệp của bạn</li>
+        <li>Tuyên bố tầm nhìn: Khát vọng dài hạn của bạn</li>
+        <li>Giá trị cốt lõi: Nguyên tắc chỉ đạo hoạt động kinh doanh của bạn</li>
+        <li>Cấu trúc kinh doanh: Cấu trúc pháp lý (LLC, corporation, v.v.)</li>
+        <li>Địa điểm và cơ sở vật chất</li>
+        <li>Cấu trúc sở hữu</li>
       </ul>
       
-      <p>Remaining sections include market analysis, organization structure, product/service details, marketing strategy, financial projections, and appendices...</p>
+      <p>Các phần còn lại bao gồm phân tích thị trường, cấu trúc tổ chức, chi tiết sản phẩm/dịch vụ, chiến lược tiếp thị, dự báo tài chính và phụ lục...</p>
     `,
   },
   "3": {
     id: "3",
-    title: "Introduction to Computer Science",
-    description: "Learn the fundamentals of computer science with this comprehensive beginner-friendly guide. Perfect for students and self-learners looking to build a foundation in programming and computer theory.",
-    category: "Education",
+    title: "Nhập Môn Khoa Học Máy Tính",
+    description: "Học những kiến thức cơ bản về khoa học máy tính với hướng dẫn toàn diện thân thiện với người mới bắt đầu. Hoàn hảo cho học sinh và người tự học muốn xây dựng nền tảng trong lập trình và lý thuyết máy tính.",
+    category: "Giáo Dục",
     thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 0,
     isFree: true,
     pages: 120,
     fileSize: "5.4 MB",
-    dateAdded: "2023-04-10",
+    dateAdded: "10/04/2023",
     previewContent: `
-      <h2>Chapter 1: Introduction to Computing</h2>
+      <h2>Chương 1: Giới Thiệu về Điện Toán</h2>
       
-      <p>Computer science is the study of computers and computational systems, encompassing both theoretical and practical aspects of computing. Unlike electrical engineering, which focuses on hardware, computer science primarily concerns itself with software, algorithms, and the theoretical foundations of information and computation.</p>
+      <p>Khoa học máy tính là nghiên cứu về máy tính và hệ thống điện toán, bao gồm cả khía cạnh lý thuyết và thực tế của điện toán. Không giống như kỹ thuật điện, tập trung vào phần cứng, khoa học máy tính chủ yếu liên quan đến phần mềm, thuật toán và nền tảng lý thuyết của thông tin và điện toán.</p>
       
-      <h3>1.1 What is Computer Science?</h3>
+      <h3>1.1 Khoa Học Máy Tính Là Gì?</h3>
       
-      <p>Computer science can be broadly categorized into several core areas:</p>
+      <p>Khoa học máy tính có thể được phân loại rộng rãi thành một số lĩnh vực cốt lõi:</p>
       
       <ul>
-        <li><strong>Algorithms and Data Structures:</strong> The study of methods for solving problems and organizing data efficiently</li>
-        <li><strong>Programming Languages and Software Development:</strong> The tools and methodologies used to create software</li>
-        <li><strong>Computer Architecture:</strong> The design and organization of computer systems</li>
-        <li><strong>Theoretical Computer Science:</strong> Mathematical aspects of computing, including complexity theory and formal languages</li>
-        <li><strong>Artificial Intelligence:</strong> Creating systems that can perform tasks requiring human intelligence</li>
-        <li><strong>Networks and Security:</strong> How computers communicate and how to secure information</li>
-        <li><strong>Graphics and Visual Computing:</strong> Creating and manipulating visual content</li>
-        <li><strong>Human-Computer Interaction:</strong> The study of how humans interact with computers</li>
+        <li><strong>Thuật Toán và Cấu Trúc Dữ Liệu:</strong> Nghiên cứu các phương pháp giải quyết vấn đề và tổ chức dữ liệu hiệu quả</li>
+        <li><strong>Ngôn Ngữ Lập Trình và Phát Triển Phần Mềm:</strong> Các công cụ và phương pháp được sử dụng để tạo phần mềm</li>
+        <li><strong>Kiến Trúc Máy Tính:</strong> Thiết kế và tổ chức của hệ thống máy tính</li>
+        <li><strong>Khoa Học Máy Tính Lý Thuyết:</strong> Khía cạnh toán học của điện toán, bao gồm lý thuyết độ phức tạp và ngôn ngữ hình thức</li>
+        <li><strong>Trí Tuệ Nhân Tạo:</strong> Tạo ra các hệ thống có thể thực hiện các nhiệm vụ đòi hỏi trí thông minh của con người</li>
+        <li><strong>Mạng và Bảo Mật:</strong> Cách máy tính giao tiếp và cách bảo mật thông tin</li>
+        <li><strong>Đồ Họa và Điện Toán Trực Quan:</strong> Tạo và thao tác nội dung hình ảnh</li>
+        <li><strong>Tương Tác Người-Máy:</strong> Nghiên cứu cách con người tương tác với máy tính</li>
       </ul>
       
-      <h3>1.2 A Brief History of Computing</h3>
+      <h3>1.2 Lịch Sử Ngắn của Điện Toán</h3>
       
-      <p>The evolution of computing spans thousands of years, from ancient calculating devices to modern supercomputers:</p>
+      <p>Quá trình phát triển của điện toán kéo dài hàng nghìn năm, từ thiết bị tính toán cổ đại đến siêu máy tính hiện đại:</p>
       
-      <p><strong>Ancient Computing (3000 BCE - 1800 CE)</strong></p>
+      <p><strong>Điện Toán Cổ Đại (3000 TCN - 1800 SCN)</strong></p>
       <ul>
-        <li>The abacus (circa 3000 BCE): One of the earliest computing devices</li>
-        <li>The Antikythera mechanism (circa 100 BCE): An ancient Greek analog computer</li>
-        <li>Pascal's calculator (1642): The first mechanical calculator</li>
-        <li>Jacquard's loom (1804): Used punch cards to automate weaving patterns</li>
+        <li>Bàn tính (khoảng 3000 TCN): Một trong những thiết bị điện toán đầu tiên</li>
+        <li>Cơ chế Antikythera (khoảng 100 TCN): Một máy tính tương tự Hy Lạp cổ đại</li>
+        <li>Máy tính của Pascal (1642): Máy tính cơ học đầu tiên</li>
+        <li>Khung dệt Jacquard (1804): Sử dụng thẻ đục lỗ để tự động hóa các mẫu dệt</li>
       </ul>
       
-      <p><strong>Theoretical Foundations (1800s - 1930s)</strong></p>
+      <p><strong>Nền Tảng Lý Thuyết (1800s - 1930s)</strong></p>
       <ul>
-        <li>Charles Babbage's Analytical Engine (1837): Conceptualized the first general-purpose computer</li>
-        <li>Ada Lovelace's notes (1843): Contained what is considered the first algorithm</li>
-        <li>Boolean algebra (1854): Provided the mathematical basis for digital logic</li>
-        <li>Alan Turing's "On Computable Numbers" (1936): Introduced the concept of the Turing machine</li>
+        <li>Máy Phân Tích của Charles Babbage (1837): Khái niệm hóa máy tính đa năng đầu tiên</li>
+        <li>Ghi chú của Ada Lovelace (1843): Bao gồm những gì được coi là thuật toán đầu tiên</li>
+        <li>Đại số Boole (1854): Cung cấp cơ sở toán học cho logic kỹ thuật số</li>
+        <li>"On Computable Numbers" của Alan Turing (1936): Giới thiệu khái niệm máy Turing</li>
       </ul>
       
-      <p>The chapter continues with the development of early electronic computers, the transition to personal computing, and the modern computing landscape...</p>
+      <p>Chương này tiếp tục với sự phát triển của các máy tính điện tử đầu tiên, sự chuyển đổi sang điện toán cá nhân và bối cảnh điện toán hiện đại...</p>
     `,
   },
 };
@@ -167,7 +167,7 @@ const DocumentView = () => {
   const [document, setDocument] = useState<any>(null);
   
   useEffect(() => {
-    // Simulate API fetch
+    // Giả lập lấy dữ liệu từ API
     setIsLoading(true);
     setTimeout(() => {
       if (id && documentData[id as keyof typeof documentData]) {
@@ -177,7 +177,7 @@ const DocumentView = () => {
     }, 500);
   }, [id]);
   
-  // Related documents (would come from an API in a real app)
+  // Tài liệu liên quan (trong ứng dụng thực tế sẽ lấy từ API)
   const relatedDocuments = Object.values(documentData)
     .filter(doc => doc.id !== id)
     .slice(0, 3);
@@ -189,7 +189,7 @@ const DocumentView = () => {
         <div className="container mx-auto px-4 py-20 flex-grow flex items-center justify-center">
           <div className="text-center">
             <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4 animate-pulse" />
-            <p className="text-muted-foreground">Loading document...</p>
+            <p className="text-muted-foreground">Đang tải tài liệu...</p>
           </div>
         </div>
         <Footer />
@@ -203,14 +203,14 @@ const DocumentView = () => {
         <Navbar />
         <div className="container mx-auto px-4 py-20 flex-grow">
           <div className="max-w-md mx-auto text-center">
-            <h1 className="text-2xl font-bold mb-4">Document Not Found</h1>
+            <h1 className="text-2xl font-bold mb-4">Không Tìm Thấy Tài Liệu</h1>
             <p className="text-muted-foreground mb-8">
-              The document you are looking for does not exist or has been removed.
+              Tài liệu bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.
             </p>
             <Button asChild>
               <Link to="/documents">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Browse Documents
+                Duyệt Tài Liệu
               </Link>
             </Button>
           </div>
@@ -230,17 +230,17 @@ const DocumentView = () => {
             <Button variant="ghost" asChild size="sm">
               <Link to="/documents">
                 <ArrowLeft className="mr-1 h-4 w-4" />
-                Back to Documents
+                Quay Lại Tài Liệu
               </Link>
             </Button>
           </div>
           
           <DocumentPreview {...document} />
           
-          {/* Related Documents */}
+          {/* Tài Liệu Liên Quan */}
           {relatedDocuments.length > 0 && (
             <div className="mt-16">
-              <h2 className="text-2xl font-bold mb-6">Related Documents</h2>
+              <h2 className="text-2xl font-bold mb-6">Tài Liệu Liên Quan</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {relatedDocuments.map((doc, index) => (

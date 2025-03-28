@@ -20,43 +20,43 @@ const Index = () => {
   const features = [
     {
       icon: <FileText className="h-8 w-8 text-primary" />,
-      title: "High-Quality Documents",
-      description: "Access thousands of premium academic, business, and educational documents curated for quality.",
+      title: "Tài Liệu Chất Lượng Cao",
+      description: "Truy cập hàng ngàn tài liệu cao cấp về học thuật, kinh doanh và giáo dục được tuyển chọn kỹ lưỡng.",
     },
     {
       icon: <Download className="h-8 w-8 text-primary" />,
-      title: "Easy Downloads",
-      description: "Subscribe once and download unlimited free documents, or purchase premium documents individually.",
+      title: "Tải Xuống Dễ Dàng",
+      description: "Đăng ký một lần và tải xuống không giới hạn tài liệu miễn phí, hoặc mua riêng các tài liệu cao cấp.",
     },
     {
       icon: <Users className="h-8 w-8 text-primary" />,
-      title: "Created by Experts",
-      description: "All documents are created by field experts and professionals to ensure accuracy and value.",
+      title: "Tạo Bởi Chuyên Gia",
+      description: "Tất cả tài liệu đều được tạo bởi các chuyên gia và chuyên gia trong lĩnh vực để đảm bảo tính chính xác và giá trị.",
     },
     {
       icon: <ShieldCheck className="h-8 w-8 text-primary" />,
-      title: "Secure Platform",
-      description: "Your data and payments are always secure with our enterprise-grade encryption and protection.",
+      title: "Nền Tảng An Toàn",
+      description: "Dữ liệu và thanh toán của bạn luôn được bảo mật với mã hóa và bảo vệ cấp doanh nghiệp của chúng tôi.",
     },
   ];
   
   const testimonials = [
     {
-      name: "Nguyen Minh",
-      role: "University Student",
-      content: "DocAccess has been essential for my research projects. The quality of documents and ease of access made my academic work much easier.",
+      name: "Nguyễn Minh",
+      role: "Sinh Viên Đại Học",
+      content: "TàiLiệuVN đã trở thành công cụ thiết yếu cho các dự án nghiên cứu của tôi. Chất lượng tài liệu và khả năng truy cập dễ dàng đã giúp công việc học thuật của tôi dễ dàng hơn nhiều.",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     {
-      name: "Tran Linh",
-      role: "Business Owner",
-      content: "The business templates saved me countless hours. Well worth the subscription for the time saved and professional quality.",
+      name: "Trần Linh",
+      role: "Chủ Doanh Nghiệp",
+      content: "Các mẫu kinh doanh đã giúp tôi tiết kiệm vô số thời gian. Đáng đồng tiền bát gạo cho thời gian tiết kiệm được và chất lượng chuyên nghiệp.",
       avatar: "https://randomuser.me/api/portraits/women/44.jpg",
     },
     {
-      name: "Pham Duc",
-      role: "Researcher",
-      content: "As a researcher, having reliable sources is crucial. DocAccess provides exactly that with their extensive document library.",
+      name: "Phạm Đức",
+      role: "Nhà Nghiên Cứu",
+      content: "Là một nhà nghiên cứu, việc có nguồn tài liệu đáng tin cậy là rất quan trọng. TàiLiệuVN cung cấp chính xác những gì tôi cần với thư viện tài liệu phong phú của họ.",
       avatar: "https://randomuser.me/api/portraits/men/22.jpg",
     },
   ];
@@ -81,7 +81,7 @@ const Index = () => {
                 transition={{ duration: 0.5 }}
                 viewport={{ once: true }}
               >
-                Everything You Need in One Platform
+                Tất Cả Những Gì Bạn Cần Trong Một Nền Tảng
               </motion.h2>
               <motion.p 
                 className="text-muted-foreground"
@@ -90,7 +90,7 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 viewport={{ once: true }}
               >
-                Our document platform is designed to make accessing high-quality materials simple, secure, and affordable.
+                Nền tảng tài liệu của chúng tôi được thiết kế để giúp truy cập tài liệu chất lượng cao một cách đơn giản, an toàn và giá cả phải chăng.
               </motion.p>
             </div>
             
@@ -131,45 +131,50 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-2">
                 <div className="p-8 md:p-12 flex flex-col justify-center">
                   <div className="inline-block text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full mb-6">
-                    Affordable Plans
+                    Gói Giá Hợp Lý
                   </div>
-                  <h2 className="text-3xl font-bold mb-4">Ready to Access Premium Documents?</h2>
+                  <h2 className="text-3xl font-bold mb-4">Sẵn Sàng Truy Cập Tài Liệu Cao Cấp?</h2>
                   <p className="text-muted-foreground mb-8">
-                    Choose a subscription plan that works for you and get unlimited access to our growing library of free documents. Premium documents available for individual purchase.
+                    Chọn gói đăng ký phù hợp với bạn và nhận quyền truy cập không giới hạn vào thư viện tài liệu miễn phí đang phát triển của chúng tôi. Tài liệu cao cấp có sẵn để mua riêng.
                   </p>
                   <Button asChild size="lg" className="w-full md:w-auto">
                     <Link to="/pricing">
-                      See Our Pricing
+                      Xem Bảng Giá Của Chúng Tôi
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
-                <div className="bg-gradient-to-br from-primary/90 to-primary h-full p-8 md:p-12 flex items-center justify-center">
-                  <div className="text-white space-y-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                        <Download className="h-6 w-6 text-white" />
+                <div className="bg-gradient-to-br from-primary/90 to-primary h-full p-8 md:p-12 flex flex-col justify-center text-white">
+                  <div className="space-y-6">
+                    <div className="flex items-start">
+                      <div className="bg-white/20 p-2 rounded-full mr-4">
+                        <CheckIcon className="h-5 w-5 text-white" />
                       </div>
-                      <h3 className="text-xl font-semibold">Starting from</h3>
+                      <div>
+                        <h3 className="font-semibold mb-1">Tải Xuống Không Giới Hạn</h3>
+                        <p className="text-white/80 text-sm">Tất cả tài liệu miễn phí với gói đăng ký</p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-5xl font-bold">30.000₫</span>
-                      <span className="text-white/90 ml-2">/month</span>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-white/20 p-2 rounded-full mr-4">
+                        <CheckIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Tài Liệu Chất Lượng Cao</h3>
+                        <p className="text-white/80 text-sm">Được biên soạn bởi các chuyên gia trong lĩnh vực</p>
+                      </div>
                     </div>
-                    <ul className="space-y-3">
-                      <li className="flex items-center">
-                        <CheckIcon className="h-5 w-5 mr-2" />
-                        <span>Unlimited free document downloads</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckIcon className="h-5 w-5 mr-2" />
-                        <span>No download restrictions</span>
-                      </li>
-                      <li className="flex items-center">
-                        <CheckIcon className="h-5 w-5 mr-2" />
-                        <span>Access to all free content</span>
-                      </li>
-                    </ul>
+                    
+                    <div className="flex items-start">
+                      <div className="bg-white/20 p-2 rounded-full mr-4">
+                        <CheckIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Hủy Bất Cứ Lúc Nào</h3>
+                        <p className="text-white/80 text-sm">Không cam kết dài hạn, hủy khi bạn muốn</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -188,7 +193,7 @@ const Index = () => {
                 transition={{ duration: 0.5 }}
                 viewport={{ once: true }}
               >
-                What Our Users Say
+                Người Dùng Của Chúng Tôi Nói Gì
               </motion.h2>
               <motion.p 
                 className="text-muted-foreground"
@@ -197,7 +202,7 @@ const Index = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 viewport={{ once: true }}
               >
-                Join thousands of satisfied users who rely on our platform for their document needs.
+                Đây là những gì người dùng nói về trải nghiệm của họ với nền tảng TàiLiệuVN.
               </motion.p>
             </div>
             
@@ -210,22 +215,20 @@ const Index = () => {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <Card className="h-full hover:shadow-md transition-shadow duration-300">
+                  <Card className="h-full">
                     <CardContent className="p-6">
                       <div className="flex items-center mb-4">
-                        <div className="mr-4">
-                          <img 
-                            src={testimonial.avatar} 
-                            alt={testimonial.name} 
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        </div>
+                        <img 
+                          src={testimonial.avatar} 
+                          alt={testimonial.name}
+                          className="w-12 h-12 rounded-full mr-4 object-cover"
+                        />
                         <div>
                           <h4 className="font-semibold">{testimonial.name}</h4>
                           <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                         </div>
                       </div>
-                      <p className="italic text-muted-foreground">"{testimonial.content}"</p>
+                      <p className="text-muted-foreground italic">"{testimonial.content}"</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -239,21 +242,5 @@ const Index = () => {
     </div>
   );
 };
-
-// Helper component for the pricing section
-const CheckIcon = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M20 6L9 17l-5-5" />
-  </svg>
-);
 
 export default Index;

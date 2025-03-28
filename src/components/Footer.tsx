@@ -8,9 +8,9 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div>
-            <h3 className="text-lg font-semibold mb-4">DocAccess</h3>
+            <h3 className="text-lg font-semibold mb-4">TàiLiệuVN</h3>
             <p className="text-muted-foreground mb-4">
-              Your premium platform for accessing quality documents and academic materials.
+              Nền tảng truy cập tài liệu chất lượng và tài liệu học thuật hàng đầu.
             </p>
             <div className="flex space-x-4">
               <a 
@@ -32,7 +32,7 @@ const Footer = () => {
                 <Instagram className="h-5 w-5" />
               </a>
               <a 
-                href="mailto:contact@docaccess.com" 
+                href="mailto:contact@tailieuVN.com" 
                 className="text-muted-foreground hover:text-primary transition-colors"
               >
                 <Mail className="h-5 w-5" />
@@ -41,14 +41,14 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4">Liên Kết Nhanh</h3>
             <ul className="space-y-2">
               <li>
                 <Link 
                   to="/" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Home
+                  Trang Chủ
                 </Link>
               </li>
               <li>
@@ -56,7 +56,7 @@ const Footer = () => {
                   to="/documents" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Browse Documents
+                  Duyệt Tài Liệu
                 </Link>
               </li>
               <li>
@@ -64,7 +64,7 @@ const Footer = () => {
                   to="/pricing" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Pricing Plans
+                  Bảng Giá
                 </Link>
               </li>
               <li>
@@ -72,21 +72,21 @@ const Footer = () => {
                   to="/account" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  My Account
+                  Tài Khoản Của Tôi
                 </Link>
               </li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-4">Categories</h3>
+            <h3 className="text-lg font-semibold mb-4">Danh Mục</h3>
             <ul className="space-y-2">
               <li>
                 <Link 
                   to="/documents?category=academic" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Academic Papers
+                  Bài Báo Học Thuật
                 </Link>
               </li>
               <li>
@@ -94,7 +94,7 @@ const Footer = () => {
                   to="/documents?category=business" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Business Documents
+                  Tài Liệu Kinh Doanh
                 </Link>
               </li>
               <li>
@@ -102,7 +102,7 @@ const Footer = () => {
                   to="/documents?category=templates" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Templates
+                  Mẫu Tài Liệu
                 </Link>
               </li>
               <li>
@@ -110,21 +110,21 @@ const Footer = () => {
                   to="/documents?category=research" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Research Materials
+                  Tài Liệu Nghiên Cứu
                 </Link>
               </li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-4">Support</h3>
+            <h3 className="text-lg font-semibold mb-4">Hỗ Trợ</h3>
             <ul className="space-y-2">
               <li>
                 <a 
                   href="#" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Help Center
+                  Trung Tâm Trợ Giúp
                 </a>
               </li>
               <li>
@@ -132,7 +132,7 @@ const Footer = () => {
                   href="#" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Contact Us
+                  Liên Hệ
                 </a>
               </li>
               <li>
@@ -140,7 +140,7 @@ const Footer = () => {
                   href="#" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Terms of Service
+                  Điều Khoản Dịch Vụ
                 </a>
               </li>
               <li>
@@ -148,7 +148,7 @@ const Footer = () => {
                   href="#" 
                   className="text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Privacy Policy
+                  Chính Sách Bảo Mật
                 </a>
               </li>
             </ul>
@@ -156,7 +156,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-border pt-8 text-center text-muted-foreground">
-          <p>© {new Date().getFullYear()} DocAccess. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} TàiLiệuVN. Tất cả quyền được bảo lưu.</p>
         </div>
       </div>
     </footer>

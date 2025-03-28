@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-// Dummy data for documents
+// Dữ liệu mẫu cho tài liệu
 const documents = [
   {
     id: "1",
-    title: "Research Paper: Modern Architecture Principles",
-    description: "A comprehensive analysis of contemporary architectural principles and their applications in urban design.",
-    category: "Architecture",
+    title: "Nghiên Cứu: Nguyên Tắc Kiến Trúc Hiện Đại",
+    description: "Phân tích toàn diện về các nguyên tắc kiến trúc đương đại và ứng dụng của chúng trong thiết kế đô thị.",
+    category: "Kiến Trúc",
     thumbnail: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 50000,
     isFree: false,
@@ -20,9 +20,9 @@ const documents = [
   },
   {
     id: "2",
-    title: "Business Plan Template: Startup Guide",
-    description: "A detailed template for creating a compelling business plan for your startup with financial projections.",
-    category: "Business",
+    title: "Mẫu Kế Hoạch Kinh Doanh: Hướng Dẫn Khởi Nghiệp",
+    description: "Mẫu chi tiết để tạo kế hoạch kinh doanh thuyết phục cho startup với dự báo tài chính.",
+    category: "Kinh Doanh",
     thumbnail: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 75000,
     isFree: false,
@@ -30,9 +30,9 @@ const documents = [
   },
   {
     id: "3",
-    title: "Introduction to Computer Science",
-    description: "Learn the fundamentals of computer science with this comprehensive beginner-friendly guide.",
-    category: "Education",
+    title: "Nhập Môn Khoa Học Máy Tính",
+    description: "Học những kiến thức cơ bản về khoa học máy tính với hướng dẫn toàn diện thân thiện với người mới bắt đầu.",
+    category: "Giáo Dục",
     thumbnail: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 0,
     isFree: true,
@@ -40,9 +40,9 @@ const documents = [
   },
   {
     id: "4",
-    title: "Market Analysis: Renewable Energy Sector",
-    description: "In-depth analysis of the renewable energy market trends, opportunities and forecasts for 2023-2030.",
-    category: "Market Research",
+    title: "Phân Tích Thị Trường: Ngành Năng Lượng Tái Tạo",
+    description: "Phân tích chuyên sâu về xu hướng thị trường năng lượng tái tạo, cơ hội và dự báo cho 2023-2030.",
+    category: "Nghiên Cứu Thị Trường",
     thumbnail: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 120000,
     isFree: false,
@@ -50,9 +50,9 @@ const documents = [
   },
   {
     id: "5",
-    title: "Legal Contract Templates Bundle",
-    description: "A collection of essential legal templates for various business needs and transactions.",
-    category: "Legal",
+    title: "Bộ Mẫu Hợp Đồng Pháp Lý",
+    description: "Tập hợp các mẫu hợp đồng pháp lý thiết yếu cho các nhu cầu kinh doanh và giao dịch.",
+    category: "Pháp Lý",
     thumbnail: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 90000,
     isFree: false,
@@ -60,8 +60,8 @@ const documents = [
   },
   {
     id: "6",
-    title: "Beginner's Guide to Digital Marketing",
-    description: "Learn the essentials of digital marketing strategies, social media, and SEO optimization.",
+    title: "Hướng Dẫn Marketing Số Cho Người Mới Bắt Đầu",
+    description: "Học những kiến thức cơ bản về chiến lược marketing số, mạng xã hội, và tối ưu hóa SEO.",
     category: "Marketing",
     thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     price: 0,
@@ -103,9 +103,9 @@ const FeaturedDocuments = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
           <div>
-            <h2 className="text-3xl font-bold mb-4">Featured Documents</h2>
+            <h2 className="text-3xl font-bold mb-4">Tài Liệu Nổi Bật</h2>
             <p className="text-muted-foreground max-w-2xl">
-              Explore our selection of premium and free documents curated for your needs.
+              Khám phá bộ sưu tập tài liệu cao cấp và miễn phí được tuyển chọn theo nhu cầu của bạn.
             </p>
           </div>
           
@@ -113,7 +113,7 @@ const FeaturedDocuments = () => {
             to="/documents" 
             className="mt-4 md:mt-0 text-primary hover:text-primary/80 transition-colors flex items-center"
           >
-            Browse all documents
+            Xem tất cả tài liệu
             <ArrowRight className="ml-1 h-4 w-4" />
           </Link>
         </div>
@@ -138,7 +138,7 @@ const FeaturedDocuments = () => {
             onClick={toggleDocuments}
             className="rounded-full px-6"
           >
-            {isShowingAll ? "Show Less" : "Show More"}
+            {isShowingAll ? "Thu Gọn" : "Xem Thêm"}
             <ArrowRight className={`ml-2 h-4 w-4 transition-transform duration-300 ${isShowingAll ? "rotate-90" : ""}`} />
           </Button>
         </div>

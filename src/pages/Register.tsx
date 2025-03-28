@@ -1,225 +1,167 @@
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/components/ui/use-toast";
-import Footer from "@/components/Footer";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { Eye, EyeOff } from "lucide-react";
-
-const registerSchema = z.object({
-  name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
-  email: z.string().email("Email không hợp lệ"),
-  password: z.string()
-    .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
-    .regex(/[A-Z]/, "Mật khẩu phải có ít nhất 1 chữ hoa")
-    .regex(/[a-z]/, "Mật khẩu phải có ít nhất 1 chữ thường")
-    .regex(/[0-9]/, "Mật khẩu phải có ít nhất 1 số"),
-  confirmPassword: z.string(),
-  terms: z.boolean().refine(val => val === true, {
-    message: "Bạn phải đồng ý với điều khoản sử dụng",
-  }),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Mật khẩu không khớp",
-  path: ["confirmPassword"],
-});
-
-type RegisterValues = z.infer<typeof registerSchema>;
+import Footer from "@/components/Footer";
 
 const Register = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const [acceptTerms, setAcceptTerms] = useState(false);
   
-  const form = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      terms: false,
-    },
-  });
-
-  const onSubmit = async (values: RegisterValues) => {
-    setIsLoading(true);
-    
-    // This would connect to your registration backend in production
-    try {
-      console.log("Registration data:", values);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "Đăng ký thành công!",
-        description: "Chúng tôi đã gửi email xác nhận đến địa chỉ email của bạn",
-      });
-      
-      // Here you would typically redirect to login or verification page
-    } catch (error) {
-      toast({
-        title: "Đăng ký thất bại",
-        description: "Đã xảy ra lỗi khi đăng ký tài khoản",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Xử lý đăng ký ở đây
+    console.log("Đăng ký với:", { name, email, password, confirmPassword, acceptTerms });
   };
-
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow flex items-center justify-center p-4 bg-gradient-hero">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <Card className="shadow-lg border-accent/20">
-            <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-2xl font-bold text-gradient">Đăng Ký Tài Khoản</CardTitle>
-              <CardDescription>
+      <main className="flex-grow flex items-center justify-center pt-28 pb-20">
+        <div className="w-full max-w-md mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-lg shadow-md p-8"
+          >
+            <div className="text-center mb-6">
+              <h1 className="text-3xl font-bold text-gradient mb-2">Đăng Ký Tài Khoản</h1>
+              <p className="text-muted-foreground">
                 Tạo tài khoản để truy cập tài liệu độc quyền
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Họ và tên</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nguyễn Văn A" {...field} className="bg-background/50" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              </p>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-sm font-medium">
+                  Họ và tên
+                </label>
+                <Input
+                  id="name"
+                  placeholder="Nguyễn Văn A"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="password" className="block text-sm font-medium">
+                  Mật khẩu
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="email@example.com" {...field} className="bg-background/50" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOffIcon className="h-4 w-4" />
+                    ) : (
+                      <EyeIcon className="h-4 w-4" />
                     )}
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium">
+                  Xác nhận mật khẩu
+                </label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
                   />
-                  
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mật khẩu</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              type={showPassword ? "text" : "password"} 
-                              placeholder="••••••••" 
-                              {...field} 
-                              className="bg-background/50 pr-10"
-                            />
-                            <button 
-                              type="button"
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOffIcon className="h-4 w-4" />
+                    ) : (
+                      <EyeIcon className="h-4 w-4" />
                     )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Xác nhận mật khẩu</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              type={showConfirmPassword ? "text" : "password"} 
-                              placeholder="••••••••" 
-                              {...field} 
-                              className="bg-background/50 pr-10"
-                            />
-                            <button 
-                              type="button"
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            >
-                              {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="terms"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-muted/50">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            Tôi đồng ý với <Link to="/terms" className="text-primary hover:underline">điều khoản sử dụng</Link> và <Link to="/privacy" className="text-primary hover:underline">chính sách bảo mật</Link>
-                          </FormLabel>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Đang đăng ký..." : "Đăng ký ngay"}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-              <p className="text-center text-sm text-muted-foreground">
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={acceptTerms}
+                  onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                  required
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-sm text-muted-foreground leading-tight"
+                >
+                  Tôi đồng ý với{" "}
+                  <a href="#" className="text-primary hover:underline">
+                    điều khoản sử dụng
+                  </a>{" "}
+                  và{" "}
+                  <a href="#" className="text-primary hover:underline">
+                    chính sách bảo mật
+                  </a>
+                </label>
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={!acceptTerms}>
+                Đăng ký ngay
+              </Button>
+            </form>
+            
+            <div className="mt-6 text-center text-sm">
+              <p className="text-muted-foreground">
                 Đã có tài khoản?{" "}
-                <Link to="/login" className="font-semibold text-primary hover:underline">
+                <Link to="/login" className="text-primary hover:underline font-medium">
                   Đăng nhập
                 </Link>
               </p>
-            </CardFooter>
-          </Card>
-        </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </main>
       
       <Footer />

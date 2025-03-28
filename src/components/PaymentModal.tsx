@@ -46,24 +46,24 @@ export const PaymentModal = ({
   };
   
   const subscriptionPlans = [
-    { id: "monthly", name: "1 Month", price: 30000, duration: "month" },
-    { id: "quarterly", name: "3 Months", price: 45000, duration: "3 months", savings: "50%" },
-    { id: "biannual", name: "6 Months", price: 60000, duration: "6 months", savings: "67%" },
-    { id: "annual", name: "12 Months", price: 90000, duration: "year", savings: "75%" },
+    { id: "monthly", name: "1 Tháng", price: 30000, duration: "tháng" },
+    { id: "quarterly", name: "3 Tháng", price: 45000, duration: "3 tháng", savings: "50%" },
+    { id: "biannual", name: "6 Tháng", price: 60000, duration: "6 tháng", savings: "67%" },
+    { id: "annual", name: "12 Tháng", price: 90000, duration: "năm", savings: "75%" },
   ];
   
   const handlePayment = () => {
     setIsProcessing(true);
     
-    // Simulate payment processing
+    // Giả lập xử lý thanh toán
     setTimeout(() => {
       setIsProcessing(false);
       
       toast({
-        title: "Payment Successful!",
+        title: "Thanh Toán Thành Công!",
         description: isFree 
-          ? `You've subscribed to the ${selectedPlan} plan. You can now download free documents.`
-          : `You've purchased "${docTitle}". You can now download it.`,
+          ? `Bạn đã đăng ký gói ${selectedPlan}. Bạn có thể tải xuống tài liệu miễn phí ngay bây giờ.`
+          : `Bạn đã mua "${docTitle}". Bạn có thể tải xuống ngay bây giờ.`,
         variant: "default",
       });
       
@@ -76,12 +76,12 @@ export const PaymentModal = ({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-xl">
-            {isFree ? "Subscribe to Download Free Documents" : `Purchase Document`}
+            {isFree ? "Đăng Ký Để Tải Tài Liệu Miễn Phí" : `Mua Tài Liệu`}
           </DialogTitle>
           <DialogDescription>
             {isFree
-              ? "Choose a subscription plan to download unlimited free documents."
-              : `You are about to purchase "${docTitle}" for ${formatPrice(docPrice)}.`}
+              ? "Chọn gói đăng ký để tải xuống không giới hạn tài liệu miễn phí."
+              : `Bạn đang mua tài liệu "${docTitle}" với giá ${formatPrice(docPrice)}.`}
           </DialogDescription>
         </DialogHeader>
         
@@ -108,26 +108,26 @@ export const PaymentModal = ({
                   </div>
                   <div className="text-xl font-bold mb-1">{formatPrice(plan.price)}</div>
                   {plan.savings && (
-                    <div className="text-xs text-green-600">Save {plan.savings}</div>
+                    <div className="text-xs text-green-600">Tiết kiệm {plan.savings}</div>
                   )}
                 </div>
               ))}
             </div>
             
             <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Subscription Benefits</h4>
+              <h4 className="font-medium mb-2">Lợi Ích Của Gói Đăng Ký</h4>
               <ul className="space-y-2">
                 <li className="flex items-start text-sm">
                   <CheckIcon className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
-                  <span>Unlimited downloads of free documents</span>
+                  <span>Tải xuống không giới hạn tài liệu miễn phí</span>
                 </li>
                 <li className="flex items-start text-sm">
                   <CheckIcon className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
-                  <span>No restrictions on free content</span>
+                  <span>Không giới hạn nội dung miễn phí</span>
                 </li>
                 <li className="flex items-start text-sm">
                   <CheckIcon className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
-                  <span>Cancel anytime</span>
+                  <span>Hủy bất cứ lúc nào</span>
                 </li>
               </ul>
             </div>
@@ -135,18 +135,18 @@ export const PaymentModal = ({
         ) : (
           <div className="space-y-4 py-4">
             <div className="bg-muted p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Purchase Details</h4>
+              <h4 className="font-medium mb-2">Chi Tiết Mua Hàng</h4>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Document price:</span>
+                  <span>Giá tài liệu:</span>
                   <span className="font-medium">{formatPrice(docPrice)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Transaction fee:</span>
+                  <span>Phí giao dịch:</span>
                   <span className="font-medium">{formatPrice(0)}</span>
                 </div>
                 <div className="border-t pt-2 mt-2 flex justify-between font-medium">
-                  <span>Total:</span>
+                  <span>Tổng:</span>
                   <span>{formatPrice(docPrice)}</span>
                 </div>
               </div>
@@ -156,7 +156,7 @@ export const PaymentModal = ({
         
         <div className="space-y-4">
           <div>
-            <h4 className="font-medium mb-3">Payment Method</h4>
+            <h4 className="font-medium mb-3">Phương Thức Thanh Toán</h4>
             <RadioGroup 
               defaultValue="momo" 
               className="grid grid-cols-2 gap-4"
@@ -201,8 +201,8 @@ export const PaymentModal = ({
           <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 flex items-start">
             <AlertCircle className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-yellow-700">
-              This is a demo. No actual payment will be processed. In a real implementation, 
-              you would be redirected to the selected payment provider.
+              Đây là bản demo. Không có thanh toán thực tế nào được xử lý. Trong ứng dụng thực tế, 
+              bạn sẽ được chuyển hướng đến nhà cung cấp thanh toán đã chọn.
             </p>
           </div>
         </div>
@@ -213,13 +213,13 @@ export const PaymentModal = ({
             onClick={onClose}
             disabled={isProcessing}
           >
-            Cancel
+            Hủy
           </Button>
           <Button 
             onClick={handlePayment}
             disabled={isProcessing}
           >
-            {isProcessing ? "Processing..." : isFree ? "Subscribe Now" : "Complete Purchase"}
+            {isProcessing ? "Đang xử lý..." : isFree ? "Đăng Ký Ngay" : "Hoàn Tất Mua Hàng"}
           </Button>
         </DialogFooter>
       </DialogContent>
