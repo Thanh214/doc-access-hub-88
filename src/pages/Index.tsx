@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -7,7 +6,7 @@ import Hero from "@/components/Hero";
 import FeaturedDocuments from "@/components/FeaturedDocuments";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, FileText, Download, Users, ShieldCheck } from "lucide-react";
+import { ArrowRight, FileText, Download, Users, ShieldCheck, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -148,7 +147,7 @@ const Index = () => {
                   <div className="space-y-6">
                     <div className="flex items-start">
                       <div className="bg-white/20 p-2 rounded-full mr-4">
-                        <CheckIcon className="h-5 w-5 text-white" />
+                        <Check className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Tải Xuống Không Giới Hạn</h3>
@@ -158,7 +157,7 @@ const Index = () => {
                     
                     <div className="flex items-start">
                       <div className="bg-white/20 p-2 rounded-full mr-4">
-                        <CheckIcon className="h-5 w-5 text-white" />
+                        <Check className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Tài Liệu Chất Lượng Cao</h3>
@@ -168,7 +167,7 @@ const Index = () => {
                     
                     <div className="flex items-start">
                       <div className="bg-white/20 p-2 rounded-full mr-4">
-                        <CheckIcon className="h-5 w-5 text-white" />
+                        <Check className="h-5 w-5 text-white" />
                       </div>
                       <div>
                         <h3 className="font-semibold mb-1">Hủy Bất Cứ Lúc Nào</h3>
