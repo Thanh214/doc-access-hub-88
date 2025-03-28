@@ -19,25 +19,25 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = path.extname(file.originalname) || '.jpg'; // Sử dụng .jpg nếu không có phần mở rộng
     cb(null, 'avatar-' + uniqueSuffix + ext);
   }
 });
 
-// Lọc file, chỉ nhận file ảnh
+// Chấp nhận tất cả các định dạng file ảnh
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  if (allowedTypes.includes(file.mimetype)) {
+  // Chấp nhận tất cả các file với mime type bắt đầu bằng 'image/'
+  if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Chỉ chấp nhận file ảnh (jpeg, png, gif, webp)'), false);
+    cb(new Error('Chỉ chấp nhận file ảnh'), false);
   }
 };
 
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // Giới hạn file 5MB
+  limits: { fileSize: 10 * 1024 * 1024 } // Tăng giới hạn file lên 10MB
 });
 
 // Lấy thông tin người dùng hiện tại

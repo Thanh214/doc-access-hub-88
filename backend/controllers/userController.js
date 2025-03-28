@@ -58,13 +58,15 @@ exports.updateUser = async (req, res) => {
       [name, emailToUpdate, userId]
     );
     
+    // Lấy thông tin người dùng sau khi cập nhật để trả về
+    const [updatedUser] = await pool.query(
+      'SELECT id, name, email, avatar, balance FROM users WHERE id = ?',
+      [userId]
+    );
+    
     res.status(200).json({ 
       message: 'Cập nhật thông tin thành công',
-      user: {
-        id: userId,
-        name,
-        email: emailToUpdate
-      }
+      user: updatedUser[0]
     });
   } catch (error) {
     console.error(error);
@@ -99,15 +101,27 @@ exports.updateAvatar = async (req, res) => {
     // Xóa file ảnh cũ nếu tồn tại
     const oldAvatar = currentUser[0]?.avatar;
     if (oldAvatar && oldAvatar !== '/uploads/avatars/default.png') {
-      const oldAvatarPath = path.join(__dirname, '..', 'public', oldAvatar);
-      if (fs.existsSync(oldAvatarPath)) {
-        fs.unlinkSync(oldAvatarPath);
+      try {
+        const oldAvatarPath = path.join(__dirname, '..', 'public', oldAvatar);
+        if (fs.existsSync(oldAvatarPath)) {
+          fs.unlinkSync(oldAvatarPath);
+        }
+      } catch (err) {
+        console.error('Không thể xóa avatar cũ:', err);
+        // Tiếp tục xử lý ngay cả khi không thể xóa file cũ
       }
     }
     
+    // Lấy thông tin người dùng sau khi cập nhật
+    const [updatedUser] = await pool.query(
+      'SELECT id, name, email, avatar, balance FROM users WHERE id = ?',
+      [userId]
+    );
+    
     res.status(200).json({ 
       message: 'Cập nhật avatar thành công',
-      avatar: avatarPath
+      avatar: avatarPath,
+      user: updatedUser[0]
     });
   } catch (error) {
     console.error(error);
