@@ -26,6 +26,7 @@ CREATE TABLE documents (
   user_id INT,
   is_featured BOOLEAN DEFAULT FALSE,
   category VARCHAR(100),
+  price DECIMAL(10, 2) DEFAULT 0.00,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
@@ -40,6 +41,9 @@ CREATE TABLE subscriptions (
   start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   end_date TIMESTAMP,
   status ENUM('active', 'expired', 'cancelled') DEFAULT 'active',
+  downloads_limit INT NOT NULL,
+  uploads_limit INT NOT NULL,
+  max_document_price DECIMAL(10, 2) NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -64,3 +68,7 @@ INSERT INTO documents (title, description, user_id, is_featured, category) VALUE
 ('Getting Started Guide', 'A comprehensive guide for new users', 1, 1, 'Tutorial'),
 ('Sample Contract', 'A template for standard contracts', 1, 1, 'Legal'),
 ('Research Paper', 'Academic research on document management', 1, 0, 'Academic');
+
+-- Create subscription plan defaults
+INSERT INTO subscriptions (user_id, plan_name, price, end_date, status, downloads_limit, uploads_limit, max_document_price) VALUES
+(1, 'Cao Cấp', 100000, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 DAY), 'active', 30, 10, 40000);
