@@ -4,8 +4,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import DocumentPreview from "@/components/DocumentPreview";
-import { getDocumentById, getMockFreeDocuments, getMockPremiumDocuments } from "@/services/document.service";
+import { getDocumentById } from "@/services/document.service";
 import { useToast } from "@/hooks/use-toast";
+import { getCurrentUser, getCurrentSubscription } from "@/services/auth.service";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock } from "lucide-react";
 
 const DocumentDemo = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +17,32 @@ const DocumentDemo = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [document, setDocument] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState(getCurrentUser());
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState<number | null>(null);
+  
+  useEffect(() => {
+    const fetchUserSubscription = async () => {
+      try {
+        const subscriptionData = await getCurrentSubscription();
+        setSubscription(subscriptionData);
+        
+        if (subscriptionData && subscriptionData.end_date) {
+          const endDate = new Date(subscriptionData.end_date);
+          const today = new Date();
+          const diffTime = endDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          setSubscriptionDaysLeft(diffDays);
+        }
+      } catch (error) {
+        console.error("Error fetching subscription:", error);
+      }
+    };
+    
+    if (currentUser) {
+      fetchUserSubscription();
+    }
+  }, [currentUser]);
   
   useEffect(() => {
     const fetchDocument = async () => {
@@ -21,22 +50,7 @@ const DocumentDemo = () => {
       
       setIsLoading(true);
       try {
-        let doc;
-        
-        // Try to get real data first
-        try {
-          doc = await getDocumentById(id);
-        } catch (err) {
-          console.log("Using mock data for demo");
-          // For demo, grab from mock data
-          const allMockDocs = [...getMockFreeDocuments(), ...getMockPremiumDocuments()];
-          doc = allMockDocs.find(d => d.id === id);
-          
-          if (!doc) {
-            throw new Error("Document not found");
-          }
-        }
-        
+        const doc = await getDocumentById(id);
         setDocument(doc);
       } catch (err) {
         console.error("Error fetching document:", err);
@@ -55,7 +69,7 @@ const DocumentDemo = () => {
     fetchDocument();
   }, [id, toast]);
   
-  // Generate demo preview content based on document type
+  // Generate preview content based on document type
   const generatePreviewContent = (doc: any) => {
     if (doc.isFree) {
       return `
@@ -71,7 +85,7 @@ const DocumentDemo = () => {
           <li>Trắc nghiệm kiến thức</li>
         </ol>
         <p>Tài liệu này được tải lên bởi quản trị viên và được phép phân phối miễn phí cho mục đích giáo dục.</p>
-        <p>Số trang: ${10 + Math.floor(Math.random() * 40)}</p>
+        <p>Số trang: ${doc.pages || 25}</p>
         <p>Định dạng: PDF</p>
         <p>Ngôn ngữ: Tiếng Việt</p>
       `;
@@ -90,7 +104,7 @@ const DocumentDemo = () => {
           <li>Bài tập và giải pháp</li>
         </ol>
         <p>Tài liệu này được biên soạn bởi các chuyên gia hàng đầu trong lĩnh vực ${doc.category}.</p>
-        <p>Đây chỉ là phần xem trước. Nội dung đầy đủ bao gồm ${3 + Math.floor(Math.random() * 5)} chương với ${20 + Math.floor(Math.random() * 100)} trang.</p>
+        <p>Đây chỉ là phần xem trước. Nội dung đầy đủ bao gồm ${doc.chapters || 5} chương với ${doc.pages || 50} trang.</p>
         <p><em>Phần còn lại của tài liệu chỉ có sẵn khi mua.</em></p>
       `;
     }
@@ -142,17 +156,39 @@ const DocumentDemo = () => {
       <Navbar />
       <main className="flex-grow pt-28 pb-20">
         <div className="container mx-auto px-4">
+          {subscription && currentUser && (
+            <div className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-medium">Gói đăng ký hiện tại: <span className="text-primary">{subscription.plan_name}</span></h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Bạn đang sử dụng gói {subscription.plan_name} với nhiều tính năng cao cấp
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Badge variant="outline" className="px-3 py-1 flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>Còn {subscriptionDaysLeft} ngày</span>
+                  </Badge>
+                  <Badge className="bg-primary hover:bg-primary/90 cursor-pointer" onClick={() => navigate('/pricing')}>
+                    Nâng cấp gói
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <DocumentPreview
             id={document.id}
             title={document.title}
             description={document.description}
             category={document.category}
-            thumbnail={document.thumbnail}
+            thumbnail={document.thumbnail || "https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14"}
             previewContent={generatePreviewContent(document)}
             price={document.price}
             isFree={document.isFree || !document.is_premium}
-            pages={20 + Math.floor(Math.random() * 100)}
-            fileSize={`${1 + Math.floor(Math.random() * 9)}.${Math.floor(Math.random() * 99)} MB`}
+            pages={document.pages || (20 + Math.floor(Math.random() * 100))}
+            fileSize={document.file_size || `${1 + Math.floor(Math.random() * 9)}.${Math.floor(Math.random() * 99)} MB`}
             dateAdded={document.created_at || "2023-05-15"}
           />
         </div>
