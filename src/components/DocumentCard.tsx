@@ -12,9 +12,9 @@ export interface DocumentCardProps {
   title: string;
   description: string;
   category: string;
-  thumbnail?: string;
+  thumbnail?: string; // Make thumbnail optional but provide a default in component
   price: number;
-  isFree?: boolean; // Make isFree optional 
+  isFree?: boolean; 
   previewAvailable: boolean;
   is_premium?: boolean;
   is_featured?: boolean;
@@ -29,7 +29,7 @@ const DocumentCard = ({
   title,
   description,
   category,
-  thumbnail,
+  thumbnail = "/placeholder.svg", // Provide default value
   price,
   isFree,
   previewAvailable,
@@ -55,7 +55,7 @@ const DocumentCard = ({
           <Link to={`/document/${id}`}>
             <div className="aspect-[4/3] overflow-hidden">
               <img 
-                src={thumbnail || "/placeholder.svg"} 
+                src={thumbnail} 
                 alt={title} 
                 className={`w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-105' : 'scale-100'}`}
               />
