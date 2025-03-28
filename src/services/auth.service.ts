@@ -7,6 +7,8 @@ export interface UserData {
   email: string;
   avatar?: string;
   balance?: number;
+  bank_info?: string;
+  momo_number?: string;
 }
 
 export interface LoginCredentials {
@@ -18,6 +20,16 @@ export interface RegisterData {
   username: string;
   email: string;
   password: string;
+}
+
+export interface SubscriptionData {
+  plan_name: string;
+  price: number;
+  downloads_limit: number;
+  uploads_limit: number;
+  max_document_price: number;
+  end_date: string;
+  status: 'active' | 'expired' | 'cancelled';
 }
 
 export const register = async (userData: RegisterData) => {
@@ -49,6 +61,7 @@ export const login = async (credentials: LoginCredentials) => {
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  localStorage.removeItem('authToken');
 };
 
 export const getCurrentUser = (): UserData | null => {
@@ -143,9 +156,73 @@ export const addBalance = async (amount: number) => {
   }
 };
 
+export const requestWithdrawal = async (data: { amount: number, payment_method: 'bank_transfer' | 'momo' }) => {
+  try {
+    const response = await API.post('/users/withdrawal-request', data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const changePassword = async (passwordData: { currentPassword: string; newPassword: string }) => {
   try {
     const response = await API.put('/users/change-password', passwordData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updatePaymentInfo = async (paymentInfo: { bank_info?: string; momo_number?: string }) => {
+  try {
+    const response = await API.put('/users/update-payment-info', paymentInfo);
+    
+    if (response.data.user) {
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        const updatedUser = { ...currentUser, ...response.data.user };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    }
+    
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getCurrentSubscription = async (): Promise<SubscriptionData | null> => {
+  try {
+    const response = await API.get('/users/subscription');
+    return response.data.subscription;
+  } catch (error) {
+    console.error('Error fetching subscription:', error);
+    return null;
+  }
+};
+
+export const subscribeToPlan = async (planName: string) => {
+  try {
+    const response = await API.post('/subscriptions/subscribe', { plan_name: planName });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getTransactionHistory = async () => {
+  try {
+    const response = await API.get('/users/transactions');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getWithdrawalHistory = async () => {
+  try {
+    const response = await API.get('/users/withdrawals');
     return response.data;
   } catch (error) {
     throw error;

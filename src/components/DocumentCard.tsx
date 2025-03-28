@@ -7,15 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye, Lock } from "lucide-react";
 import { PaymentModal } from "./PaymentModal";
 
-interface DocumentCardProps {
+export interface DocumentCardProps {
   id: string;
   title: string;
   description: string;
   category: string;
   thumbnail?: string;
   price: number;
-  isFree: boolean;
+  isFree?: boolean; // Make isFree optional 
   previewAvailable: boolean;
+  is_premium?: boolean;
+  is_featured?: boolean;
+  user_id?: number;
+  download_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const DocumentCard = ({
@@ -34,6 +40,9 @@ const DocumentCard = ({
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
+  
+  // Calculate isFree based on is_premium if isFree is not provided
+  const documentIsFree = isFree !== undefined ? isFree : false;
   
   return (
     <>
@@ -59,7 +68,7 @@ const DocumentCard = ({
             {category}
           </Badge>
           
-          {!isFree && (
+          {!documentIsFree && (
             <Badge 
               className="absolute top-3 right-3 bg-primary/80 backdrop-blur-sm hover:bg-primary"
             >
@@ -67,7 +76,7 @@ const DocumentCard = ({
             </Badge>
           )}
           
-          {isFree && (
+          {documentIsFree && (
             <Badge 
               className="absolute top-3 right-3 bg-green-500/80 text-white backdrop-blur-sm hover:bg-green-500"
             >
@@ -98,7 +107,7 @@ const DocumentCard = ({
             </Link>
           </Button>
           
-          {isFree ? (
+          {documentIsFree ? (
             <Button
               size="sm"
               className="flex-1"
@@ -126,7 +135,7 @@ const DocumentCard = ({
           docId={id}
           docTitle={title}
           docPrice={price}
-          isFree={isFree}
+          isFree={documentIsFree}
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
         />

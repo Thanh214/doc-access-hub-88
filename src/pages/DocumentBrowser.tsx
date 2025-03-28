@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -39,20 +38,24 @@ const DocumentBrowser = () => {
       try {
         setIsLoading(true);
         const response = await getAllDocuments();
-        setDocuments(response.documents);
         
-        // Fixed: Properly type the categories array
-        const allCategories = response.documents
+        const processedDocuments = response.documents.map((doc: Document) => ({
+          ...doc,
+          isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+        }));
+        
+        setDocuments(processedDocuments);
+        
+        const allCategories = processedDocuments
           .map(doc => doc.category)
           .filter((category): category is string => 
             typeof category === 'string' && category.trim() !== ''
           );
         
-        // Create a unique set of categories
         const uniqueCategories: string[] = Array.from(new Set(allCategories));
         
         setCategories(uniqueCategories);
-        setFilteredDocuments(response.documents);
+        setFilteredDocuments(processedDocuments);
       } catch (error) {
         console.error("Error fetching documents:", error);
         toast({
@@ -75,32 +78,33 @@ const DocumentBrowser = () => {
       try {
         let filtered = [...documents];
         
-        // Apply search filter
         if (searchTerm) {
           const searchResults = await searchDocuments(searchTerm);
-          filtered = searchResults;
+          filtered = searchResults.map((doc: Document) => ({
+            ...doc,
+            isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+          }));
         }
         
-        // Apply category filter
         if (selectedCategory !== "Tất Cả Danh Mục") {
           if (searchTerm) {
             filtered = filtered.filter(doc => doc.category === selectedCategory);
           } else {
             const categoryResults = await getDocumentsByCategory(selectedCategory);
-            filtered = categoryResults;
+            filtered = categoryResults.map((doc: Document) => ({
+              ...doc,
+              isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+            }));
           }
         }
         
-        // Apply document type filter
         if (documentType === "free") {
-          filtered = filtered.filter(doc => doc.isFree);
+          filtered = filtered.filter(doc => doc.isFree === true);
         } else if (documentType === "premium") {
-          filtered = filtered.filter(doc => !doc.isFree);
+          filtered = filtered.filter(doc => doc.isFree === false);
         }
         
-        // Apply sorting
         if (sortOrder === "newest") {
-          // Giả sử id cao hơn là mới hơn
           filtered = [...filtered].sort((a, b) => parseInt(b.id) - parseInt(a.id));
         } else if (sortOrder === "oldest") {
           filtered = [...filtered].sort((a, b) => parseInt(a.id) - parseInt(b.id));
@@ -169,7 +173,6 @@ const DocumentBrowser = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar lọc */}
             <div className={`lg:block ${isFilterOpen ? "block" : "hidden"}`}>
               <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
                 <div className="mb-6">
@@ -231,7 +234,6 @@ const DocumentBrowser = () => {
               </div>
             </div>
             
-            {/* Lưới tài liệu */}
             <div className="lg:col-span-3">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-muted-foreground">
