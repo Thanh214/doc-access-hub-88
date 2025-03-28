@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,15 +8,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentUser, updateUserProfile, changePassword } from "@/services/auth.service";
+import { 
+  getCurrentUser, 
+  updateUserProfile, 
+  changePassword, 
+  updateAvatar, 
+  getBalance, 
+  addBalance 
+} from "@/services/auth.service";
 import { getUserDocuments } from "@/services/document.service";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { User, Upload, Download, Key, CreditCard, Loader2 } from "lucide-react";
+import { User, Upload, Download, Key, CreditCard, Loader2, Plus } from "lucide-react";
 
 // Định nghĩa schema cho form thông tin cá nhân
 const profileFormSchema = z.object({
@@ -44,6 +60,16 @@ const passwordFormSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// Định nghĩa schema cho form nạp tiền
+const balanceFormSchema = z.object({
+  amount: z.string().refine((val) => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num > 0;
+  }, {
+    message: "Số tiền phải là số dương.",
+  }),
+});
+
 interface Document {
   id: string;
   title: string;
@@ -61,8 +87,12 @@ const ProfilePage = () => {
   const [user, setUser] = useState(getCurrentUser());
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [isAvatarLoading, setIsAvatarLoading] = useState(false);
+  const [isBalanceLoading, setIsBalanceLoading] = useState(false);
+  const [showAddBalanceDialog, setShowAddBalanceDialog] = useState(false);
   const [uploadedDocuments, setUploadedDocuments] = useState<Document[]>([]);
   const [downloadedDocuments, setDownloadedDocuments] = useState<Document[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Khởi tạo form cho thông tin cá nhân
   const profileForm = useForm<z.infer<typeof profileFormSchema>>({
@@ -83,6 +113,14 @@ const ProfilePage = () => {
     },
   });
 
+  // Khởi tạo form cho nạp tiền
+  const balanceForm = useForm<z.infer<typeof balanceFormSchema>>({
+    resolver: zodResolver(balanceFormSchema),
+    defaultValues: {
+      amount: "",
+    },
+  });
+
   useEffect(() => {
     // Nếu chưa đăng nhập, chuyển hướng về trang login
     if (!user) {
@@ -95,6 +133,17 @@ const ProfilePage = () => {
       name: user.name || "",
       email: user.email || "",
     });
+
+    // Lấy số dư mới nhất
+    const fetchBalance = async () => {
+      try {
+        await getBalance();
+        // Cập nhật lại user state sau khi lấy balance
+        setUser(getCurrentUser());
+      } catch (error) {
+        console.error("Lỗi khi lấy số dư:", error);
+      }
+    };
 
     // Lấy danh sách tài liệu của người dùng
     const fetchDocuments = async () => {
@@ -109,6 +158,7 @@ const ProfilePage = () => {
       }
     };
 
+    fetchBalance();
     fetchDocuments();
   }, [user, navigate]);
 
@@ -165,6 +215,77 @@ const ProfilePage = () => {
     }
   };
 
+  // Xử lý cập nhật avatar
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setIsAvatarLoading(true);
+      const formData = new FormData();
+      formData.append('avatar', files[0]);
+
+      await updateAvatar(formData);
+      setUser(getCurrentUser()); // Cập nhật thông tin người dùng trong state
+
+      toast({
+        title: "Thành công!",
+        description: "Ảnh đại diện đã được cập nhật.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Lỗi!",
+        description: error.response?.data?.message || "Có lỗi xảy ra khi cập nhật avatar.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAvatarLoading(false);
+    }
+  };
+
+  // Xử lý nạp tiền
+  const onBalanceSubmit = async (data: z.infer<typeof balanceFormSchema>) => {
+    try {
+      setIsBalanceLoading(true);
+      const amount = parseFloat(data.amount);
+      
+      await addBalance(amount);
+      setUser(getCurrentUser()); // Cập nhật thông tin người dùng trong state
+      
+      // Đóng dialog
+      setShowAddBalanceDialog(false);
+      
+      // Reset form
+      balanceForm.reset({
+        amount: "",
+      });
+
+      toast({
+        title: "Thành công!",
+        description: `Đã nạp ${amount.toLocaleString('vi-VN')} VNĐ vào tài khoản.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Lỗi!",
+        description: error.response?.data?.message || "Có lỗi xảy ra khi nạp tiền.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBalanceLoading(false);
+    }
+  };
+
+  // Format số dư thành định dạng tiền tệ Việt Nam
+  const formatCurrency = (amount?: number) => {
+    if (amount === undefined) return "0 VNĐ";
+    return amount.toLocaleString('vi-VN') + ' VNĐ';
+  };
+
+  // Xử lý click nút chọn file ảnh
+  const handleAvatarButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -176,22 +297,88 @@ const ProfilePage = () => {
             <div className="w-full md:w-1/3">
               <Card>
                 <CardHeader className="flex flex-col items-center">
-                  <Avatar className="h-24 w-24 mb-4">
-                    <AvatarImage src="https://github.com/shadcn.png" alt={user?.name} />
-                    <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="h-24 w-24 mb-4">
+                      <AvatarImage 
+                        src={user?.avatar ? `http://localhost:5000${user.avatar}` : "https://github.com/shadcn.png"} 
+                        alt={user?.name} 
+                      />
+                      <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute bottom-3 right-0 rounded-full h-8 w-8"
+                      onClick={handleAvatarButtonClick}
+                      disabled={isAvatarLoading}
+                    >
+                      {isAvatarLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                    />
+                  </div>
                   <CardTitle>{user?.name}</CardTitle>
                   <CardDescription>{user?.email}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center space-y-2">
                     <div>
-                      <span className="font-semibold">Số dư:</span> 0 VNĐ
+                      <span className="font-semibold">Số dư:</span> {formatCurrency(user?.balance)}
                     </div>
-                    <Button variant="outline" className="w-full">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Nạp tiền
-                    </Button>
+                    <Dialog open={showAddBalanceDialog} onOpenChange={setShowAddBalanceDialog}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full">
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Nạp tiền
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Nạp tiền vào tài khoản</DialogTitle>
+                          <DialogDescription>
+                            Nhập số tiền bạn muốn nạp vào tài khoản.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <Form {...balanceForm}>
+                          <form onSubmit={balanceForm.handleSubmit(onBalanceSubmit)} className="space-y-4">
+                            <FormField
+                              control={balanceForm.control}
+                              name="amount"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Số tiền (VNĐ)</FormLabel>
+                                  <FormControl>
+                                    <Input 
+                                      placeholder="Nhập số tiền" 
+                                      {...field} 
+                                      type="number"
+                                      min="1000"
+                                      step="1000"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <DialogFooter>
+                              <Button type="submit" disabled={isBalanceLoading}>
+                                {isBalanceLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Nạp tiền
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                 </CardContent>
               </Card>
@@ -257,17 +444,6 @@ const ProfilePage = () => {
                               </FormItem>
                             )}
                           />
-                          
-                          <div>
-                            <Label htmlFor="avatar">Ảnh đại diện</Label>
-                            <div className="flex items-center gap-4 mt-2">
-                              <Avatar>
-                                <AvatarImage src="https://github.com/shadcn.png" alt={user?.name} />
-                                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <Input id="avatar" type="file" className="flex-1" />
-                            </div>
-                          </div>
                           
                           <Button type="submit" disabled={isLoading}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
