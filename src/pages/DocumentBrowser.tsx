@@ -80,7 +80,10 @@ const DocumentBrowser = () => {
         
         if (searchTerm) {
           const searchResults = await searchDocuments(searchTerm);
-          filtered = searchResults;
+          filtered = searchResults.map((doc: Document) => ({
+            ...doc,
+            isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+          }));
         }
         
         if (selectedCategory !== "Tất Cả Danh Mục") {
@@ -88,14 +91,17 @@ const DocumentBrowser = () => {
             filtered = filtered.filter(doc => doc.category === selectedCategory);
           } else {
             const categoryResults = await getDocumentsByCategory(selectedCategory);
-            filtered = categoryResults;
+            filtered = categoryResults.map((doc: Document) => ({
+              ...doc,
+              isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+            }));
           }
         }
         
         if (documentType === "free") {
-          filtered = filtered.filter(doc => doc.isFree);
+          filtered = filtered.filter(doc => doc.isFree === true);
         } else if (documentType === "premium") {
-          filtered = filtered.filter(doc => !doc.isFree);
+          filtered = filtered.filter(doc => doc.isFree === false);
         }
         
         if (sortOrder === "newest") {

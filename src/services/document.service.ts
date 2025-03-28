@@ -1,3 +1,4 @@
+
 import API from './api';
 
 export interface Document {
@@ -14,7 +15,7 @@ export interface Document {
   download_count: number;
   created_at: string;
   updated_at: string;
-  isFree?: boolean;
+  isFree?: boolean; // Keep this optional but ensure it's set correctly
 }
 
 export interface DocumentStats {
