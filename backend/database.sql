@@ -10,6 +10,8 @@ CREATE TABLE users (
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
+  avatar VARCHAR(255) DEFAULT NULL,
+  balance DECIMAL(10, 2) DEFAULT 0.00,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -54,8 +56,8 @@ CREATE TABLE document_access (
 );
 
 -- Create sample user data
-INSERT INTO users (name, email, password) VALUES 
-('Admin User', 'admin@example.com', '$2b$10$6oXTmRIMI0AmCFVJfQWkreOZJezTvPXtDVlNJr/enIYk3UhJCkJ8e'); -- Password: admin123
+INSERT INTO users (name, email, password, balance) VALUES 
+('Admin User', 'admin@example.com', '$2b$10$6oXTmRIMI0AmCFVJfQWkreOZJezTvPXtDVlNJr/enIYk3UhJCkJ8e', 100000.00); -- Password: admin123
 
 -- Create sample documents
 INSERT INTO documents (title, description, user_id, is_featured, category) VALUES 

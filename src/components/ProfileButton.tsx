@@ -28,6 +28,7 @@ interface ProfileButtonProps {
   userName?: string;
   userEmail?: string;
   userAvatar?: string;
+  userBalance?: number;
   isLoggedIn: boolean;
 }
 
@@ -35,6 +36,7 @@ export default function ProfileButton({
   userName = "",
   userEmail = "",
   userAvatar = "",
+  userBalance = 0,
   isLoggedIn = false,
 }: ProfileButtonProps) {
   const { toast } = useToast();
@@ -44,6 +46,8 @@ export default function ProfileButton({
   const handleLogout = () => {
     // Xóa token từ localStorage
     localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     
     // Thông báo đăng xuất thành công
     toast({
@@ -56,13 +60,27 @@ export default function ProfileButton({
     navigate("/");
   };
 
+  // Hàm định dạng số dư thành định dạng tiền tệ Việt Nam
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('vi-VN') + ' VNĐ';
+  };
+
+  // Tạo URL đầy đủ cho avatar (chỉ khi có giá trị và bắt đầu bằng /)
+  const getAvatarUrl = () => {
+    if (!userAvatar) return "";
+    if (userAvatar.startsWith('/')) {
+      return `http://localhost:5000${userAvatar}`;
+    }
+    return userAvatar;
+  };
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative p-1 rounded-full">
           <Avatar className="h-9 w-9 border border-primary/10 hover:border-primary/30 transition-colors">
-            {userAvatar ? (
-              <AvatarImage src={userAvatar} alt={userName || "User"} />
+            {getAvatarUrl() ? (
+              <AvatarImage src={getAvatarUrl()} alt={userName || "User"} />
             ) : (
               <AvatarFallback className="bg-secondary text-primary">
                 {userName ? userName.charAt(0).toUpperCase() : <UserRound className="h-5 w-5" />}
@@ -80,6 +98,11 @@ export default function ProfileButton({
                 <p className="text-xs leading-none text-muted-foreground">
                   {userEmail}
                 </p>
+                {userBalance !== undefined && (
+                  <p className="text-xs leading-none text-emerald-600 font-medium mt-1">
+                    {formatCurrency(userBalance)}
+                  </p>
+                )}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
