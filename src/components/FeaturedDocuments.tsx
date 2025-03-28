@@ -19,8 +19,13 @@ const FeaturedDocuments = () => {
     const fetchDocuments = async () => {
       try {
         const data = await getFeaturedDocuments();
-        setDocuments(data);
-        setVisibleDocuments(data.slice(0, 3));
+        // Ensure all documents have the isFree property based on is_premium
+        const processedData = data.map((doc: Document) => ({
+          ...doc,
+          isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium
+        }));
+        setDocuments(processedData);
+        setVisibleDocuments(processedData.slice(0, 3));
         setIsLoading(false);
       } catch (error: any) {
         toast({

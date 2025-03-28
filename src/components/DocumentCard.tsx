@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye, Lock } from "lucide-react";
 import { PaymentModal } from "./PaymentModal";
 
-interface DocumentCardProps {
+export interface DocumentCardProps {
   id: string;
   title: string;
   description: string;
@@ -16,6 +15,12 @@ interface DocumentCardProps {
   price: number;
   isFree: boolean;
   previewAvailable: boolean;
+  is_premium?: boolean;
+  is_featured?: boolean;
+  user_id?: number;
+  download_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const DocumentCard = ({

@@ -1,4 +1,3 @@
-
 import API from './api';
 
 export interface Document {
@@ -15,6 +14,7 @@ export interface Document {
   download_count: number;
   created_at: string;
   updated_at: string;
+  isFree?: boolean;
 }
 
 export interface DocumentStats {
@@ -27,7 +27,11 @@ export interface DocumentStats {
 export const getAllDocuments = async () => {
   try {
     const response = await API.get('/documents');
-    return response.data;
+    const documents = response.data.documents.map((doc: Document) => ({
+      ...doc,
+      isFree: !doc.is_premium
+    }));
+    return { documents };
   } catch (error) {
     throw error;
   }
@@ -36,7 +40,10 @@ export const getAllDocuments = async () => {
 export const getDocumentById = async (id: string) => {
   try {
     const response = await API.get(`/documents/${id}`);
-    return response.data;
+    return {
+      ...response.data,
+      isFree: !response.data.is_premium
+    };
   } catch (error) {
     throw error;
   }
@@ -45,7 +52,11 @@ export const getDocumentById = async (id: string) => {
 export const getFeaturedDocuments = async () => {
   try {
     const response = await API.get('/documents/featured');
-    return response.data;
+    const documents = response.data.map((doc: Document) => ({
+      ...doc,
+      isFree: !doc.is_premium
+    }));
+    return documents;
   } catch (error) {
     throw error;
   }
@@ -54,7 +65,11 @@ export const getFeaturedDocuments = async () => {
 export const getPremiumDocuments = async () => {
   try {
     const response = await API.get('/documents/premium');
-    return response.data;
+    const documents = response.data.map((doc: Document) => ({
+      ...doc,
+      isFree: false
+    }));
+    return documents;
   } catch (error) {
     throw error;
   }
@@ -63,7 +78,11 @@ export const getPremiumDocuments = async () => {
 export const getDocumentsByCategory = async (category: string) => {
   try {
     const response = await API.get(`/documents/category/${category}`);
-    return response.data;
+    const documents = response.data.map((doc: Document) => ({
+      ...doc,
+      isFree: !doc.is_premium
+    }));
+    return documents;
   } catch (error) {
     throw error;
   }
@@ -72,13 +91,16 @@ export const getDocumentsByCategory = async (category: string) => {
 export const searchDocuments = async (query: string) => {
   try {
     const response = await API.get(`/documents/search?q=${query}`);
-    return response.data;
+    const documents = response.data.map((doc: Document) => ({
+      ...doc,
+      isFree: !doc.is_premium
+    }));
+    return documents;
   } catch (error) {
     throw error;
   }
 };
 
-// Lấy danh sách tài liệu của người dùng hiện tại
 export const getUserDocuments = async () => {
   try {
     const response = await API.get('/documents/my-documents');
@@ -88,7 +110,6 @@ export const getUserDocuments = async () => {
   }
 };
 
-// Lấy danh sách tài liệu đã mua của người dùng hiện tại
 export const getPurchasedDocuments = async () => {
   try {
     const response = await API.get('/documents/purchased');
@@ -98,7 +119,6 @@ export const getPurchasedDocuments = async () => {
   }
 };
 
-// Upload tài liệu mới
 export const uploadDocument = async (formData: FormData) => {
   try {
     const response = await API.post('/documents/upload', formData, {
@@ -112,7 +132,6 @@ export const uploadDocument = async (formData: FormData) => {
   }
 };
 
-// Mua tài liệu
 export const purchaseDocument = async (documentId: string) => {
   try {
     const response = await API.post(`/documents/${documentId}/purchase`);
@@ -122,7 +141,6 @@ export const purchaseDocument = async (documentId: string) => {
   }
 };
 
-// Xóa tài liệu
 export const deleteDocument = async (id: string) => {
   try {
     const response = await API.delete(`/documents/${id}`);
@@ -132,7 +150,6 @@ export const deleteDocument = async (id: string) => {
   }
 };
 
-// Cập nhật thông tin tài liệu
 export const updateDocument = async (id: string, formData: FormData) => {
   try {
     const response = await API.put(`/documents/${id}`, formData, {
@@ -146,7 +163,6 @@ export const updateDocument = async (id: string, formData: FormData) => {
   }
 };
 
-// Lấy thống kê về tài liệu của người dùng
 export const getUserDocumentStats = async () => {
   try {
     const response = await API.get('/documents/stats');
@@ -156,14 +172,12 @@ export const getUserDocumentStats = async () => {
   }
 };
 
-// Tải xuống tài liệu
 export const downloadDocument = async (documentId: string) => {
   try {
     const response = await API.get(`/documents/${documentId}/download`, {
       responseType: 'blob',
     });
     
-    // Tạo URL cho blob và tải xuống
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
