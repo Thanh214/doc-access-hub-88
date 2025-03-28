@@ -1,43 +1,31 @@
-
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import DocumentView from "./pages/DocumentView";
-import PricingPlans from "./pages/PricingPlans";
-import DocumentBrowser from "./pages/DocumentBrowser";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import { Toaster } from "@/components/ui/toaster";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import DocumentBrowser from "@/pages/DocumentBrowser";
+import DocumentView from "@/pages/DocumentView";
+import PricingPlans from "@/pages/PricingPlans";
+import NotFound from "@/pages/NotFound";
+import Profile from "@/pages/Profile";
 
-// Create a client
-const queryClient = new QueryClient();
-
-// App component must be defined as a function component for hooks to work properly
 function App() {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/documents" element={<DocumentBrowser />} />
-              <Route path="/document/:id" element={<DocumentView />} />
-              <Route path="/pricing" element={<PricingPlans />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <div className="App">
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/documents" element={<DocumentBrowser />} />
+          <Route path="/documents/:id" element={<DocumentView />} />
+          <Route path="/pricing" element={<PricingPlans />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </BrowserRouter>
+    </div>
   );
 }
 

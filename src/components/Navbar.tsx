@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, User, Menu, X, LogIn, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { getCurrentUser, logout } from "@/services/auth.service";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -95,7 +94,7 @@ const Navbar = () => {
             {currentUser ? (
               <div className="flex items-center space-x-2">
                 <div className="text-sm mr-2">
-                  Xin chào, <span className="font-medium">{currentUser.name}</span>
+                  Xin chào, <Link to="/profile" className="font-medium hover:underline">{currentUser.name}</Link>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1">
                   <LogOut className="h-4 w-4 mr-1" />
@@ -175,6 +174,12 @@ const Navbar = () => {
                     <div className="text-sm mb-2">
                       Xin chào, <span className="font-medium">{currentUser.name}</span>
                     </div>
+                    <Button variant="outline" asChild className="justify-start">
+                      <Link to="/profile" className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        Thông tin cá nhân
+                      </Link>
+                    </Button>
                     <Button variant="outline" className="justify-start" onClick={() => {
                       handleLogout();
                       setIsMobileMenuOpen(false);
