@@ -90,28 +90,6 @@ const Login = () => {
               </Button>
             </form>
             
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-muted"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">
-                    Hoặc đăng nhập với
-                  </span>
-                </div>
-              </div>
-              
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <Button variant="outline" className="w-full">
-                  Google
-                </Button>
-                <Button variant="outline" className="w-full">
-                  Facebook
-                </Button>
-              </div>
-            </div>
-            
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
                 Chưa có tài khoản?{" "}
