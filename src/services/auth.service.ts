@@ -87,7 +87,15 @@ export const updateAvatar = async (formData: FormData) => {
       },
     });
     
-    if (response.data.avatar) {
+    if (response.data.user) {
+      // Cập nhật localStorage với thông tin user đầy đủ từ server
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        const updatedUser = { ...currentUser, ...response.data.user };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } else if (response.data.avatar) {
+      // Trường hợp cũ - chỉ cập nhật avatar
       const currentUser = getCurrentUser();
       if (currentUser) {
         const updatedUser = { ...currentUser, avatar: response.data.avatar };
