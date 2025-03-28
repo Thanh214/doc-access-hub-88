@@ -41,9 +41,9 @@ const DocumentBrowser = () => {
         setDocuments(data);
         setFilteredDocuments(data);
         
-        // Extract unique categories from the documents
-        const uniqueCategories = ["Tất Cả Danh Mục", ...new Set(data.map((doc: Document) => doc.category))];
-        setCategories(uniqueCategories);
+        // Extract unique categories from the documents and ensure they are strings
+        const uniqueCategories = Array.from(new Set(data.map((doc: Document) => doc.category)));
+        setCategories(["Tất Cả Danh Mục", ...uniqueCategories.filter(category => typeof category === 'string')]);
         
         setIsLoading(false);
       } catch (error: any) {
