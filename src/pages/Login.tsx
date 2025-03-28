@@ -1,22 +1,43 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { login } from "@/services/auth.service";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Xử lý đăng nhập ở đây
-    console.log("Đăng nhập với:", { email, password });
+    setIsLoading(true);
+    
+    try {
+      await login({ email, password });
+      toast({
+        title: "Đăng nhập thành công",
+        description: "Bạn đã đăng nhập thành công vào hệ thống.",
+      });
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Đăng nhập thất bại",
+        description: error.response?.data?.message || "Đã xảy ra lỗi khi đăng nhập. Vui lòng thử lại.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -50,6 +71,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -70,6 +92,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
@@ -85,8 +108,8 @@ const Login = () => {
                 </div>
               </div>
               
-              <Button type="submit" className="w-full">
-                Đăng nhập
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
             </form>
             
