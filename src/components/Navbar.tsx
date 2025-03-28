@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,13 @@ const Navbar = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  const navItems = [
+    { label: "Trang Chủ", href: "/" },
+    { label: "Thư Viện", href: "/documents" },
+    { label: "Khám Phá", href: "/browse" },
+    { label: "Bảng Giá", href: "/pricing" },
+  ];
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
@@ -28,7 +34,6 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   
-  // Check for current user on location change (for when logging in/out)
   useEffect(() => {
     setCurrentUser(getCurrentUser());
   }, [location.pathname]);
@@ -61,24 +66,15 @@ const Navbar = () => {
         
         <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
-            <Link 
-              to="/" 
-              className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
-            >
-              Trang Chủ
-            </Link>
-            <Link 
-              to="/documents" 
-              className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
-            >
-              Tài Liệu
-            </Link>
-            <Link 
-              to="/pricing" 
-              className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
-            >
-              Bảng Giá
-            </Link>
+            {navItems.map(item => (
+              <Link 
+                key={item.href} 
+                to={item.href} 
+                className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === item.href ? 'text-primary font-medium' : ''}`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
           
           <div className="flex items-center space-x-2">
@@ -118,7 +114,6 @@ const Navbar = () => {
         </button>
       </div>
       
-      {/* Mobile menu */}
       {isMobileMenuOpen && (
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
@@ -129,27 +124,16 @@ const Navbar = () => {
         >
           <div className="container mx-auto px-4 py-4 space-y-4">
             <nav className="flex flex-col space-y-3">
-              <Link 
-                to="/" 
-                className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Trang Chủ
-              </Link>
-              <Link 
-                to="/documents" 
-                className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Tài Liệu
-              </Link>
-              <Link 
-                to="/pricing" 
-                className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Bảng Giá
-              </Link>
+              {navItems.map(item => (
+                <Link 
+                  key={item.href} 
+                  to={item.href} 
+                  className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === item.href ? 'text-primary font-medium' : ''}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
               
               <div className="pt-2 border-t">
                 {currentUser ? (
