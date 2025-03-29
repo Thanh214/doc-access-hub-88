@@ -14,7 +14,8 @@ import {
   changePassword, 
   updateAvatar, 
   getBalance, 
-  addBalance 
+  addBalance, 
+  UserData 
 } from "@/services/auth.service";
 import { getUserDocuments, Document as DocumentType } from "@/services/document.service";
 import { z } from "zod";
@@ -30,6 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { User, Upload, Download, Key, CreditCard, Loader2, Plus, Smartphone, CreditCard as CreditCardIcon, AlertCircle } from "lucide-react";
@@ -81,7 +83,7 @@ interface Document {
 const ProfilePage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [user, setUser] = useState(getCurrentUser());
+  const [user, setUser] = useState<UserData | null>(getCurrentUser());
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [isAvatarLoading, setIsAvatarLoading] = useState(false);
@@ -130,7 +132,8 @@ const ProfilePage = () => {
     const fetchBalance = async () => {
       try {
         await getBalance();
-        setUser(getCurrentUser());
+        const updatedUser = getCurrentUser();
+        setUser(updatedUser);
       } catch (error) {
         console.error("Lỗi khi lấy số dư:", error);
       }
@@ -313,7 +316,7 @@ const ProfilePage = () => {
                         src={user?.avatar ? `http://localhost:5000${user.avatar}` : "https://github.com/shadcn.png"} 
                         alt={user?.name} 
                       />
-                      <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{user?.name?.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
                     <Button
                       variant="outline"
@@ -336,8 +339,8 @@ const ProfilePage = () => {
                       onChange={handleAvatarChange}
                     />
                   </div>
-                  <CardTitle>{user?.name}</CardTitle>
-                  <CardDescription>{user?.email}</CardDescription>
+                  <CardTitle>{user?.name || 'Người dùng'}</CardTitle>
+                  <CardDescription>{user?.email || 'user@example.com'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center space-y-2">
@@ -351,7 +354,7 @@ const ProfilePage = () => {
                           Nạp tiền
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="sm:max-w-[500px]">
+                      <DialogContent className="sm:max-w-[500px] max-h-[90vh]">
                         <DialogHeader>
                           <DialogTitle>Nạp tiền vào tài khoản</DialogTitle>
                           <DialogDescription>
@@ -359,135 +362,140 @@ const ProfilePage = () => {
                           </DialogDescription>
                         </DialogHeader>
                         
-                        <div className="space-y-4 py-4">
-                          <div>
-                            <h4 className="font-medium mb-3">Phương Thức Thanh Toán</h4>
-                            <RadioGroup 
-                              defaultValue="momo" 
-                              className="grid grid-cols-2 gap-4"
-                              onValueChange={(value) => setSelectedPaymentMethod(value as "momo" | "zalopay")}
-                            >
-                              <div>
-                                <RadioGroupItem 
-                                  value="momo" 
-                                  id="deposit-momo" 
-                                  className="sr-only" 
-                                />
-                                <Label
-                                  htmlFor="deposit-momo"
-                                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
-                                    selectedPaymentMethod === "momo" ? "border-primary" : ""
-                                  }`}
-                                >
-                                  <Smartphone className="mb-3 h-6 w-6 text-pink-500" />
-                                  <span className="text-sm font-medium">Momo</span>
-                                </Label>
-                              </div>
-                              
-                              <div>
-                                <RadioGroupItem
-                                  value="zalopay"
-                                  id="deposit-zalopay"
-                                  className="sr-only"
-                                />
-                                <Label
-                                  htmlFor="deposit-zalopay"
-                                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
-                                    selectedPaymentMethod === "zalopay" ? "border-primary" : ""
-                                  }`}
-                                >
-                                  <CreditCard className="mb-3 h-6 w-6 text-blue-500" />
-                                  <span className="text-sm font-medium">ZaloPay</span>
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-                          
-                          <Form {...balanceForm}>
-                            <form onSubmit={balanceForm.handleSubmit(onBalanceSubmit)} className="space-y-4">
-                              <FormField
-                                control={balanceForm.control}
-                                name="amount"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>Số tiền (VNĐ)</FormLabel>
-                                    <FormControl>
-                                      <Input 
-                                        placeholder="Nhập số tiền" 
-                                        {...field} 
-                                        type="number"
-                                        min="10000"
-                                        step="10000"
-                                      />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
-                              {balanceForm.watch("amount") && (
-                                <div className="mt-4 p-4 border rounded-lg">
-                                  <h4 className="font-medium mb-3 text-center">Thông tin chuyển khoản</h4>
-                                  <div className="flex flex-col items-center space-y-2 mb-4">
-                                    {balanceForm.watch("amount") && (
-                                      <img 
-                                        src={getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).qrCode} 
-                                        alt="QR Code" 
-                                        className="w-40 h-40 mb-2" 
-                                      />
-                                    )}
-                                    <p className="text-sm text-center text-muted-foreground">
-                                      Quét mã QR bằng ứng dụng {selectedPaymentMethod === "momo" ? "Momo" : "ZaloPay"} 
-                                      để thanh toán
-                                    </p>
-                                  </div>
-                                  
-                                  <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                      <span className="font-medium">Số điện thoại:</span>
-                                      <span>{getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).phoneNumber}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="font-medium">Người nhận:</span>
-                                      <span>{getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="font-medium">Số tiền:</span>
-                                      <span>{parseFloat(balanceForm.watch("amount") || "0").toLocaleString('vi-VN')} VNĐ</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="font-medium">Nội dung:</span>
-                                      <span className="text-right">{getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).message}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 mt-4 flex items-start">
-                                    <AlertCircle className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
-                                    <p className="text-xs text-yellow-700">
-                                      Sau khi chuyển khoản, hãy nhấp vào nút "Đã thanh toán". Số dư sẽ được cập nhật trong vòng 5 phút.
-                                      Nếu không nhận được tiền, vui lòng liên hệ hỗ trợ.
-                                    </p>
-                                  </div>
+                        <ScrollArea className="max-h-[60vh] overflow-y-auto pr-4">
+                          <div className="space-y-4 py-4">
+                            <div>
+                              <h4 className="font-medium mb-3">Phương Thức Thanh Toán</h4>
+                              <RadioGroup 
+                                defaultValue="momo" 
+                                className="grid grid-cols-2 gap-4"
+                                onValueChange={(value) => setSelectedPaymentMethod(value as "momo" | "zalopay")}
+                              >
+                                <div>
+                                  <RadioGroupItem 
+                                    value="momo" 
+                                    id="deposit-momo" 
+                                    className="sr-only" 
+                                  />
+                                  <Label
+                                    htmlFor="deposit-momo"
+                                    className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
+                                      selectedPaymentMethod === "momo" ? "border-primary" : ""
+                                    }`}
+                                  >
+                                    <Smartphone className="mb-3 h-6 w-6 text-pink-500" />
+                                    <span className="text-sm font-medium">Momo</span>
+                                  </Label>
                                 </div>
-                              )}
-                              
-                              <DialogFooter className="mt-4">
-                                <Button 
-                                  variant="outline" 
-                                  onClick={() => setShowAddBalanceDialog(false)}
-                                  disabled={isBalanceLoading}
-                                  type="button"
-                                >
-                                  Hủy
-                                </Button>
-                                <Button type="submit" disabled={isBalanceLoading || !balanceForm.watch("amount")}>
-                                  {isBalanceLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                  Đã thanh toán
-                                </Button>
-                              </DialogFooter>
-                            </form>
-                          </Form>
-                        </div>
+                                
+                                <div>
+                                  <RadioGroupItem
+                                    value="zalopay"
+                                    id="deposit-zalopay"
+                                    className="sr-only"
+                                  />
+                                  <Label
+                                    htmlFor="deposit-zalopay"
+                                    className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
+                                      selectedPaymentMethod === "zalopay" ? "border-primary" : ""
+                                    }`}
+                                  >
+                                    <CreditCard className="mb-3 h-6 w-6 text-blue-500" />
+                                    <span className="text-sm font-medium">ZaloPay</span>
+                                  </Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
+                            
+                            <Form {...balanceForm}>
+                              <form onSubmit={balanceForm.handleSubmit(onBalanceSubmit)} className="space-y-4">
+                                <FormField
+                                  control={balanceForm.control}
+                                  name="amount"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-left block">Số tiền (VNĐ)</FormLabel>
+                                      <FormControl>
+                                        <Input 
+                                          placeholder="Nhập số tiền" 
+                                          {...field} 
+                                          type="number"
+                                          min="10000"
+                                          step="10000"
+                                        />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                
+                                {balanceForm.watch("amount") && (
+                                  <div className="mt-4 p-4 border rounded-lg">
+                                    <h4 className="font-medium mb-3 text-center">Thông tin chuyển khoản</h4>
+                                    <div className="flex flex-col items-center space-y-2 mb-4">
+                                      {balanceForm.watch("amount") && (
+                                        <img 
+                                          src={getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).qrCode} 
+                                          alt="QR Code" 
+                                          className="w-40 h-40 mb-2" 
+                                        />
+                                      )}
+                                      <p className="text-sm text-center text-muted-foreground">
+                                        Quét mã QR bằng ứng dụng {selectedPaymentMethod === "momo" ? "Momo" : "ZaloPay"} 
+                                        để thanh toán
+                                      </p>
+                                    </div>
+                                    
+                                    <div className="space-y-2 text-sm">
+                                      <div className="flex justify-between">
+                                        <span className="font-medium">Số điện thoại:</span>
+                                        <span>{getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).phoneNumber}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="font-medium">Người nhận:</span>
+                                        <span>{getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).name}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="font-medium">Số tiền:</span>
+                                        <span>{parseFloat(balanceForm.watch("amount") || "0").toLocaleString('vi-VN')} VNĐ</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="font-medium">Nội dung:</span>
+                                        <span className="text-right">{getPaymentInfo(selectedPaymentMethod, balanceForm.watch("amount")).message}</span>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 mt-4 flex items-start">
+                                      <AlertCircle className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
+                                      <p className="text-xs text-yellow-700">
+                                        Sau khi chuyển khoản, hãy nhấp vào nút "Đã thanh toán". Số dư sẽ được cập nhật trong vòng 5 phút.
+                                        Nếu không nhận được tiền, vui lòng liên hệ hỗ trợ.
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </form>
+                            </Form>
+                          </div>
+                        </ScrollArea>
+                        
+                        <DialogFooter className="mt-4">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => setShowAddBalanceDialog(false)}
+                            disabled={isBalanceLoading}
+                            type="button"
+                          >
+                            Hủy
+                          </Button>
+                          <Button 
+                            onClick={balanceForm.handleSubmit(onBalanceSubmit)}
+                            disabled={isBalanceLoading || !balanceForm.watch("amount")}
+                          >
+                            {isBalanceLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Đã thanh toán
+                          </Button>
+                        </DialogFooter>
                       </DialogContent>
                     </Dialog>
                   </div>

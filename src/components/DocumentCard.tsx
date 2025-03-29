@@ -1,11 +1,13 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download, Eye, Lock } from "lucide-react";
 import { PaymentModal } from "./PaymentModal";
+import { isAuthenticated } from "@/services/auth.service";
+import { useToast } from "@/hooks/use-toast";
 
 export interface DocumentCardProps {
   id: string;
@@ -36,9 +38,25 @@ const DocumentCard = ({
 }: DocumentCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  };
+  
+  const handleAction = () => {
+    if (!isAuthenticated()) {
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description: "Vui lòng đăng nhập để tiếp tục thao tác này.",
+        variant: "destructive"
+      });
+      navigate("/login");
+      return;
+    }
+    
+    setShowPaymentModal(true);
   };
   
   return (
@@ -109,7 +127,7 @@ const DocumentCard = ({
               size="sm"
               className="flex-1"
               disabled={!previewAvailable}
-              onClick={() => setShowPaymentModal(true)}
+              onClick={handleAction}
             >
               <Download className="mr-1 h-4 w-4" />
               Tải Xuống
@@ -118,7 +136,7 @@ const DocumentCard = ({
             <Button 
               size="sm" 
               className="flex-1"
-              onClick={() => setShowPaymentModal(true)}
+              onClick={handleAction}
             >
               <Lock className="mr-1 h-4 w-4" />
               Mua Ngay

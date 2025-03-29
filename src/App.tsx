@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import './App.css';
@@ -20,6 +20,19 @@ const PrivateRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 function App() {
+  // Force re-render when local storage changes (for user data updates)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // Force component re-render when localStorage changes
+      window.dispatchEvent(new Event('storage-update'));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   return (
     <Router>
       <Routes>

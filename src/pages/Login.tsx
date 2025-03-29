@@ -61,7 +61,7 @@ const Login = () => {
             
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium">
+                <label htmlFor="email" className="block text-sm font-medium text-left">
                   Email
                 </label>
                 <Input
@@ -77,7 +77,7 @@ const Login = () => {
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label htmlFor="password" className="block text-sm font-medium">
+                  <label htmlFor="password" className="block text-sm font-medium text-left">
                     Mật khẩu
                   </label>
                   <a href="#" className="text-sm text-primary hover:underline">
