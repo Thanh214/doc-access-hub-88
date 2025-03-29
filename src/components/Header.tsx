@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
@@ -12,13 +11,11 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState({ name: "", email: "" });
   
-  // Xác định xem người dùng đã đăng nhập hay chưa
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
       setIsLoggedIn(true);
       
-      // Lấy thông tin người dùng từ API
       fetch("http://localhost:5000/api/users/me", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -41,7 +38,6 @@ const Header = () => {
     }
   }, [location.pathname]);
 
-  // Theo dõi cuộn trang
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
@@ -73,14 +69,12 @@ const Header = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center">
             <span className="text-xl font-bold">TàiLiệuVN</span>
           </Link>
 
-          {/* Navigation - Desktop - Centered */}
-          <nav className="hidden md:flex items-center justify-center flex-1 mx-8">
-            <div className="flex items-center space-x-8">
+          <div className="hidden md:flex items-center justify-center flex-1">
+            <div className="flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
               <Link
                 to="/"
                 className={`text-sm font-medium transition-colors hover:text-primary ${
@@ -106,9 +100,8 @@ const Header = () => {
                 Bảng Giá
               </Link>
             </div>
-          </nav>
+          </div>
 
-          {/* Actions - Desktop */}
           <div className="hidden md:flex items-center">
             <ProfileButton 
               isLoggedIn={isLoggedIn}
@@ -117,7 +110,6 @@ const Header = () => {
             />
           </div>
 
-          {/* Mobile menu button */}
           <div className="flex md:hidden items-center space-x-2">
             <Button
               variant="ghost"
@@ -138,7 +130,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile navigation */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-50 bg-background md:hidden">
           <div className="container mx-auto px-4 pt-4 h-full flex flex-col">

@@ -60,7 +60,7 @@ export default function ProfileButton({
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         {isLoggedIn ? (
-          <Button variant="outline" className="rounded-full border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
+          <Button variant="outline" className="rounded-full h-10 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
             <div className="flex items-center gap-2">
               <Avatar className="h-8 w-8">
                 {userAvatar ? (
@@ -77,7 +77,7 @@ export default function ProfileButton({
             </div>
           </Button>
         ) : (
-          <Button variant="outline" className="gap-2 hover:bg-primary/5 border-primary/20 hover:border-primary/50">
+          <Button variant="outline" className="gap-2 h-10 hover:bg-primary/5 border-primary/20 hover:border-primary/50">
             <UserRound className="h-4 w-4" />
             <span className="hidden sm:inline-block">Tài khoản</span>
           </Button>
