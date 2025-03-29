@@ -78,36 +78,38 @@ const Header = () => {
             <span className="text-xl font-bold">TàiLiệuVN</span>
           </Link>
 
-          {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link
-              to="/"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/" ? "text-primary" : "text-foreground"
-              }`}
-            >
-              Trang Chủ
-            </Link>
-            <Link
-              to="/documents"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/documents" ? "text-primary" : "text-foreground"
-              }`}
-            >
-              Tài Liệu
-            </Link>
-            <Link
-              to="/pricing"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/pricing" ? "text-primary" : "text-foreground"
-              }`}
-            >
-              Bảng Giá
-            </Link>
+          {/* Navigation - Desktop - Centered */}
+          <nav className="hidden md:flex items-center justify-center flex-1 mx-8">
+            <div className="flex items-center space-x-8">
+              <Link
+                to="/"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location.pathname === "/" ? "text-primary" : "text-foreground"
+                }`}
+              >
+                Trang Chủ
+              </Link>
+              <Link
+                to="/documents"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location.pathname === "/documents" ? "text-primary" : "text-foreground"
+                }`}
+              >
+                Tài Liệu
+              </Link>
+              <Link
+                to="/pricing"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location.pathname === "/pricing" ? "text-primary" : "text-foreground"
+                }`}
+              >
+                Bảng Giá
+              </Link>
+            </div>
           </nav>
 
           {/* Actions - Desktop */}
-          <div className="hidden md:flex items-center space-x-2">
+          <div className="hidden md:flex items-center">
             <ProfileButton 
               isLoggedIn={isLoggedIn}
               userName={userData.name}

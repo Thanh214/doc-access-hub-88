@@ -59,17 +59,29 @@ export default function ProfileButton({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative p-1 rounded-full">
-          <Avatar className="h-9 w-9 border border-primary/10 hover:border-primary/30 transition-colors">
-            {userAvatar ? (
-              <AvatarImage src={userAvatar} alt={userName || "User"} />
-            ) : (
-              <AvatarFallback className="bg-secondary text-primary">
-                {userName ? userName.charAt(0).toUpperCase() : <UserRound className="h-5 w-5" />}
-              </AvatarFallback>
-            )}
-          </Avatar>
-        </Button>
+        {isLoggedIn ? (
+          <Button variant="outline" className="rounded-full border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
+            <div className="flex items-center gap-2">
+              <Avatar className="h-8 w-8">
+                {userAvatar ? (
+                  <AvatarImage src={userAvatar} alt={userName || "User"} />
+                ) : (
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {userName ? userName.charAt(0).toUpperCase() : <UserRound className="h-4 w-4" />}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <span className="hidden sm:inline-block text-sm font-medium max-w-[100px] truncate">
+                {userName || "Tài khoản"}
+              </span>
+            </div>
+          </Button>
+        ) : (
+          <Button variant="outline" className="gap-2 hover:bg-primary/5 border-primary/20 hover:border-primary/50">
+            <UserRound className="h-4 w-4" />
+            <span className="hidden sm:inline-block">Tài khoản</span>
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         {isLoggedIn ? (
@@ -118,20 +130,20 @@ export default function ProfileButton({
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={handleLogout}
-              className="text-red-500 focus:text-red-500">
+              className="text-red-500 focus:text-red-500 focus:bg-red-50">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Đăng xuất</span>
             </DropdownMenuItem>
           </>
         ) : (
           <>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="hover:bg-primary/5">
               <Link to="/login" className="cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
                 <span>Đăng nhập</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="hover:bg-primary/5">
               <Link to="/register" className="cursor-pointer">
                 <User className="mr-2 h-4 w-4" />
                 <span>Đăng ký</span>
