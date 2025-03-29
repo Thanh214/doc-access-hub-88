@@ -10,6 +10,7 @@ import PricingPlans from "@/pages/PricingPlans";
 import NotFound from "@/pages/NotFound";
 import Profile from "@/pages/Profile";
 import Transactions from "@/pages/Transactions";
+import AdminDashboard from "@/pages/Admin";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/pricing" element={<PricingPlans />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/transactions" element={<Transactions />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
