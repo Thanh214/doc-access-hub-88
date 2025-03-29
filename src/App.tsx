@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import Index from "@/pages/Index";
@@ -8,6 +9,7 @@ import DocumentView from "@/pages/DocumentView";
 import PricingPlans from "@/pages/PricingPlans";
 import NotFound from "@/pages/NotFound";
 import Profile from "@/pages/Profile";
+import Transactions from "@/pages/Transactions";
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
           <Route path="/documents/:id" element={<DocumentView />} />
           <Route path="/pricing" element={<PricingPlans />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/transactions" element={<Transactions />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />

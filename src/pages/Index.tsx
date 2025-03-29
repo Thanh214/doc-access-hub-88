@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -36,27 +37,6 @@ const Index = () => {
       icon: <ShieldCheck className="h-8 w-8 text-primary" />,
       title: "Nền Tảng An Toàn",
       description: "Dữ liệu và thanh toán của bạn luôn được bảo mật với mã hóa và bảo vệ cấp doanh nghiệp của chúng tôi.",
-    },
-  ];
-  
-  const testimonials = [
-    {
-      name: "Nguyễn Minh",
-      role: "Sinh Viên Đại Học",
-      content: "TàiLiệuVN đã trở thành công cụ thiết yếu cho các dự án nghiên cứu của tôi. Chất lượng tài liệu và khả năng truy cập dễ dàng đã giúp công việc học thuật của tôi dễ dàng hơn nhiều.",
-      avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    {
-      name: "Trần Linh",
-      role: "Chủ Doanh Nghiệp",
-      content: "Các mẫu kinh doanh đã giúp tôi tiết kiệm vô số thời gian. Đáng đồng tiền bát gạo cho thời gian tiết kiệm được và chất lượng chuyên nghiệp.",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    {
-      name: "Phạm Đức",
-      role: "Nhà Nghiên Cứu",
-      content: "Là một nhà nghiên cứu, việc có nguồn tài liệu đáng tin cậy là rất quan trọng. TàiLiệuVN cung cấp chính xác những gì tôi cần với thư viện tài liệu phong phú của họ.",
-      avatar: "https://randomuser.me/api/portraits/men/22.jpg",
     },
   ];
   
@@ -178,61 +158,6 @@ const Index = () => {
                 </div>
               </div>
             </motion.div>
-          </div>
-        </section>
-        
-        {/* Testimonials */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <motion.h2 
-                className="text-3xl font-bold mb-4"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                Người Dùng Của Chúng Tôi Nói Gì
-              </motion.h2>
-              <motion.p 
-                className="text-muted-foreground"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                Đây là những gì người dùng nói về trải nghiệm của họ với nền tảng TàiLiệuVN.
-              </motion.p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {testimonials.map((testimonial, index) => (
-                <motion.div 
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card className="h-full">
-                    <CardContent className="p-6">
-                      <div className="flex items-center mb-4">
-                        <img 
-                          src={testimonial.avatar} 
-                          alt={testimonial.name}
-                          className="w-12 h-12 rounded-full mr-4 object-cover"
-                        />
-                        <div>
-                          <h4 className="font-semibold">{testimonial.name}</h4>
-                          <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                        </div>
-                      </div>
-                      <p className="text-muted-foreground italic">"{testimonial.content}"</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
           </div>
         </section>
       </main>

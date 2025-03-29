@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -114,6 +115,49 @@ router.put('/profile', auth, async (req, res) => {
                 return res.status(400).json({ message: 'Lỗi cập nhật thông tin', error: err.message });
             }
             res.json({ message: 'Cập nhật thông tin thành công' });
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
+// Đổi mật khẩu
+router.put('/change-password', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { current_password, new_password } = req.body;
+        
+        // Lấy mật khẩu hiện tại từ database
+        const getUserQuery = 'SELECT password FROM users WHERE id = ?';
+        db.query(getUserQuery, [userId], async (err, results) => {
+            if (err) {
+                return res.status(500).json({ message: 'Lỗi server', error: err.message });
+            }
+            
+            if (results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy thông tin người dùng' });
+            }
+            
+            const user = results[0];
+            
+            // Kiểm tra mật khẩu hiện tại
+            const isValidPassword = await bcrypt.compare(current_password, user.password);
+            if (!isValidPassword) {
+                return res.status(400).json({ message: 'Mật khẩu hiện tại không đúng' });
+            }
+            
+            // Mã hóa mật khẩu mới
+            const hashedPassword = await bcrypt.hash(new_password, 10);
+            
+            // Cập nhật mật khẩu mới
+            const updateQuery = 'UPDATE users SET password = ? WHERE id = ?';
+            db.query(updateQuery, [hashedPassword, userId], (updateErr, updateResult) => {
+                if (updateErr) {
+                    return res.status(500).json({ message: 'Lỗi cập nhật mật khẩu', error: updateErr.message });
+                }
+                
+                res.json({ message: 'Đổi mật khẩu thành công' });
+            });
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server', error: error.message });

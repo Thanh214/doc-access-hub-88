@@ -1,451 +1,340 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useToast } from "@/hooks/use-toast";
-import { getCurrentUser, updateUserProfile, changePassword } from "@/services/auth.service";
-import { getUserDocuments } from "@/services/document.service";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { User, Upload, Download, Key, CreditCard, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AlertCircle, User } from 'lucide-react';
+import axios from 'axios';
 
-// Định nghĩa schema cho form thông tin cá nhân
-const profileFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Tên phải có ít nhất 2 ký tự.",
-  }),
-  email: z.string().email({
-    message: "Email không hợp lệ.",
-  }).optional(),
-});
-
-// Định nghĩa schema cho form đổi mật khẩu
-const passwordFormSchema = z.object({
-  currentPassword: z.string().min(6, {
-    message: "Mật khẩu hiện tại phải có ít nhất 6 ký tự.",
-  }),
-  newPassword: z.string().min(6, {
-    message: "Mật khẩu mới phải có ít nhất 6 ký tự.",
-  }),
-  confirmPassword: z.string().min(6, {
-    message: "Xác nhận mật khẩu phải có ít nhất 6 ký tự.",
-  }),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Mật khẩu xác nhận không khớp với mật khẩu mới.",
-  path: ["confirmPassword"],
-});
-
-interface Document {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  thumbnail: string;
-  price: number;
-  isFree: boolean;
-  previewAvailable: boolean;
+interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  full_name: string;
+  role: string;
+  balance: number;
+  created_at: string;
 }
 
-const ProfilePage = () => {
+const Profile = () => {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Profile form
+  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Password form
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [user, setUser] = useState(getCurrentUser());
-  const [isLoading, setIsLoading] = useState(false);
-  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-  const [uploadedDocuments, setUploadedDocuments] = useState<Document[]>([]);
-  const [downloadedDocuments, setDownloadedDocuments] = useState<Document[]>([]);
-
-  // Khởi tạo form cho thông tin cá nhân
-  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: user?.name || "",
-      email: user?.email || "",
-    },
-  });
-
-  // Khởi tạo form cho đổi mật khẩu
-  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
-    resolver: zodResolver(passwordFormSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
-
+  
   useEffect(() => {
-    // Nếu chưa đăng nhập, chuyển hướng về trang login
-    if (!user) {
-      navigate("/login");
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
       return;
     }
-
-    // Cập nhật giá trị form khi user thay đổi
-    profileForm.reset({
-      name: user.name || "",
-      email: user.email || "",
-    });
-
-    // Lấy danh sách tài liệu của người dùng
-    const fetchDocuments = async () => {
-      try {
-        // Trong thực tế, bạn sẽ cần API endpoint để lấy tài liệu đã tải lên và đã tải xuống
-        const docs = await getUserDocuments();
-        // Giả lập phân loại tài liệu, trong thực tế sẽ có endpoint riêng
-        setUploadedDocuments(docs.filter((_, index) => index % 2 === 0));
-        setDownloadedDocuments(docs.filter((_, index) => index % 2 !== 0));
-      } catch (error) {
-        console.error("Lỗi khi lấy tài liệu:", error);
-      }
-    };
-
-    fetchDocuments();
-  }, [user, navigate]);
-
-  // Xử lý cập nhật thông tin cá nhân
-  const onProfileSubmit = async (data: z.infer<typeof profileFormSchema>) => {
+    
+    fetchUserProfile();
+  }, [navigate]);
+  
+  const fetchUserProfile = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const response = await updateUserProfile({ name: data.name });
-      setUser(getCurrentUser()); // Cập nhật thông tin người dùng trong state
-
-      toast({
-        title: "Thành công!",
-        description: "Thông tin cá nhân đã được cập nhật.",
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5000/api/auth/profile', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-    } catch (error: any) {
+      
+      setUserProfile(response.data);
+      setUsername(response.data.username);
+      setFullName(response.data.full_name || '');
+    } catch (error) {
+      console.error('Lỗi khi lấy thông tin profile:', error);
       toast({
-        title: "Lỗi!",
-        description: error.response?.data?.message || "Có lỗi xảy ra khi cập nhật thông tin.",
+        title: "Lỗi",
+        description: "Không thể tải thông tin người dùng. Vui lòng thử lại sau.",
         variant: "destructive",
       });
+      localStorage.removeItem('token');
+      navigate('/login');
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Xử lý đổi mật khẩu
-  const onPasswordSubmit = async (data: z.infer<typeof passwordFormSchema>) => {
+  
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    
     try {
-      setIsPasswordLoading(true);
-      await changePassword({
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
-      });
-
-      // Reset form sau khi đổi mật khẩu thành công
-      passwordForm.reset({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-
+      const token = localStorage.getItem('token');
+      await axios.put(
+        'http://localhost:5000/api/auth/profile',
+        { username, full_name: fullName },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
       toast({
-        title: "Thành công!",
-        description: "Mật khẩu đã được cập nhật.",
+        title: "Thành công",
+        description: "Thông tin cá nhân đã được cập nhật",
       });
-    } catch (error: any) {
+      
+      // Refresh user profile
+      fetchUserProfile();
+    } catch (error) {
+      console.error('Lỗi khi cập nhật thông tin:', error);
       toast({
-        title: "Lỗi!",
-        description: error.response?.data?.message || "Có lỗi xảy ra khi đổi mật khẩu.",
+        title: "Lỗi",
+        description: "Không thể cập nhật thông tin. Vui lòng thử lại sau.",
         variant: "destructive",
       });
     } finally {
-      setIsPasswordLoading(false);
+      setIsUpdating(false);
     }
   };
-
+  
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Lỗi",
+        description: "Mật khẩu mới không khớp với mật khẩu xác nhận",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        'http://localhost:5000/api/auth/change-password',
+        { current_password: currentPassword, new_password: newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast({
+        title: "Thành công",
+        description: "Mật khẩu đã được thay đổi",
+      });
+      
+      // Clear password fields
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      console.error('Lỗi khi đổi mật khẩu:', error);
+      
+      const errorMessage = error.response?.data?.message || "Không thể đổi mật khẩu. Vui lòng thử lại sau.";
+      
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pt-16">
       <Navbar />
-      <div className="flex-grow container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Thông tin cá nhân</h1>
+      
+      <main className="flex-grow container mx-auto px-4 py-8">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Thông tin tài khoản</h1>
           
-          <div className="flex flex-col md:flex-row gap-8 mb-8">
-            <div className="w-full md:w-1/3">
-              <Card>
-                <CardHeader className="flex flex-col items-center">
-                  <Avatar className="h-24 w-24 mb-4">
-                    <AvatarImage src="https://github.com/shadcn.png" alt={user?.name} />
-                    <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <CardTitle>{user?.name}</CardTitle>
-                  <CardDescription>{user?.email}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center space-y-2">
-                    <div>
-                      <span className="font-semibold">Số dư:</span> 0 VNĐ
-                    </div>
-                    <Button variant="outline" className="w-full">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Nạp tiền
-                    </Button>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6 flex flex-col items-center">
+                <Avatar className="h-24 w-24 mb-4">
+                  <AvatarFallback className="text-2xl bg-primary text-white">
+                    {userProfile?.full_name 
+                      ? userProfile.full_name.charAt(0).toUpperCase() 
+                      : userProfile?.username.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <h2 className="text-xl font-semibold mb-1">{userProfile?.full_name || userProfile?.username}</h2>
+                <p className="text-muted-foreground mb-4">{userProfile?.email}</p>
+                <div className="bg-muted py-1 px-3 rounded-full text-sm">
+                  {userProfile?.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
+                </div>
+                <div className="w-full mt-6 pt-6 border-t">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-muted-foreground">Ngày đăng ký:</span>
+                    <span>{userProfile?.created_at ? formatDate(userProfile.created_at) : 'N/A'}</span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Số dư:</span>
+                    <span className="font-medium">{userProfile?.balance.toLocaleString()}đ</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
-            <div className="w-full md:w-2/3">
+            <div>
               <Tabs defaultValue="profile">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="profile" className="flex items-center gap-1">
-                    <User className="h-4 w-4" /> Hồ sơ
-                  </TabsTrigger>
-                  <TabsTrigger value="security" className="flex items-center gap-1">
-                    <Key className="h-4 w-4" /> Bảo mật
-                  </TabsTrigger>
-                  <TabsTrigger value="uploads" className="flex items-center gap-1">
-                    <Upload className="h-4 w-4" /> Tải lên
-                  </TabsTrigger>
-                  <TabsTrigger value="downloads" className="flex items-center gap-1">
-                    <Download className="h-4 w-4" /> Tải xuống
-                  </TabsTrigger>
+                <TabsList className="w-full mb-6">
+                  <TabsTrigger value="profile" className="flex-1">Thông tin cá nhân</TabsTrigger>
+                  <TabsTrigger value="security" className="flex-1">Bảo mật</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="profile">
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Thông tin cá nhân</CardTitle>
-                      <CardDescription>
-                        Cập nhật thông tin cá nhân của bạn tại đây.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Form {...profileForm}>
-                        <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
-                          <FormField
-                            control={profileForm.control}
-                            name="name"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Họ và tên</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Nhập họ và tên" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                    <form onSubmit={handleUpdateProfile}>
+                      <CardHeader>
+                        <CardTitle>Thông tin cá nhân</CardTitle>
+                        <CardDescription>
+                          Cập nhật thông tin cá nhân của bạn
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input id="email" value={userProfile?.email || ''} disabled />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="username">Tên đăng nhập</Label>
+                          <Input 
+                            id="username" 
+                            value={username} 
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Nhập tên đăng nhập"
                           />
-                          
-                          <FormField
-                            control={profileForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                  <Input 
-                                    placeholder="example@example.com" 
-                                    {...field} 
-                                    disabled 
-                                    className="bg-muted"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="fullName">Họ và tên</Label>
+                          <Input 
+                            id="fullName" 
+                            value={fullName} 
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder="Nhập họ và tên"
                           />
-                          
-                          <div>
-                            <Label htmlFor="avatar">Ảnh đại diện</Label>
-                            <div className="flex items-center gap-4 mt-2">
-                              <Avatar>
-                                <AvatarImage src="https://github.com/shadcn.png" alt={user?.name} />
-                                <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <Input id="avatar" type="file" className="flex-1" />
-                            </div>
-                          </div>
-                          
-                          <Button type="submit" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Lưu thay đổi
-                          </Button>
-                        </form>
-                      </Form>
-                    </CardContent>
+                        </div>
+                      </CardContent>
+                      <CardFooter>
+                        <Button type="submit" disabled={isUpdating}>
+                          {isUpdating ? 'Đang cập nhật...' : 'Cập nhật thông tin'}
+                        </Button>
+                      </CardFooter>
+                    </form>
                   </Card>
                 </TabsContent>
                 
                 <TabsContent value="security">
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Bảo mật</CardTitle>
-                      <CardDescription>
-                        Thay đổi mật khẩu của bạn tại đây.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Form {...passwordForm}>
-                        <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
-                          <FormField
-                            control={passwordForm.control}
-                            name="currentPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Mật khẩu hiện tại</FormLabel>
-                                <FormControl>
-                                  <Input type="password" placeholder="••••••" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                    <form onSubmit={handleChangePassword}>
+                      <CardHeader>
+                        <CardTitle>Đổi mật khẩu</CardTitle>
+                        <CardDescription>
+                          Cập nhật mật khẩu để bảo vệ tài khoản của bạn
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="currentPassword">Mật khẩu hiện tại</Label>
+                          <Input 
+                            id="currentPassword" 
+                            type="password"
+                            value={currentPassword} 
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            placeholder="Nhập mật khẩu hiện tại"
+                            required
                           />
-                          
-                          <FormField
-                            control={passwordForm.control}
-                            name="newPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Mật khẩu mới</FormLabel>
-                                <FormControl>
-                                  <Input type="password" placeholder="••••••" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                          <Input 
+                            id="newPassword" 
+                            type="password" 
+                            value={newPassword} 
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Nhập mật khẩu mới"
+                            required
                           />
-                          
-                          <FormField
-                            control={passwordForm.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Xác nhận mật khẩu mới</FormLabel>
-                                <FormControl>
-                                  <Input type="password" placeholder="••••••" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="confirmPassword">Xác nhận mật khẩu mới</Label>
+                          <Input 
+                            id="confirmPassword" 
+                            type="password"
+                            value={confirmPassword} 
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Nhập lại mật khẩu mới"
+                            required
                           />
-                          
-                          <Button type="submit" disabled={isPasswordLoading}>
-                            {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Đổi mật khẩu
-                          </Button>
-                        </form>
-                      </Form>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="uploads">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Tài liệu đã tải lên</CardTitle>
-                      <CardDescription>
-                        Quản lý các tài liệu bạn đã tải lên hệ thống.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {uploadedDocuments.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {uploadedDocuments.map((doc) => (
-                            <Card key={doc.id}>
-                              <CardHeader className="p-4">
-                                <CardTitle className="text-base">{doc.title}</CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-4 pt-0">
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  {doc.description.substring(0, 100)}...
-                                </p>
-                                <div className="text-sm text-muted-foreground">
-                                  Danh mục: {doc.category}
-                                </div>
-                              </CardContent>
-                              <CardFooter className="p-4 flex justify-between">
-                                <Button variant="outline" size="sm">
-                                  Chỉnh sửa
-                                </Button>
-                                <Button variant="destructive" size="sm">
-                                  Xóa
-                                </Button>
-                              </CardFooter>
-                            </Card>
-                          ))}
                         </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <p className="text-muted-foreground">
-                            Bạn chưa tải lên tài liệu nào.
-                          </p>
-                          <Button className="mt-4">
-                            <Upload className="h-4 w-4 mr-2" />
-                            Tải lên tài liệu
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="downloads">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Tài liệu đã tải xuống</CardTitle>
-                      <CardDescription>
-                        Danh sách các tài liệu bạn đã tải xuống.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {downloadedDocuments.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {downloadedDocuments.map((doc) => (
-                            <Card key={doc.id}>
-                              <CardHeader className="p-4">
-                                <CardTitle className="text-base">{doc.title}</CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-4 pt-0">
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  {doc.description.substring(0, 100)}...
-                                </p>
-                                <div className="text-sm text-muted-foreground">
-                                  Danh mục: {doc.category}
-                                </div>
-                              </CardContent>
-                              <CardFooter className="p-4">
-                                <Button variant="outline" size="sm" className="w-full">
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Tải xuống lại
-                                </Button>
-                              </CardFooter>
-                            </Card>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-12">
-                          <p className="text-muted-foreground">
-                            Bạn chưa tải xuống tài liệu nào.
-                          </p>
-                          <Button asChild className="mt-4">
-                            <a href="/documents">Khám phá tài liệu</a>
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
+                        
+                        {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                          <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              Mật khẩu mới không khớp với mật khẩu xác nhận
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </CardContent>
+                      <CardFooter>
+                        <Button 
+                          type="submit" 
+                          disabled={isChangingPassword || (newPassword !== confirmPassword && newPassword !== '')}
+                        >
+                          {isChangingPassword ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
+                        </Button>
+                      </CardFooter>
+                    </form>
                   </Card>
                 </TabsContent>
               </Tabs>
             </div>
           </div>
         </div>
-      </div>
+      </main>
+      
       <Footer />
     </div>
   );
 };
 
-export default ProfilePage;
+export default Profile;
