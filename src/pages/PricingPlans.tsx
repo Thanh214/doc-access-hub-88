@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SubscriptionCard from "@/components/SubscriptionCard";
@@ -8,11 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckIcon } from "lucide-react";
 import { PaymentModal } from "@/components/PaymentModal";
+import { isAuthenticated } from "@/services/auth.service";
+import { useToast } from "@/hooks/use-toast";
 
 const PricingPlans = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Dữ liệu gói đăng ký đã cập nhật
   const subscriptionPlans = {
@@ -110,6 +115,17 @@ const PricingPlans = () => {
   };
   
   const handleSelectPlan = (planName: string) => {
+    // Kiểm tra xem người dùng đã đăng nhập chưa
+    if (!isAuthenticated()) {
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description: "Vui lòng đăng nhập để đăng ký gói dịch vụ.",
+        variant: "destructive"
+      });
+      navigate("/login");
+      return;
+    }
+    
     setSelectedPlan(planName);
     setShowPaymentModal(true);
   };
