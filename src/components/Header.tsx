@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import ProfileButton from "./ProfileButton";
 
 const Header = () => {
@@ -13,13 +11,11 @@ const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState({ name: "", email: "" });
   
-  // Xác định xem người dùng đã đăng nhập hay chưa
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
       setIsLoggedIn(true);
       
-      // Lấy thông tin người dùng từ API
       fetch("http://localhost:5000/api/users/me", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -42,7 +38,6 @@ const Header = () => {
     }
   }, [location.pathname]);
 
-  // Theo dõi cuộn trang
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
@@ -74,50 +69,40 @@ const Header = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center">
             <span className="text-xl font-bold">TàiLiệuVN</span>
           </Link>
 
-          {/* Navigation - Desktop */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link
-              to="/"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/" ? "text-primary" : "text-foreground"
-              }`}
-            >
-              Trang Chủ
-            </Link>
-            <Link
-              to="/documents"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/documents" ? "text-primary" : "text-foreground"
-              }`}
-            >
-              Tài Liệu
-            </Link>
-            <Link
-              to="/pricing"
-              className={`text-sm font-medium transition-colors hover:text-primary ${
-                location.pathname === "/pricing" ? "text-primary" : "text-foreground"
-              }`}
-            >
-              Bảng Giá
-            </Link>
-          </nav>
-
-          {/* Actions - Desktop */}
-          <div className="hidden md:flex items-center space-x-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Tìm tài liệu..."
-                className="w-[200px] pl-8 rounded-full bg-background"
-              />
+          <div className="hidden md:flex items-center justify-center flex-1">
+            <div className="flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+              <Link
+                to="/"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location.pathname === "/" ? "text-primary" : "text-foreground"
+                }`}
+              >
+                Trang Chủ
+              </Link>
+              <Link
+                to="/documents"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location.pathname === "/documents" ? "text-primary" : "text-foreground"
+                }`}
+              >
+                Tài Liệu
+              </Link>
+              <Link
+                to="/pricing"
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  location.pathname === "/pricing" ? "text-primary" : "text-foreground"
+                }`}
+              >
+                Bảng Giá
+              </Link>
             </div>
-            
+          </div>
+
+          <div className="hidden md:flex items-center">
             <ProfileButton 
               isLoggedIn={isLoggedIn}
               userName={userData.name}
@@ -125,7 +110,6 @@ const Header = () => {
             />
           </div>
 
-          {/* Mobile menu button */}
           <div className="flex md:hidden items-center space-x-2">
             <Button
               variant="ghost"
@@ -146,7 +130,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile navigation */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-50 bg-background md:hidden">
           <div className="container mx-auto px-4 pt-4 h-full flex flex-col">
@@ -162,14 +145,6 @@ const Header = () => {
                 <X className="h-5 w-5" />
                 <span className="sr-only">Đóng menu</span>
               </Button>
-            </div>
-            <div className="relative mb-8">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Tìm tài liệu..."
-                className="w-full pl-8"
-              />
             </div>
             <nav className="flex flex-col space-y-4">
               <Link
