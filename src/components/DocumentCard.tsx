@@ -12,9 +12,9 @@ export interface DocumentCardProps {
   title: string;
   description: string;
   category: string;
-  thumbnail?: string; // Make thumbnail optional but provide a default in component
+  thumbnail: string; // Require thumbnail with default in component
   price: number;
-  isFree?: boolean; 
+  isFree: boolean; 
   previewAvailable: boolean;
   is_premium?: boolean;
   is_featured?: boolean;
@@ -41,9 +41,6 @@ const DocumentCard = ({
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
   
-  // Calculate isFree based on is_premium if isFree is not provided
-  const documentIsFree = isFree !== undefined ? isFree : false;
-  
   return (
     <>
       <Card 
@@ -68,7 +65,7 @@ const DocumentCard = ({
             {category}
           </Badge>
           
-          {!documentIsFree && (
+          {!isFree && (
             <Badge 
               className="absolute top-3 right-3 bg-primary/80 backdrop-blur-sm hover:bg-primary"
             >
@@ -76,7 +73,7 @@ const DocumentCard = ({
             </Badge>
           )}
           
-          {documentIsFree && (
+          {isFree && (
             <Badge 
               className="absolute top-3 right-3 bg-green-500/80 text-white backdrop-blur-sm hover:bg-green-500"
             >
@@ -107,7 +104,7 @@ const DocumentCard = ({
             </Link>
           </Button>
           
-          {documentIsFree ? (
+          {isFree ? (
             <Button
               size="sm"
               className="flex-1"
@@ -135,7 +132,7 @@ const DocumentCard = ({
           docId={id}
           docTitle={title}
           docPrice={price}
-          isFree={documentIsFree}
+          isFree={isFree}
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
         />
