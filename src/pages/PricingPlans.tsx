@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SubscriptionCard from "@/components/SubscriptionCard";
@@ -9,17 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckIcon } from "lucide-react";
 import { PaymentModal } from "@/components/PaymentModal";
-import { isAuthenticated } from "@/services/auth.service";
-import { useToast } from "@/hooks/use-toast";
 
 const PricingPlans = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { toast } = useToast();
   
-  // Dữ liệu gói đăng ký đã cập nhật
+  // Dữ liệu gói đăng ký
   const subscriptionPlans = {
     monthly: [
       {
@@ -29,8 +24,6 @@ const PricingPlans = () => {
         features: [
           "Tải xuống 10 tài liệu miễn phí mỗi tháng",
           "Xem trước tất cả tài liệu",
-          "Tải lên 3 tài liệu mỗi tháng",
-          "Đặt giá tối đa 20.000đ cho mỗi tài liệu",
           "Hỗ trợ cơ bản qua email",
         ],
         popular: false,
@@ -40,9 +33,7 @@ const PricingPlans = () => {
         price: 60000,
         duration: "tháng",
         features: [
-          "Tải xuống 15 tài liệu miễn phí mỗi tháng",
-          "Tải lên 6 tài liệu mỗi tháng",
-          "Đặt giá tối đa 25.000đ cho mỗi tài liệu",
+          "Tải xuống không giới hạn tài liệu miễn phí",
           "Giảm 10% khi mua tài liệu cao cấp",
           "Hỗ trợ ưu tiên",
           "Không quảng cáo",
@@ -54,9 +45,7 @@ const PricingPlans = () => {
         price: 100000,
         duration: "tháng",
         features: [
-          "Tải xuống 30 tài liệu miễn phí mỗi tháng",
-          "Tải lên 10 tài liệu mỗi tháng",
-          "Đặt giá tối đa 40.000đ cho mỗi tài liệu",
+          "Tất cả tính năng của gói Tiêu Chuẩn",
           "Giảm 25% khi mua tài liệu cao cấp",
           "5 tài liệu cao cấp miễn phí hàng tháng",
           "Hỗ trợ 24/7",
@@ -71,10 +60,8 @@ const PricingPlans = () => {
         price: 300000,
         duration: "năm",
         features: [
-          "Tải xuống 10 tài liệu miễn phí mỗi tháng",
+          "Tải xuống 15 tài liệu miễn phí mỗi tháng",
           "Xem trước tất cả tài liệu",
-          "Tải lên 3 tài liệu mỗi tháng",
-          "Đặt giá tối đa 20.000đ cho mỗi tài liệu",
           "Hỗ trợ cơ bản qua email",
           "Tiết kiệm 17% so với thanh toán hàng tháng",
         ],
@@ -85,9 +72,7 @@ const PricingPlans = () => {
         price: 600000,
         duration: "năm",
         features: [
-          "Tải xuống 15 tài liệu miễn phí mỗi tháng",
-          "Tải lên 6 tài liệu mỗi tháng",
-          "Đặt giá tối đa 25.000đ cho mỗi tài liệu",
+          "Tải xuống không giới hạn tài liệu miễn phí",
           "Giảm 15% khi mua tài liệu cao cấp",
           "Hỗ trợ ưu tiên",
           "Không quảng cáo",
@@ -100,9 +85,7 @@ const PricingPlans = () => {
         price: 990000,
         duration: "năm",
         features: [
-          "Tải xuống 30 tài liệu miễn phí mỗi tháng",
-          "Tải lên 10 tài liệu mỗi tháng",
-          "Đặt giá tối đa 40.000đ cho mỗi tài liệu",
+          "Tất cả tính năng của gói Tiêu Chuẩn",
           "Giảm 30% khi mua tài liệu cao cấp",
           "7 tài liệu cao cấp miễn phí hàng tháng",
           "Hỗ trợ 24/7",
@@ -115,17 +98,6 @@ const PricingPlans = () => {
   };
   
   const handleSelectPlan = (planName: string) => {
-    // Kiểm tra xem người dùng đã đăng nhập chưa
-    if (!isAuthenticated()) {
-      toast({
-        title: "Yêu cầu đăng nhập",
-        description: "Vui lòng đăng nhập để đăng ký gói dịch vụ.",
-        variant: "destructive"
-      });
-      navigate("/login");
-      return;
-    }
-    
     setSelectedPlan(planName);
     setShowPaymentModal(true);
   };

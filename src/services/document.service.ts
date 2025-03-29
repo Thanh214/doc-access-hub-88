@@ -1,3 +1,4 @@
+
 import API from './api';
 
 export interface Document {
@@ -9,351 +10,167 @@ export interface Document {
   price: number;
   isFree: boolean;
   previewAvailable: boolean;
-  is_premium?: boolean;
-  is_featured?: boolean;
-  user_id?: number;
-  download_count?: number;
-  created_at?: string;
-  updated_at?: string;
-  content?: string;
 }
 
-// Lấy tất cả tài liệu
-export const getAllDocuments = async (): Promise<Document[]> => {
+export const getAllDocuments = async () => {
   try {
     const response = await API.get('/documents');
-    
-    // Đảm bảo dữ liệu trả về đúng định dạng
-    const documents = response.data.map((doc: any) => ({
-      id: doc.id.toString(),
-      title: doc.title,
-      description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
-      category: doc.category || "Chưa phân loại",
-      thumbnail: doc.thumbnail || "/placeholder.svg",
-      price: doc.price || 0,
-      isFree: doc.price === 0 || doc.is_free === true,
-      previewAvailable: doc.preview_available !== false,
-      is_premium: doc.is_premium || false,
-      is_featured: doc.is_featured || false,
-      user_id: doc.user_id,
-      download_count: doc.download_count || 0,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at
-    }));
-    
-    return documents;
-  } catch (error) {
-    console.error('Lỗi khi lấy tài liệu:', error);
-    
-    // Trả về dữ liệu mẫu trong trường hợp lỗi
-    return getMockDocuments();
-  }
-};
-
-// Lấy tài liệu nổi bật 
-export const getFeaturedDocuments = async (): Promise<Document[]> => {
-  try {
-    const response = await API.get('/documents/featured');
-    
-    // Đảm bảo dữ liệu trả về đúng định dạng
-    const documents = response.data.map((doc: any) => ({
-      id: doc.id.toString(),
-      title: doc.title,
-      description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
-      category: doc.category || "Chưa phân loại",
-      thumbnail: doc.thumbnail || "/placeholder.svg",
-      price: doc.price || 0,
-      isFree: doc.price === 0 || doc.is_free === true,
-      previewAvailable: doc.preview_available !== false,
-      is_premium: doc.is_premium || false,
-      is_featured: doc.is_featured || true,
-      user_id: doc.user_id,
-      download_count: doc.download_count || 0,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at
-    }));
-    
-    return documents;
-  } catch (error) {
-    console.error('Lỗi khi lấy tài liệu nổi bật:', error);
-    
-    // Lọc tài liệu nổi bật từ dữ liệu mẫu
-    const mockDocs = getMockDocuments();
-    return mockDocs.filter(doc => doc.is_featured);
-  }
-};
-
-// Lấy tài liệu theo id
-export const getDocumentById = async (id: string): Promise<Document | null> => {
-  try {
-    const response = await API.get(`/documents/${id}`);
-    const doc = response.data;
-    
-    return {
-      id: doc.id.toString(),
-      title: doc.title,
-      description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
-      category: doc.category || "Chưa phân loại",
-      thumbnail: doc.thumbnail || "/placeholder.svg",
-      price: doc.price || 0,
-      isFree: doc.price === 0 || doc.is_free === true,
-      previewAvailable: doc.preview_available !== false,
-      content: doc.content,
-      is_premium: doc.is_premium || false,
-      is_featured: doc.is_featured || false,
-      user_id: doc.user_id,
-      download_count: doc.download_count || 0,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at
-    };
-  } catch (error) {
-    console.error(`Lỗi khi lấy tài liệu ID ${id}:`, error);
-    
-    // Tìm tài liệu theo ID từ dữ liệu mẫu
-    const mockDocs = getMockDocuments();
-    return mockDocs.find(doc => doc.id === id) || null;
-  }
-};
-
-// Lấy tài liệu theo danh mục
-export const getDocumentsByCategory = async (category: string): Promise<Document[]> => {
-  try {
-    const response = await API.get(`/documents/category/${category}`);
-    
-    // Đảm bảo dữ liệu trả về đúng định dạng
-    const documents = response.data.map((doc: any) => ({
-      id: doc.id.toString(),
-      title: doc.title,
-      description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
-      category: doc.category || "Chưa phân loại",
-      thumbnail: doc.thumbnail || "/placeholder.svg",
-      price: doc.price || 0,
-      isFree: doc.price === 0 || doc.is_free === true,
-      previewAvailable: doc.preview_available !== false,
-      is_premium: doc.is_premium || false,
-      is_featured: doc.is_featured || false,
-      user_id: doc.user_id,
-      download_count: doc.download_count || 0,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at
-    }));
-    
-    return documents;
-  } catch (error) {
-    console.error(`Lỗi khi lấy tài liệu danh mục ${category}:`, error);
-    
-    // Lọc tài liệu theo danh mục từ dữ liệu mẫu
-    const mockDocs = getMockDocuments();
-    return mockDocs.filter(doc => doc.category.toLowerCase() === category.toLowerCase());
-  }
-};
-
-// Xử lý thanh toán tài liệu
-export const processDocumentPayment = async (docId: string, paymentMethod: string) => {
-  try {
-    const response = await API.post('/payments/document', { document_id: docId, payment_method: paymentMethod });
     return response.data;
   } catch (error) {
-    console.error('Lỗi khi xử lý thanh toán:', error);
+    throw error;
+  }
+};
+
+export const getDocumentById = async (id: string) => {
+  try {
+    const response = await API.get(`/documents/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getFeaturedDocuments = async () => {
+  try {
+    const response = await API.get('/documents/featured');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getDocumentsByCategory = async (category: string) => {
+  try {
+    const response = await API.get(`/documents/category/${category}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const searchDocuments = async (query: string) => {
+  try {
+    const response = await API.get(`/documents/search?q=${query}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Mới thêm: Lấy danh sách tài liệu của người dùng hiện tại
+export const getUserDocuments = async () => {
+  try {
+    // Giả lập dữ liệu vì chưa có API endpoint thực tế
+    // Trong thực tế, bạn sẽ gọi API đến backend
+    return [
+      {
+        id: "1",
+        title: "Tài liệu luyện thi THPT Quốc Gia môn Toán",
+        description: "Bộ tài liệu đầy đủ dành cho học sinh luyện thi THPT Quốc Gia môn Toán với các dạng bài tập từ cơ bản đến nâng cao.",
+        category: "Giáo dục",
+        thumbnail: "/placeholder.svg",
+        price: 50000,
+        isFree: false,
+        previewAvailable: true
+      },
+      {
+        id: "2",
+        title: "Luật Doanh Nghiệp 2020",
+        description: "Tài liệu cập nhật đầy đủ về Luật Doanh Nghiệp 2020 với các điều khoản và hướng dẫn chi tiết.",
+        category: "Pháp luật",
+        thumbnail: "/placeholder.svg",
+        price: 0,
+        isFree: true,
+        previewAvailable: false
+      },
+      {
+        id: "3",
+        title: "Học tiếng Anh giao tiếp cơ bản",
+        description: "Tài liệu giúp người học nắm vững các kỹ năng giao tiếp tiếng Anh cơ bản trong cuộc sống hàng ngày.",
+        category: "Ngoại ngữ",
+        thumbnail: "/placeholder.svg",
+        price: 30000,
+        isFree: false,
+        previewAvailable: true
+      },
+      {
+        id: "4",
+        title: "Lập trình cơ bản với Python",
+        description: "Tài liệu hướng dẫn lập trình Python từ cơ bản đến nâng cao cho người mới bắt đầu.",
+        category: "Công nghệ",
+        thumbnail: "/placeholder.svg",
+        price: 75000,
+        isFree: false,
+        previewAvailable: true
+      }
+    ];
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Mới thêm: Upload tài liệu mới
+export const uploadDocument = async (documentData: Omit<Document, 'id'>) => {
+  try {
+    // Trong thực tế, bạn sẽ gọi API POST đến backend
+    // const response = await API.post('/documents/upload', documentData);
+    // return response.data;
     
-    // Trả về kết quả giả cho mục đích demo
+    // Trả về dữ liệu giả lập
     return {
       success: true,
-      message: 'Thanh toán thành công (mô phỏng)',
-      transaction_id: `TR-${Date.now()}`,
-      document_id: docId,
-      amount: 0, // Sẽ được điền đúng giá trị trong thực tế
-      payment_method: paymentMethod,
-      payment_date: new Date().toISOString()
+      message: "Tài liệu đã được tải lên thành công",
+      document: {
+        id: Math.random().toString(36).substring(2, 9),
+        ...documentData
+      }
     };
-  }
-};
-
-// Lấy tài liệu của người dùng hiện tại
-export const getUserDocuments = async (): Promise<Document[]> => {
-  try {
-    const response = await API.get('/user/documents');
-    
-    // Đảm bảo dữ liệu trả về đúng định dạng
-    const documents = response.data.map((doc: any) => ({
-      id: doc.id.toString(),
-      title: doc.title,
-      description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
-      category: doc.category || "Chưa phân loại",
-      thumbnail: doc.thumbnail || "/placeholder.svg",
-      price: doc.price || 0,
-      isFree: doc.price === 0 || doc.is_free === true,
-      previewAvailable: doc.preview_available !== false,
-      is_premium: doc.is_premium || false,
-      is_featured: doc.is_featured || false,
-      user_id: doc.user_id,
-      download_count: doc.download_count || 0,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at
-    }));
-    
-    return documents;
   } catch (error) {
-    console.error('Lỗi khi lấy tài liệu của người dùng:', error);
-    
-    // Trả về một số tài liệu mẫu
-    return getMockDocuments().slice(0, 2);
+    throw error;
   }
 };
 
-// Lấy tài liệu miễn phí
-export const getFreeDocuments = async (): Promise<Document[]> => {
+// Mới thêm: Xóa tài liệu
+export const deleteDocument = async (id: string) => {
   try {
-    const response = await API.get('/documents');
+    // Trong thực tế, bạn sẽ gọi API DELETE đến backend
+    // const response = await API.delete(`/documents/${id}`);
+    // return response.data;
     
-    // Lọc tài liệu miễn phí từ response
-    const documents = response.data
-      .filter((doc: any) => doc.price === 0 || doc.is_free === true)
-      .map((doc: any) => ({
-        id: doc.id.toString(),
-        title: doc.title,
-        description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
-        category: doc.category || "Chưa phân loại",
-        thumbnail: doc.thumbnail || "/placeholder.svg",
-        price: doc.price || 0,
-        isFree: true,
-        previewAvailable: doc.preview_available !== false,
-        is_premium: false,
-        is_featured: doc.is_featured || false,
-        user_id: doc.user_id,
-        download_count: doc.download_count || 0,
-        created_at: doc.created_at,
-        updated_at: doc.updated_at
-      }));
-    
-    return documents;
+    // Trả về dữ liệu giả lập
+    return {
+      success: true,
+      message: "Tài liệu đã được xóa thành công"
+    };
   } catch (error) {
-    console.error('Lỗi khi lấy tài liệu miễn phí:', error);
-    
-    // Trả về dữ liệu mẫu trong trường hợp lỗi
-    return getMockFreeDocuments();
+    throw error;
   }
 };
 
-// Lấy tài liệu có phí
-export const getPremiumDocuments = async (): Promise<Document[]> => {
+// Mới thêm: Cập nhật thông tin tài liệu
+export const updateDocument = async (id: string, documentData: Partial<Document>) => {
   try {
-    const response = await API.get('/documents');
+    // Trong thực tế, bạn sẽ gọi API PUT đến backend
+    // const response = await API.put(`/documents/${id}`, documentData);
+    // return response.data;
     
-    // Lọc tài liệu có phí từ response
-    const documents = response.data
-      .filter((doc: any) => doc.price > 0 || doc.is_premium === true)
-      .map((doc: any) => ({
-        id: doc.id.toString(),
-        title: doc.title,
-        description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
-        category: doc.category || "Chưa phân loại",
-        thumbnail: doc.thumbnail || "/placeholder.svg",
-        price: doc.price || 0,
+    // Trả về dữ liệu giả lập
+    return {
+      success: true,
+      message: "Tài liệu đã được cập nhật thành công",
+      document: {
+        id,
+        title: "Tài liệu đã cập nhật",
+        description: "Mô tả mới",
+        category: "Danh mục mới",
+        thumbnail: "/placeholder.svg",
+        price: 50000,
         isFree: false,
-        previewAvailable: doc.preview_available !== false,
-        is_premium: true,
-        is_featured: doc.is_featured || false,
-        user_id: doc.user_id,
-        download_count: doc.download_count || 0,
-        created_at: doc.created_at,
-        updated_at: doc.updated_at
-      }));
-    
-    return documents;
+        previewAvailable: true,
+        ...documentData
+      }
+    };
   } catch (error) {
-    console.error('Lỗi khi lấy tài liệu có phí:', error);
-    
-    // Trả về dữ liệu mẫu trong trường hợp lỗi
-    return getMockPremiumDocuments();
+    throw error;
   }
-};
-
-// Dữ liệu mẫu để sử dụng khi API chưa hoàn thiện
-const getMockDocuments = (): Document[] => {
-  return [
-    {
-      id: "1",
-      title: "Giáo Trình Tiếng Anh Giao Tiếp Cơ Bản",
-      description: "Giáo trình tiếng Anh cơ bản dành cho người mới bắt đầu, tập trung vào giao tiếp hàng ngày và ngữ pháp cơ bản.",
-      category: "Ngoại Ngữ",
-      thumbnail: "https://via.placeholder.com/400x300?text=English+Course",
-      price: 0,
-      isFree: true,
-      previewAvailable: true,
-      is_featured: true,
-      download_count: 1245
-    },
-    {
-      id: "2",
-      title: "Sách Giáo Khoa Toán Học Lớp 12",
-      description: "Sách giáo khoa Toán học dành cho học sinh lớp 12, bao gồm đầy đủ các chương trình theo chuẩn của Bộ Giáo Dục.",
-      category: "Giáo Dục",
-      thumbnail: "https://via.placeholder.com/400x300?text=Math+Textbook",
-      price: 15000,
-      isFree: false,
-      previewAvailable: true,
-      download_count: 867
-    },
-    {
-      id: "3",
-      title: "Hướng Dẫn Lập Trình Python Cho Người Mới Bắt Đầu",
-      description: "Tài liệu hướng dẫn lập trình Python từ cơ bản đến nâng cao dành cho người mới bắt đầu, với nhiều ví dụ thực tế.",
-      category: "Công Nghệ",
-      thumbnail: "https://via.placeholder.com/400x300?text=Python+Programming",
-      price: 50000,
-      isFree: false,
-      previewAvailable: true,
-      is_premium: true,
-      is_featured: true,
-      download_count: 2341
-    },
-    {
-      id: "4",
-      title: "Ebook - 101 Công Thức Nấu Ăn Chay",
-      description: "Sách điện tử với 101 công thức nấu ăn chay đơn giản, bổ dưỡng và dễ thực hiện tại nhà.",
-      category: "Ẩm Thực",
-      thumbnail: "https://via.placeholder.com/400x300?text=Vegetarian+Cookbook",
-      price: 25000,
-      isFree: false,
-      previewAvailable: true,
-      download_count: 634
-    },
-    {
-      id: "5",
-      title: "Báo Cáo Thị Trường Bất Động Sản 2023",
-      description: "Báo cáo phân tích chi tiết về thị trường bất động sản Việt Nam năm 2023, xu hướng và dự báo cho năm 2024.",
-      category: "Kinh Doanh",
-      thumbnail: "https://via.placeholder.com/400x300?text=Real+Estate+Report",
-      price: 120000,
-      isFree: false,
-      previewAvailable: false,
-      is_premium: true,
-      download_count: 189
-    },
-    {
-      id: "6",
-      title: "Tài Liệu Y Khoa - Cẩm Nang Sơ Cứu",
-      description: "Cẩm nang hướng dẫn sơ cứu cơ bản trong các tình huống khẩn cấp, được biên soạn bởi các chuyên gia y tế.",
-      category: "Y Tế",
-      thumbnail: "https://via.placeholder.com/400x300?text=First+Aid+Guide",
-      price: 0,
-      isFree: true,
-      previewAvailable: true,
-      is_featured: true,
-      download_count: 3245
-    }
-  ];
-};
-
-// Dữ liệu mẫu cho tài liệu miễn phí
-export const getMockFreeDocuments = (): Document[] => {
-  const allDocs = getMockDocuments();
-  return allDocs.filter(doc => doc.isFree || doc.price === 0);
-};
-
-// Dữ liệu mẫu cho tài liệu có phí
-export const getMockPremiumDocuments = (): Document[] => {
-  const allDocs = getMockDocuments();
-  return allDocs.filter(doc => !doc.isFree && doc.price > 0);
 };

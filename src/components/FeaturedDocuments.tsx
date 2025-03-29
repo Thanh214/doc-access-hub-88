@@ -18,17 +18,16 @@ const FeaturedDocuments = () => {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        setIsLoading(true);
         const data = await getFeaturedDocuments();
         setDocuments(data);
         setVisibleDocuments(data.slice(0, 3));
+        setIsLoading(false);
       } catch (error: any) {
         toast({
           variant: "destructive",
           title: "Lỗi",
           description: "Không thể tải dữ liệu tài liệu. Vui lòng thử lại sau.",
         });
-      } finally {
         setIsLoading(false);
       }
     };
@@ -95,16 +94,7 @@ const FeaturedDocuments = () => {
             >
               {visibleDocuments.map((doc) => (
                 <motion.div key={doc.id} variants={item}>
-                  <DocumentCard
-                    id={doc.id}
-                    title={doc.title}
-                    description={doc.description}
-                    category={doc.category}
-                    thumbnail={doc.thumbnail}
-                    price={doc.price}
-                    isFree={doc.isFree}
-                    previewAvailable={doc.previewAvailable}
-                  />
+                  <DocumentCard {...doc} />
                 </motion.div>
               ))}
             </motion.div>

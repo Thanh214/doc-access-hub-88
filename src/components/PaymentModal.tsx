@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,9 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CheckIcon, CreditCard, Smartphone, AlertCircle, Wallet } from "lucide-react";
+import { CheckIcon, CreditCard, Smartphone, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentUser } from "@/services/auth.service";
 
 interface PaymentModalProps {
   docId: string;
@@ -41,15 +40,6 @@ export const PaymentModal = ({
   const [selectedPlan, setSelectedPlan] = useState<string>("monthly");
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"momo" | "zalopay">("momo");
-  const [currentUser, setCurrentUser] = useState(getCurrentUser());
-  const [insufficientFunds, setInsufficientFunds] = useState(false);
-  
-  // Check if user has enough balance when component mounts
-  useEffect(() => {
-    if (!isFree && currentUser?.balance !== undefined) {
-      setInsufficientFunds(currentUser.balance < docPrice);
-    }
-  }, [currentUser, docPrice, isFree]);
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -61,18 +51,6 @@ export const PaymentModal = ({
     { id: "biannual", name: "6 Tháng", price: 60000, duration: "6 tháng", savings: "67%" },
     { id: "annual", name: "12 Tháng", price: 90000, duration: "năm", savings: "75%" },
   ];
-  
-  // Calculate remaining balance after purchase
-  const calculateRemainingBalance = () => {
-    if (!currentUser || currentUser.balance === undefined) return 0;
-    return currentUser.balance - docPrice;
-  };
-
-  // Get the price of the selected subscription plan
-  const getSelectedPlanPrice = () => {
-    const plan = subscriptionPlans.find(p => p.id === selectedPlan);
-    return plan ? plan.price : 0;
-  };
   
   const handlePayment = () => {
     setIsProcessing(true);
@@ -153,29 +131,6 @@ export const PaymentModal = ({
                 </li>
               </ul>
             </div>
-
-            {currentUser?.balance !== undefined && (
-              <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-                <h4 className="font-medium mb-2 flex items-center">
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Chi Tiết Thanh Toán
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Số dư hiện tại:</span>
-                    <span className="font-medium">{formatPrice(currentUser.balance)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Giá gói đăng ký:</span>
-                    <span className="font-medium">{formatPrice(getSelectedPlanPrice())}</span>
-                  </div>
-                  <div className="border-t pt-2 mt-2 flex justify-between font-medium">
-                    <span>Số dư sau thanh toán:</span>
-                    <span>{formatPrice(currentUser.balance - getSelectedPlanPrice())}</span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <div className="space-y-4 py-4">
@@ -196,34 +151,6 @@ export const PaymentModal = ({
                 </div>
               </div>
             </div>
-
-            {currentUser?.balance !== undefined && (
-              <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-                <h4 className="font-medium mb-2 flex items-center">
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Thông Tin Số Dư
-                </h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Số dư hiện tại:</span>
-                    <span className="font-medium">{formatPrice(currentUser.balance)}</span>
-                  </div>
-                  <div className="border-t pt-2 mt-2 flex justify-between font-medium">
-                    <span>Số dư sau thanh toán:</span>
-                    <span className={calculateRemainingBalance() < 0 ? "text-red-500" : ""}>
-                      {formatPrice(calculateRemainingBalance())}
-                    </span>
-                  </div>
-                </div>
-                
-                {insufficientFunds && (
-                  <div className="mt-2 text-xs text-red-500 flex items-center">
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    Số dư không đủ. Vui lòng nạp thêm tiền để mua tài liệu này.
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
         
@@ -290,7 +217,7 @@ export const PaymentModal = ({
           </Button>
           <Button 
             onClick={handlePayment}
-            disabled={isProcessing || (!isFree && insufficientFunds)}
+            disabled={isProcessing}
           >
             {isProcessing ? "Đang xử lý..." : isFree ? "Đăng Ký Ngay" : "Hoàn Tất Mua Hàng"}
           </Button>

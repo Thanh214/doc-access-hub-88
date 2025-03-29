@@ -61,23 +61,13 @@ const Index = () => {
   ];
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
       <Navbar />
+      
       <main className="flex-grow">
         <Hero />
-        <FeaturedDocuments />
         
-        <section className="py-12 md:py-20 bg-muted/30">
-          <div className="container px-4 mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">Khám Phá Thư Viện Tài Liệu Của Chúng Tôi</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto mb-8">
-              Truy cập thư viện đầy đủ với các tài liệu miễn phí và cao cấp trong nhiều lĩnh vực khác nhau.
-            </p>
-            <Button asChild size="lg" className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
-              <Link to="/documents">Xem Thư Viện Tài Liệu</Link>
-            </Button>
-          </div>
-        </section>
+        <FeaturedDocuments />
         
         {/* Features Section */}
         <section className="py-20">
