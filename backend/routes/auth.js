@@ -107,13 +107,19 @@ router.get('/profile', auth, async (req, res) => {
 router.put('/profile', auth, async (req, res) => {
     try {
         const userId = req.user.id;
-        const { username, full_name } = req.body;
+        const { full_name } = req.body;
 
-        const query = 'UPDATE users SET username = ?, full_name = ? WHERE id = ?';
-        db.query(query, [username, full_name, userId], (err, result) => {
+        // Chỉ cập nhật họ và tên, đã loại bỏ username
+        const query = 'UPDATE users SET full_name = ? WHERE id = ?';
+        db.query(query, [full_name, userId], (err, result) => {
             if (err) {
                 return res.status(400).json({ message: 'Lỗi cập nhật thông tin', error: err.message });
             }
+            
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+            }
+            
             res.json({ message: 'Cập nhật thông tin thành công' });
         });
     } catch (error) {
@@ -131,6 +137,7 @@ router.put('/change-password', auth, async (req, res) => {
         const getUserQuery = 'SELECT password FROM users WHERE id = ?';
         db.query(getUserQuery, [userId], async (err, results) => {
             if (err) {
+                console.error("Database error:", err);
                 return res.status(500).json({ message: 'Lỗi server', error: err.message });
             }
             
@@ -153,13 +160,19 @@ router.put('/change-password', auth, async (req, res) => {
             const updateQuery = 'UPDATE users SET password = ? WHERE id = ?';
             db.query(updateQuery, [hashedPassword, userId], (updateErr, updateResult) => {
                 if (updateErr) {
+                    console.error("Update error:", updateErr);
                     return res.status(500).json({ message: 'Lỗi cập nhật mật khẩu', error: updateErr.message });
+                }
+                
+                if (updateResult.affectedRows === 0) {
+                    return res.status(404).json({ message: 'Không tìm thấy người dùng' });
                 }
                 
                 res.json({ message: 'Đổi mật khẩu thành công' });
             });
         });
     } catch (error) {
+        console.error("Server error:", error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });

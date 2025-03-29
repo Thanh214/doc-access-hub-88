@@ -10,8 +10,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlertCircle, User } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
 interface UserProfile {
@@ -29,7 +29,6 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   // Profile form
-  const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   
@@ -38,6 +37,7 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -63,7 +63,6 @@ const Profile = () => {
       });
       
       setUserProfile(response.data);
-      setUsername(response.data.username);
       setFullName(response.data.full_name || '');
     } catch (error) {
       console.error('Lỗi khi lấy thông tin profile:', error);
@@ -87,7 +86,7 @@ const Profile = () => {
       const token = localStorage.getItem('token');
       await axios.put(
         'http://localhost:5000/api/auth/profile',
-        { username, full_name: fullName },
+        { full_name: fullName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -112,13 +111,10 @@ const Profile = () => {
   
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError('');
     
     if (newPassword !== confirmPassword) {
-      toast({
-        title: "Lỗi",
-        description: "Mật khẩu mới không khớp với mật khẩu xác nhận",
-        variant: "destructive",
-      });
+      setPasswordError('Mật khẩu mới không khớp với mật khẩu xác nhận');
       return;
     }
     
@@ -134,7 +130,7 @@ const Profile = () => {
       
       toast({
         title: "Thành công",
-        description: "Mật khẩu đã được thay đổi",
+        description: "Mật khẩu đã được thay đổi thành công",
       });
       
       // Clear password fields
@@ -145,6 +141,7 @@ const Profile = () => {
       console.error('Lỗi khi đổi mật khẩu:', error);
       
       const errorMessage = error.response?.data?.message || "Không thể đổi mật khẩu. Vui lòng thử lại sau.";
+      setPasswordError(errorMessage);
       
       toast({
         title: "Lỗi",
@@ -192,10 +189,10 @@ const Profile = () => {
                   <AvatarFallback className="text-2xl bg-primary text-white">
                     {userProfile?.full_name 
                       ? userProfile.full_name.charAt(0).toUpperCase() 
-                      : userProfile?.username.charAt(0).toUpperCase()}
+                      : userProfile?.email.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <h2 className="text-xl font-semibold mb-1">{userProfile?.full_name || userProfile?.username}</h2>
+                <h2 className="text-xl font-semibold mb-1">{userProfile?.full_name || userProfile?.email}</h2>
                 <p className="text-muted-foreground mb-4">{userProfile?.email}</p>
                 <div className="bg-muted py-1 px-3 rounded-full text-sm">
                   {userProfile?.role === 'admin' ? 'Quản trị viên' : 'Người dùng'}
@@ -207,7 +204,7 @@ const Profile = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Số dư:</span>
-                    <span className="font-medium">{userProfile?.balance.toLocaleString()}đ</span>
+                    <span className="font-medium">{userProfile?.balance?.toLocaleString()}đ</span>
                   </div>
                 </div>
               </CardContent>
@@ -233,15 +230,6 @@ const Profile = () => {
                         <div className="space-y-2">
                           <Label htmlFor="email">Email</Label>
                           <Input id="email" value={userProfile?.email || ''} disabled />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="username">Tên đăng nhập</Label>
-                          <Input 
-                            id="username" 
-                            value={username} 
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Nhập tên đăng nhập"
-                          />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="fullName">Họ và tên</Label>
@@ -306,11 +294,11 @@ const Profile = () => {
                           />
                         </div>
                         
-                        {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                        {passwordError && (
                           <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>
-                              Mật khẩu mới không khớp với mật khẩu xác nhận
+                              {passwordError}
                             </AlertDescription>
                           </Alert>
                         )}
@@ -318,7 +306,7 @@ const Profile = () => {
                       <CardFooter>
                         <Button 
                           type="submit" 
-                          disabled={isChangingPassword || (newPassword !== confirmPassword && newPassword !== '')}
+                          disabled={isChangingPassword}
                         >
                           {isChangingPassword ? 'Đang cập nhật...' : 'Đổi mật khẩu'}
                         </Button>
