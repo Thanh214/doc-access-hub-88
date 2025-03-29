@@ -9,11 +9,11 @@ const auth = require('../middleware/auth');
 // Đăng ký
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password, full_name } = req.body;
+        const { email, password, full_name } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const query = 'INSERT INTO users (username, email, password, full_name) VALUES (?, ?, ?, ?)';
-        db.query(query, [username, email, hashedPassword, full_name], (err, result) => {
+        const query = 'INSERT INTO users (email, password, full_name) VALUES (?, ?, ?)';
+        db.query(query, [email, hashedPassword, full_name], (err, result) => {
             if (err) {
                 return res.status(400).json({ message: 'Lỗi đăng ký', error: err.message });
             }
@@ -56,7 +56,6 @@ router.post('/login', async (req, res) => {
                 token,
                 user: {
                     id: user.id,
-                    username: user.username,
                     email: user.email,
                     full_name: user.full_name,
                     role: user.role
@@ -73,7 +72,7 @@ router.get('/profile', auth, async (req, res) => {
     try {
         const userId = req.user.id;
         const query = `
-            SELECT id, username, email, full_name, role, balance, created_at 
+            SELECT id, email, full_name, role, balance, created_at 
             FROM users 
             WHERE id = ?
         `;
@@ -90,7 +89,6 @@ router.get('/profile', auth, async (req, res) => {
             const user = results[0];
             res.json({
                 id: user.id,
-                username: user.username,
                 email: user.email,
                 full_name: user.full_name,
                 role: user.role,
@@ -109,7 +107,6 @@ router.put('/profile', auth, async (req, res) => {
         const userId = req.user.id;
         const { full_name } = req.body;
 
-        // Chỉ cập nhật họ và tên, đã loại bỏ username
         const query = 'UPDATE users SET full_name = ? WHERE id = ?';
         db.query(query, [full_name, userId], (err, result) => {
             if (err) {
@@ -120,7 +117,13 @@ router.put('/profile', auth, async (req, res) => {
                 return res.status(404).json({ message: 'Không tìm thấy người dùng' });
             }
             
-            res.json({ message: 'Cập nhật thông tin thành công' });
+            res.json({ 
+                message: 'Cập nhật thông tin thành công',
+                user: {
+                    id: userId,
+                    full_name: full_name
+                }
+            });
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server', error: error.message });

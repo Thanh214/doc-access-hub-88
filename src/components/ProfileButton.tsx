@@ -43,7 +43,8 @@ export default function ProfileButton({
 
   const handleLogout = () => {
     // Xóa token từ localStorage
-    localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     
     // Thông báo đăng xuất thành công
     toast({

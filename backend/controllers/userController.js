@@ -8,7 +8,7 @@ exports.getCurrentUser = async (req, res) => {
     const userId = req.user.id;
     
     const [users] = await pool.query(
-      'SELECT id, name, email, created_at FROM users WHERE id = ?',
+      'SELECT id, full_name, email, created_at FROM users WHERE id = ?',
       [userId]
     );
     
@@ -27,7 +27,7 @@ exports.getCurrentUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, email } = req.body;
+    const { full_name, email } = req.body;
     
     // Kiểm tra email đã tồn tại chưa (nếu email thay đổi)
     if (email) {
@@ -52,15 +52,15 @@ exports.updateUser = async (req, res) => {
     
     // Cập nhật thông tin người dùng
     await pool.query(
-      'UPDATE users SET name = ?, email = ? WHERE id = ?',
-      [name, emailToUpdate, userId]
+      'UPDATE users SET full_name = ?, email = ? WHERE id = ?',
+      [full_name, emailToUpdate, userId]
     );
     
     res.status(200).json({ 
       message: 'Cập nhật thông tin thành công',
       user: {
         id: userId,
-        name,
+        full_name,
         email: emailToUpdate
       }
     });

@@ -1,3 +1,4 @@
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
@@ -6,7 +7,7 @@ require('dotenv').config();
 // Đăng ký người dùng
 exports.register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { email, password, full_name } = req.body;
     
     // Kiểm tra email tồn tại
     const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
@@ -19,13 +20,13 @@ exports.register = async (req, res) => {
     
     // Thêm người dùng mới
     const [result] = await pool.query(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [username, email, hashedPassword]
+      'INSERT INTO users (email, password, full_name) VALUES (?, ?, ?)',
+      [email, hashedPassword, full_name]
     );
     
     // Tạo JWT token
     const token = jwt.sign(
-      { id: result.insertId, email, name: username },
+      { id: result.insertId, email, full_name },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -35,7 +36,7 @@ exports.register = async (req, res) => {
       token,
       user: {
         id: result.insertId,
-        name: username,
+        full_name,
         email
       }
     });
@@ -66,7 +67,7 @@ exports.login = async (req, res) => {
     
     // Tạo JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: user.id, email: user.email, full_name: user.full_name },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -76,7 +77,7 @@ exports.login = async (req, res) => {
       token,
       user: {
         id: user.id,
-        name: user.name,
+        full_name: user.full_name,
         email: user.email
       }
     });

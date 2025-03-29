@@ -3,8 +3,10 @@ import API from './api';
 
 export interface UserData {
   id: number;
-  name: string;
   email: string;
+  full_name: string;
+  role?: string;
+  balance?: number;
 }
 
 export interface LoginCredentials {
@@ -13,9 +15,9 @@ export interface LoginCredentials {
 }
 
 export interface RegisterData {
-  username: string;
   email: string;
   password: string;
+  full_name: string;
 }
 
 export const register = async (userData: RegisterData) => {

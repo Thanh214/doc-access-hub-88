@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -11,7 +12,7 @@ import { register } from "@/services/auth.service";
 import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
-  const [name, setName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,7 +46,7 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      await register({ username: name, email, password });
+      await register({ email, password, full_name: fullName });
       toast({
         title: "Đăng ký thành công",
         description: "Tài khoản của bạn đã được tạo thành công",
@@ -83,14 +84,14 @@ const Register = () => {
             
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium">
+                <label htmlFor="fullName" className="block text-sm font-medium">
                   Họ và tên
                 </label>
                 <Input
-                  id="name"
+                  id="fullName"
                   placeholder="Nguyễn Văn A"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   required
                   disabled={isLoading}
                 />

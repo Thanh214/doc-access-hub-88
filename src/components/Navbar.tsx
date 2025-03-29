@@ -19,7 +19,6 @@ import {
 
 interface User {
   id: number;
-  username: string;
   email: string;
   full_name: string;
   role: string;
@@ -131,11 +130,11 @@ const Navbar: React.FC = () => {
                 <Button variant="outline" className="rounded-full h-10 px-4 flex items-center gap-2">
                   <Avatar className="h-7 w-7">
                     <AvatarFallback className="bg-primary text-white">
-                      {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                      {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start text-sm">
-                    <span className="font-medium">{user.full_name || user.username}</span>
+                    <span className="font-medium">{user.full_name || user.email}</span>
                     <span className="text-xs text-muted-foreground">
                       {user.balance?.toLocaleString()}đ
                     </span>
@@ -237,11 +236,11 @@ const Navbar: React.FC = () => {
                     <div className="flex items-center mb-2">
                       <Avatar className="h-8 w-8 mr-2">
                         <AvatarFallback className="bg-primary text-white">
-                          {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}
+                          {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium">{user.full_name || user.username}</div>
+                        <div className="font-medium">{user.full_name || user.email}</div>
                         <div className="text-xs text-muted-foreground">{user.email}</div>
                       </div>
                     </div>
