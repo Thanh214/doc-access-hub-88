@@ -18,23 +18,17 @@ const FeaturedDocuments = () => {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
+        setIsLoading(true);
         const data = await getFeaturedDocuments();
-        // Ensure all documents have the isFree property based on is_premium
-        const processedData = data.map((doc: Document) => ({
-          ...doc,
-          isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium,
-          previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-          thumbnail: doc.thumbnail || "/placeholder.svg"
-        }));
-        setDocuments(processedData);
-        setVisibleDocuments(processedData.slice(0, 3));
-        setIsLoading(false);
+        setDocuments(data);
+        setVisibleDocuments(data.slice(0, 3));
       } catch (error: any) {
         toast({
           variant: "destructive",
           title: "Lỗi",
           description: "Không thể tải dữ liệu tài liệu. Vui lòng thử lại sau.",
         });
+      } finally {
         setIsLoading(false);
       }
     };

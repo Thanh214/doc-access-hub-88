@@ -17,10 +17,10 @@ const Navbar = () => {
   const navItems = [
     { label: "Trang Chủ", href: "/" },
     { label: "Thư Viện", href: "/documents" },
-    { label: "Khám Phá", href: "/browse" },
     { label: "Bảng Giá", href: "/pricing" },
   ];
 
+  
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 10) {
@@ -47,6 +47,7 @@ const Navbar = () => {
     });
     navigate("/");
   };
+  
   
   return (
     <header 

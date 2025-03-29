@@ -1,24 +1,21 @@
 
 import API from './api';
 
-// Types
 export interface Document {
   id: string;
   title: string;
   description: string;
+  category: string;
+  thumbnail: string;
+  price: number;
+  isPremium?: boolean;
+  isFeatured?: boolean;
+  userId?: number;
+  downloadCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
   content?: string;
   filePath?: string;
-  userId: number;
-  isFeatured: boolean;
-  isPremium: boolean;
-  category: string;
-  price: number;
-  downloadCount: number;
-  createdAt: string;
-  updatedAt: string;
-  thumbnail?: string;
-  isFree?: boolean;
-  previewAvailable: boolean; // Make this required with a default value
   is_premium?: boolean;
   is_featured?: boolean;
   user_id?: number;
@@ -28,13 +25,8 @@ export interface Document {
   file_size?: string;
   pages?: number;
   chapters?: number;
-}
-
-export interface DocumentCategory {
-  id: string;
-  name: string;
-  slug: string;
-  count: number;
+  isFree: boolean;
+  previewAvailable: boolean;
 }
 
 export interface DocumentStats {
@@ -44,57 +36,77 @@ export interface DocumentStats {
   remainingDownloads: number;
 }
 
-// Function to get all documents
+// Hàm chính để lấy tất cả tài liệu
 export const getAllDocuments = async (): Promise<{ documents: Document[] }> => {
   try {
     const response = await API.get('/documents');
-    const documents = response.data.documents.map((doc: Document) => ({
-      ...doc,
-      isFree: doc.isFree !== undefined ? doc.isFree : !doc.isPremium && !doc.is_premium,
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    }));
+    const documents = response.data.documents.map((doc: any) => processDocument(doc));
     return { documents };
   } catch (error) {
     console.error('Error fetching all documents:', error);
-    // Fallback to getDocuments if API fails
-    const { documents } = await getDocuments();
+    // Sử dụng dữ liệu mẫu nếu API không khả dụng
+    const documents = [...getMockFreeDocuments(), ...getMockPremiumDocuments()];
     return { documents };
   }
 };
 
-// Service functions
+// Xử lý document để đảm bảo dữ liệu nhất quán
+const processDocument = (doc: any): Document => {
+  // Đảm bảo trường isFree được định nghĩa dựa trên trường isPremium hoặc is_premium
+  const isFree = doc.isFree !== undefined 
+    ? doc.isFree 
+    : doc.isPremium === false || doc.is_premium === false;
+
+  return {
+    id: doc.id,
+    title: doc.title,
+    description: doc.description,
+    category: doc.category || "Chưa phân loại",
+    thumbnail: doc.thumbnail || "/placeholder.svg",
+    price: doc.price || 0,
+    isPremium: doc.isPremium || doc.is_premium || false,
+    isFeatured: doc.isFeatured || doc.is_featured || false,
+    userId: doc.userId || doc.user_id,
+    downloadCount: doc.downloadCount || doc.download_count || 0,
+    createdAt: doc.createdAt || doc.created_at,
+    updatedAt: doc.updatedAt || doc.updated_at,
+    content: doc.content,
+    filePath: doc.filePath,
+    is_premium: doc.is_premium || doc.isPremium || false,
+    is_featured: doc.is_featured || doc.isFeatured || false,
+    user_id: doc.user_id || doc.userId,
+    download_count: doc.download_count || doc.downloadCount || 0,
+    created_at: doc.created_at || doc.createdAt,
+    updated_at: doc.updated_at || doc.updatedAt,
+    file_size: doc.file_size,
+    pages: doc.pages,
+    chapters: doc.chapters,
+    isFree: isFree,
+    previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
+  };
+};
+
+// Hàm để lấy tài liệu phổ biến
 export const getFeaturedDocuments = async (): Promise<Document[]> => {
   try {
     const response = await API.get('/documents/featured');
-    return response.data.map((doc: Document) => ({
-      ...doc,
-      isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    }));
+    return response.data.map((doc: any) => processDocument(doc));
   } catch (error) {
     console.error('Error fetching featured documents:', error);
-    // Return documents that have isFeatured = true
-    const { documents } = await getDocuments(1, 100, { isFeatured: true });
-    return documents;
+    // Trả về dữ liệu mẫu nếu API không khả dụng
+    return getFeaturedMockDocuments();
   }
 };
 
+// Hàm để lấy tài liệu theo ID
 export const getDocumentById = async (id: string): Promise<Document | null> => {
   try {
     const response = await API.get(`/documents/${id}`);
-    return {
-      ...response.data,
-      isFree: response.data.isFree !== undefined ? response.data.isFree : !(response.data.isPremium || response.data.is_premium),
-      previewAvailable: response.data.previewAvailable !== undefined ? response.data.previewAvailable : true,
-      thumbnail: response.data.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    };
+    return processDocument(response.data);
   } catch (error) {
     console.error(`Error fetching document with ID ${id}:`, error);
     
-    // For demo purposes, try to get from mock data
-    console.log("Falling back to mock data for demo");
+    // Tìm trong dữ liệu mẫu
     const allMockDocs = [...getMockFreeDocuments(), ...getMockPremiumDocuments()];
     const mockDoc = allMockDocs.find(d => d.id === id);
     
@@ -106,168 +118,88 @@ export const getDocumentById = async (id: string): Promise<Document | null> => {
   }
 };
 
+// Hàm để lấy tài liệu theo danh mục
 export const getDocumentsByCategory = async (category: string): Promise<Document[]> => {
   try {
     const response = await API.get(`/documents/category/${category}`);
-    return response.data.map((doc: Document) => ({
-      ...doc,
-      isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    }));
+    return response.data.map((doc: any) => processDocument(doc));
   } catch (error) {
     console.error(`Error fetching documents in category ${category}:`, error);
-    // Return documents that match the category
-    const { documents } = await getDocuments(1, 100, { category });
-    return documents;
+    // Lọc dữ liệu mẫu theo danh mục
+    const allMockDocs = [...getMockFreeDocuments(), ...getMockPremiumDocuments()];
+    return allMockDocs.filter(doc => doc.category === category);
   }
 };
 
-// Function to search for documents
+// Hàm tìm kiếm tài liệu
 export const searchDocuments = async (query: string): Promise<Document[]> => {
   try {
     const response = await API.get(`/documents/search?q=${query}`);
-    const documents = response.data.map((doc: Document) => ({
-      ...doc,
-      isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    }));
-    return documents;
+    return response.data.map((doc: any) => processDocument(doc));
   } catch (error) {
     console.error('Error searching documents:', error);
-    // Try to filter existing documents based on title or description containing the query
-    const { documents } = await getDocuments();
-    return documents.filter(doc => 
+    // Tìm kiếm trong dữ liệu mẫu
+    const allMockDocs = [...getMockFreeDocuments(), ...getMockPremiumDocuments()];
+    return allMockDocs.filter(doc => 
       doc.title.toLowerCase().includes(query.toLowerCase()) || 
-      doc.description.toLowerCase().includes(query.toLowerCase())
+      doc.description.toLowerCase().includes(query.toLowerCase()) || 
+      doc.category.toLowerCase().includes(query.toLowerCase())
     );
   }
 };
 
-export const getDocuments = async (
-  page = 1,
-  limit = 10,
-  filters?: {
-    category?: string;
-    isPremium?: boolean;
-    isFeatured?: boolean;
-    search?: string;
-  }
-): Promise<{ documents: Document[]; totalCount: number }> => {
-  try {
-    let url = `/documents?page=${page}&limit=${limit}`;
-    
-    if (filters) {
-      if (filters.category) url += `&category=${filters.category}`;
-      if (filters.isPremium !== undefined) url += `&isPremium=${filters.isPremium}`;
-      if (filters.isFeatured !== undefined) url += `&isFeatured=${filters.isFeatured}`;
-      if (filters.search) url += `&search=${filters.search}`;
-    }
-    
-    const response = await API.get(url);
-    const documents = response.data.documents.map((doc: Document) => ({
-      ...doc,
-      isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    }));
-    
-    return { documents, totalCount: response.data.totalCount || documents.length };
-  } catch (error) {
-    console.error('Error fetching documents:', error);
-    return { 
-      documents: [...getMockFreeDocuments(), ...getMockPremiumDocuments()], 
-      totalCount: 6 
-    };
-  }
-};
-
-export const getCategories = async (): Promise<DocumentCategory[]> => {
-  try {
-    const response = await API.get('/documents/categories');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    return [];
-  }
-};
-
-// Function to get premium documents
+// Hàm lấy tài liệu cao cấp
 export const getPremiumDocuments = async (): Promise<Document[]> => {
   try {
     const response = await API.get('/documents/premium');
-    const documents = response.data.map((doc: Document) => ({
-      ...doc,
-      isFree: false,
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
+    return response.data.map((doc: any) => ({
+      ...processDocument(doc),
+      isFree: false
     }));
-    return documents;
   } catch (error) {
     console.error('Error fetching premium documents:', error);
-    // Fallback to getDocuments with isPremium filter
-    const { documents } = await getDocuments(1, 100, { isPremium: true });
-    if (documents.length > 0) {
-      return documents;
-    }
     return getMockPremiumDocuments();
   }
 };
 
-// Function to get free documents
+// Hàm lấy tài liệu miễn phí
 export const getFreeDocuments = async (): Promise<Document[]> => {
   try {
     const response = await API.get('/documents/free');
-    const documents = response.data.map((doc: Document) => ({
-      ...doc,
-      isFree: true,
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
+    return response.data.map((doc: any) => ({
+      ...processDocument(doc),
+      isFree: true
     }));
-    return documents;
   } catch (error) {
     console.error('Error fetching free documents:', error);
-    // Fallback to getDocuments with isPremium=false filter
-    const { documents } = await getDocuments(1, 100, { isPremium: false });
-    if (documents.length > 0) {
-      return documents;
-    }
     return getMockFreeDocuments();
   }
 };
 
+// Hàm lấy tài liệu của người dùng
 export const getUserDocuments = async (userId?: number): Promise<Document[]> => {
   try {
     const endpoint = userId ? `/users/${userId}/documents` : '/documents/my-documents';
     const response = await API.get(endpoint);
-    return response.data.map((doc: Document) => ({
-      ...doc,
-      isFree: doc.isFree !== undefined ? doc.isFree : !(doc.isPremium || doc.is_premium),
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    }));
+    return response.data.map((doc: any) => processDocument(doc));
   } catch (error) {
     console.error(`Error fetching documents for user:`, error);
     return [];
   }
 };
 
+// Hàm lấy tài liệu đã mua
 export const getPurchasedDocuments = async (): Promise<Document[]> => {
   try {
     const response = await API.get('/documents/purchased');
-    return response.data.map((doc: Document) => ({
-      ...doc,
-      isFree: false, // Purchased documents are not free (they were paid for)
-      previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true,
-      thumbnail: doc.thumbnail || "/placeholder.svg" // Ensure thumbnail is always set
-    }));
+    return response.data.map((doc: any) => processDocument(doc));
   } catch (error) {
     console.error('Error fetching purchased documents:', error);
     return [];
   }
 };
 
+// Hàm kiểm tra quyền truy cập tài liệu
 export const checkDocumentAccess = async (
   documentId: string
 ): Promise<{ hasAccess: boolean; isPurchased: boolean; isOwner: boolean }> => {
@@ -276,16 +208,19 @@ export const checkDocumentAccess = async (
     return response.data;
   } catch (error) {
     console.error(`Error checking access for document ${documentId}:`, error);
-    return { hasAccess: false, isPurchased: false, isOwner: false };
+    // Giả lập quyền truy cập cho dữ liệu mẫu
+    const freeDocIds = getMockFreeDocuments().map(doc => doc.id);
+    const hasAccess = freeDocIds.includes(documentId);
+    return { hasAccess, isPurchased: false, isOwner: false };
   }
 };
 
+// Hàm xử lý thanh toán
 export const processDocumentPayment = async (
   documentId: string,
   paymentMethod: string
 ): Promise<any> => {
   try {
-    // Try to process the payment through the API
     const response = await API.post(`/documents/${documentId}/process-payment`, {
       paymentMethod
     });
@@ -293,8 +228,7 @@ export const processDocumentPayment = async (
   } catch (error) {
     console.error('Error processing payment:', error);
     
-    // Fallback for demo
-    console.log("Using mock payment processing for demo");
+    // Mô phỏng quá trình thanh toán
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     return {
@@ -308,6 +242,7 @@ export const processDocumentPayment = async (
   }
 };
 
+// Hàm tải xuống tài liệu
 export const downloadDocument = async (documentId: string): Promise<string> => {
   try {
     const response = await API.get(`/documents/${documentId}/download`);
@@ -318,7 +253,7 @@ export const downloadDocument = async (documentId: string): Promise<string> => {
   }
 };
 
-// Export function to handle document upload
+// Hàm tải lên tài liệu mới
 export const uploadDocument = async (
   formData: FormData
 ): Promise<Document> => {
@@ -328,14 +263,14 @@ export const uploadDocument = async (
         'Content-Type': 'multipart/form-data'
       }
     });
-    return response.data;
+    return processDocument(response.data);
   } catch (error) {
     console.error('Error uploading document:', error);
     throw new Error('Failed to upload document');
   }
 };
 
-// Function to update a document
+// Hàm cập nhật tài liệu
 export const updateDocument = async (id: string, formData: FormData): Promise<Document> => {
   try {
     const response = await API.put(`/documents/${id}`, formData, {
@@ -343,14 +278,14 @@ export const updateDocument = async (id: string, formData: FormData): Promise<Do
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return processDocument(response.data);
   } catch (error) {
     console.error('Error updating document:', error);
     throw new Error('Failed to update document');
   }
 };
 
-// Function to delete a document
+// Hàm xóa tài liệu
 export const deleteDocument = async (id: string): Promise<any> => {
   try {
     const response = await API.delete(`/documents/${id}`);
@@ -361,14 +296,14 @@ export const deleteDocument = async (id: string): Promise<any> => {
   }
 };
 
-// Function to get document statistics for the current user
+// Hàm lấy thống kê tài liệu
 export const getUserDocumentStats = async (): Promise<DocumentStats> => {
   try {
     const response = await API.get('/documents/stats');
     return response.data;
   } catch (error) {
     console.error('Error fetching document stats:', error);
-    // Return mock stats
+    // Trả về thống kê mẫu
     return {
       totalUploads: 5,
       totalDownloads: 25,
@@ -378,7 +313,7 @@ export const getUserDocumentStats = async (): Promise<DocumentStats> => {
   }
 };
 
-// Mock data functions for testing and fallbacks
+// Hàm lấy tài liệu mẫu cao cấp
 export const getMockPremiumDocuments = (): Document[] => {
   return [
     {
@@ -401,7 +336,9 @@ export const getMockPremiumDocuments = (): Document[] => {
       created_at: "2023-08-10",
       updatedAt: "2023-08-10",
       updated_at: "2023-08-10",
-      isFree: false
+      isFree: false,
+      file_size: "25MB",
+      pages: 120
     },
     {
       id: "premium-doc-2",
@@ -423,7 +360,9 @@ export const getMockPremiumDocuments = (): Document[] => {
       created_at: "2023-07-25",
       updatedAt: "2023-07-25",
       updated_at: "2023-07-25",
-      isFree: false
+      isFree: false,
+      file_size: "18MB",
+      pages: 85
     },
     {
       id: "premium-doc-3",
@@ -445,11 +384,14 @@ export const getMockPremiumDocuments = (): Document[] => {
       created_at: "2023-06-05",
       updatedAt: "2023-06-05",
       updated_at: "2023-06-05",
-      isFree: false
+      isFree: false,
+      file_size: "15MB", 
+      pages: 65
     }
   ];
 };
 
+// Hàm lấy tài liệu mẫu miễn phí
 export const getMockFreeDocuments = (): Document[] => {
   return [
     {
@@ -472,7 +414,9 @@ export const getMockFreeDocuments = (): Document[] => {
       created_at: "2023-06-15",
       updatedAt: "2023-06-15",
       updated_at: "2023-06-15",
-      isFree: true
+      isFree: true,
+      file_size: "10MB",
+      pages: 45
     },
     {
       id: "free-doc-2",
@@ -494,7 +438,9 @@ export const getMockFreeDocuments = (): Document[] => {
       created_at: "2023-07-10",
       updatedAt: "2023-07-10",
       updated_at: "2023-07-10",
-      isFree: true
+      isFree: true,
+      file_size: "8MB",
+      pages: 30
     },
     {
       id: "free-doc-3",
@@ -516,7 +462,17 @@ export const getMockFreeDocuments = (): Document[] => {
       created_at: "2023-05-25",
       updatedAt: "2023-05-25",
       updated_at: "2023-05-25",
-      isFree: true
+      isFree: true,
+      file_size: "12MB",
+      pages: 60
     }
   ];
+};
+
+// Hàm lấy tất cả tài liệu mẫu phổ biến (vừa free vừa premium)
+export const getFeaturedMockDocuments = (): Document[] => {
+  // Lọc các tài liệu có trường isFeatured hoặc is_featured là true
+  const featuredFree = getMockFreeDocuments().filter(doc => doc.isFeatured || doc.is_featured);
+  const featuredPremium = getMockPremiumDocuments().filter(doc => doc.isFeatured || doc.is_featured);
+  return [...featuredFree, ...featuredPremium];
 };
