@@ -1,8 +1,6 @@
 
 const pool = require('../config/db');
 const bcrypt = require('bcrypt');
-const fs = require('fs');
-const path = require('path');
 
 // Lấy thông tin người dùng hiện tại
 exports.getCurrentUser = async (req, res) => {
@@ -10,7 +8,7 @@ exports.getCurrentUser = async (req, res) => {
     const userId = req.user.id;
     
     const [users] = await pool.query(
-      'SELECT id, name, email, avatar, balance, created_at FROM users WHERE id = ?',
+      'SELECT id, name, email, created_at FROM users WHERE id = ?',
       [userId]
     );
     
@@ -58,129 +56,13 @@ exports.updateUser = async (req, res) => {
       [name, emailToUpdate, userId]
     );
     
-    // Lấy thông tin người dùng sau khi cập nhật để trả về
-    const [updatedUser] = await pool.query(
-      'SELECT id, name, email, avatar, balance FROM users WHERE id = ?',
-      [userId]
-    );
-    
     res.status(200).json({ 
       message: 'Cập nhật thông tin thành công',
-      user: updatedUser[0]
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
-// Cập nhật avatar người dùng
-exports.updateAvatar = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    
-    if (!req.file) {
-      return res.status(400).json({ message: 'Không có file ảnh được tải lên' });
-    }
-    
-    // Đường dẫn đến file avatar mới
-    const avatarPath = `/uploads/avatars/${req.file.filename}`;
-    
-    // Lấy avatar cũ để xóa nếu có
-    const [currentUser] = await pool.query(
-      'SELECT avatar FROM users WHERE id = ?',
-      [userId]
-    );
-    
-    // Cập nhật avatar mới vào database
-    await pool.query(
-      'UPDATE users SET avatar = ? WHERE id = ?',
-      [avatarPath, userId]
-    );
-    
-    // Xóa file ảnh cũ nếu tồn tại
-    const oldAvatar = currentUser[0]?.avatar;
-    if (oldAvatar && oldAvatar !== '/uploads/avatars/default.png') {
-      try {
-        const oldAvatarPath = path.join(__dirname, '..', 'public', oldAvatar);
-        if (fs.existsSync(oldAvatarPath)) {
-          fs.unlinkSync(oldAvatarPath);
-        }
-      } catch (err) {
-        console.error('Không thể xóa avatar cũ:', err);
-        // Tiếp tục xử lý ngay cả khi không thể xóa file cũ
+      user: {
+        id: userId,
+        name,
+        email: emailToUpdate
       }
-    }
-    
-    // Lấy thông tin người dùng sau khi cập nhật
-    const [updatedUser] = await pool.query(
-      'SELECT id, name, email, avatar, balance FROM users WHERE id = ?',
-      [userId]
-    );
-    
-    res.status(200).json({ 
-      message: 'Cập nhật avatar thành công',
-      avatar: avatarPath,
-      user: updatedUser[0]
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
-// Lấy số dư tài khoản
-exports.getBalance = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    
-    const [result] = await pool.query(
-      'SELECT balance FROM users WHERE id = ?',
-      [userId]
-    );
-    
-    if (result.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
-    }
-    
-    res.status(200).json({ balance: result[0].balance });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
-// Nạp tiền vào tài khoản
-exports.addBalance = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { amount } = req.body;
-    
-    if (!amount || isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ message: 'Số tiền nạp không hợp lệ' });
-    }
-    
-    // Lấy số dư hiện tại
-    const [currentBalance] = await pool.query(
-      'SELECT balance FROM users WHERE id = ?',
-      [userId]
-    );
-    
-    if (currentBalance.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
-    }
-    
-    const newBalance = parseFloat(currentBalance[0].balance) + parseFloat(amount);
-    
-    // Cập nhật số dư mới
-    await pool.query(
-      'UPDATE users SET balance = ? WHERE id = ?',
-      [newBalance, userId]
-    );
-    
-    res.status(200).json({ 
-      message: 'Nạp tiền thành công',
-      balance: newBalance
     });
   } catch (error) {
     console.error(error);

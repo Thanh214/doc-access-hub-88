@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, LogIn, LogOut } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Search, User, Menu, X, LogIn, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { getCurrentUser, logout } from "@/services/auth.service";
 import { useToast } from "@/hooks/use-toast";
@@ -13,13 +15,6 @@ const Navbar = () => {
   const location = useLocation();
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  const navItems = [
-    { label: "Trang Chủ", href: "/" },
-    { label: "Thư Viện", href: "/documents" },
-    { label: "Bảng Giá", href: "/pricing" },
-  ];
-
   
   useEffect(() => {
     const handleScroll = () => {
@@ -34,6 +29,7 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
   
+  // Check for current user on location change (for when logging in/out)
   useEffect(() => {
     setCurrentUser(getCurrentUser());
   }, [location.pathname]);
@@ -47,7 +43,6 @@ const Navbar = () => {
     });
     navigate("/");
   };
-  
   
   return (
     <header 
@@ -67,16 +62,33 @@ const Navbar = () => {
         
         <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
-            {navItems.map(item => (
-              <Link 
-                key={item.href} 
-                to={item.href} 
-                className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === item.href ? 'text-primary font-medium' : ''}`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            <Link 
+              to="/" 
+              className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
+            >
+              Trang Chủ
+            </Link>
+            <Link 
+              to="/documents" 
+              className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
+            >
+              Tài Liệu
+            </Link>
+            <Link 
+              to="/pricing" 
+              className={`text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
+            >
+              Bảng Giá
+            </Link>
           </nav>
+          
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input 
+              placeholder="Tìm kiếm tài liệu..." 
+              className="pl-9 w-64 bg-muted/50 border-none transition-all focus:w-80"
+            />
+          </div>
           
           <div className="flex items-center space-x-2">
             {currentUser ? (
@@ -115,6 +127,7 @@ const Navbar = () => {
         </button>
       </div>
       
+      {/* Mobile menu */}
       {isMobileMenuOpen && (
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
@@ -124,17 +137,36 @@ const Navbar = () => {
           className="md:hidden absolute top-full left-0 right-0 bg-background border-b animate-fade-in"
         >
           <div className="container mx-auto px-4 py-4 space-y-4">
+            <div className="relative mb-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input 
+                placeholder="Tìm kiếm tài liệu..." 
+                className="pl-9 w-full bg-muted/50 border-none"
+              />
+            </div>
+            
             <nav className="flex flex-col space-y-3">
-              {navItems.map(item => (
-                <Link 
-                  key={item.href} 
-                  to={item.href} 
-                  className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === item.href ? 'text-primary font-medium' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              <Link 
+                to="/" 
+                className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Trang Chủ
+              </Link>
+              <Link 
+                to="/documents" 
+                className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Tài Liệu
+              </Link>
+              <Link 
+                to="/pricing" 
+                className={`text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Bảng Giá
+              </Link>
               
               <div className="pt-2 border-t">
                 {currentUser ? (

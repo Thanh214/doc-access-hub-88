@@ -7,21 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye, Lock } from "lucide-react";
 import { PaymentModal } from "./PaymentModal";
 
-export interface DocumentCardProps {
+interface DocumentCardProps {
   id: string;
   title: string;
   description: string;
   category: string;
-  thumbnail: string; // Require thumbnail with default in component
+  thumbnail?: string;
   price: number;
-  isFree: boolean; 
+  isFree: boolean;
   previewAvailable: boolean;
-  is_premium?: boolean;
-  is_featured?: boolean;
-  user_id?: number;
-  download_count?: number;
-  created_at?: string;
-  updated_at?: string;
 }
 
 const DocumentCard = ({
@@ -29,7 +23,7 @@ const DocumentCard = ({
   title,
   description,
   category,
-  thumbnail = "/placeholder.svg", // Provide default value
+  thumbnail,
   price,
   isFree,
   previewAvailable,
@@ -52,7 +46,7 @@ const DocumentCard = ({
           <Link to={`/document/${id}`}>
             <div className="aspect-[4/3] overflow-hidden">
               <img 
-                src={thumbnail} 
+                src={thumbnail || "/placeholder.svg"} 
                 alt={title} 
                 className={`w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-105' : 'scale-100'}`}
               />
