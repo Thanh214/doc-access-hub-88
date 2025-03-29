@@ -1,4 +1,3 @@
-
 import API from './api';
 
 export interface Document {
@@ -202,6 +201,74 @@ export const getUserDocuments = async (): Promise<Document[]> => {
   }
 };
 
+// Lấy tài liệu miễn phí
+export const getFreeDocuments = async (): Promise<Document[]> => {
+  try {
+    const response = await API.get('/documents');
+    
+    // Lọc tài liệu miễn phí từ response
+    const documents = response.data
+      .filter((doc: any) => doc.price === 0 || doc.is_free === true)
+      .map((doc: any) => ({
+        id: doc.id.toString(),
+        title: doc.title,
+        description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
+        category: doc.category || "Chưa phân loại",
+        thumbnail: doc.thumbnail || "/placeholder.svg",
+        price: doc.price || 0,
+        isFree: true,
+        previewAvailable: doc.preview_available !== false,
+        is_premium: false,
+        is_featured: doc.is_featured || false,
+        user_id: doc.user_id,
+        download_count: doc.download_count || 0,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
+      }));
+    
+    return documents;
+  } catch (error) {
+    console.error('Lỗi khi lấy tài liệu miễn phí:', error);
+    
+    // Trả về dữ liệu mẫu trong trường hợp lỗi
+    return getMockFreeDocuments();
+  }
+};
+
+// Lấy tài liệu có phí
+export const getPremiumDocuments = async (): Promise<Document[]> => {
+  try {
+    const response = await API.get('/documents');
+    
+    // Lọc tài liệu có phí từ response
+    const documents = response.data
+      .filter((doc: any) => doc.price > 0 || doc.is_premium === true)
+      .map((doc: any) => ({
+        id: doc.id.toString(),
+        title: doc.title,
+        description: doc.description || "Mô tả tài liệu này chưa được cập nhật.",
+        category: doc.category || "Chưa phân loại",
+        thumbnail: doc.thumbnail || "/placeholder.svg",
+        price: doc.price || 0,
+        isFree: false,
+        previewAvailable: doc.preview_available !== false,
+        is_premium: true,
+        is_featured: doc.is_featured || false,
+        user_id: doc.user_id,
+        download_count: doc.download_count || 0,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at
+      }));
+    
+    return documents;
+  } catch (error) {
+    console.error('Lỗi khi lấy tài liệu có phí:', error);
+    
+    // Trả về dữ liệu mẫu trong trường hợp lỗi
+    return getMockPremiumDocuments();
+  }
+};
+
 // Dữ liệu mẫu để sử dụng khi API chưa hoàn thiện
 const getMockDocuments = (): Document[] => {
   return [
@@ -277,4 +344,16 @@ const getMockDocuments = (): Document[] => {
       download_count: 3245
     }
   ];
+};
+
+// Dữ liệu mẫu cho tài liệu miễn phí
+export const getMockFreeDocuments = (): Document[] => {
+  const allDocs = getMockDocuments();
+  return allDocs.filter(doc => doc.isFree || doc.price === 0);
+};
+
+// Dữ liệu mẫu cho tài liệu có phí
+export const getMockPremiumDocuments = (): Document[] => {
+  const allDocs = getMockDocuments();
+  return allDocs.filter(doc => !doc.isFree && doc.price > 0);
 };

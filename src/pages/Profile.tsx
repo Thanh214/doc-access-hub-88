@@ -149,7 +149,7 @@ const ProfilePage = () => {
           category: doc.category,
           thumbnail: doc.thumbnail || "/placeholder.svg",
           price: doc.price,
-          isFree: doc.isFree !== undefined ? doc.isFree : !doc.isPremium,
+          isFree: doc.isFree !== undefined ? doc.isFree : !doc.is_premium,
           previewAvailable: doc.previewAvailable !== undefined ? doc.previewAvailable : true
         }));
         
