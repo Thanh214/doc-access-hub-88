@@ -3,8 +3,22 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const db = require('./config/database');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+const documentsDir = path.join(uploadsDir, 'documents');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+if (!fs.existsSync(documentsDir)) {
+  fs.mkdirSync(documentsDir, { recursive: true });
+}
 
 // Middleware
 app.use(cors());

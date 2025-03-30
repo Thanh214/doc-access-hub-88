@@ -7,278 +7,190 @@ const fs = require('fs');
 const db = require('../config/database');
 const auth = require('../middleware/auth');
 
-// Ensure uploads directory exists
-const uploadDir = 'uploads/documents';
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure multer for file uploads
+// Cấu hình multer cho upload file
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, uniqueSuffix + ext);
-  }
+    destination: function (req, file, cb) {
+        const dir = 'uploads/documents';
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
 });
 
-const upload = multer({ 
-  storage,
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
-  }
-});
+const upload = multer({ storage: storage });
 
-// Get all documents (admin)
+// Lấy danh sách tài liệu (chỉ admin)
 router.get('/', auth, async (req, res) => {
-  // Check if user is admin
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Không có quyền truy cập' });
-  }
+    try {
+        // Kiểm tra quyền admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
 
-  try {
-    const query = `
-      SELECT d.*, c.name as category_name 
-      FROM documents d 
-      LEFT JOIN categories c ON d.category_id = c.id
-      ORDER BY d.id DESC
-    `;
-    
-    db.query(query, (err, results) => {
-      if (err) {
-        console.error('Error fetching documents:', err);
-        return res.status(500).json({ message: 'Lỗi server', error: err.message });
-      }
-      res.json(results);
-    });
-  } catch (error) {
-    console.error('Error fetching documents:', error);
-    res.status(500).json({ message: 'Lỗi server', error: error.message });
-  }
+        const query = `
+            SELECT d.*, c.name as category_name 
+            FROM documents d 
+            LEFT JOIN categories c ON d.category_id = c.id
+            ORDER BY d.created_at DESC
+        `;
+        db.query(query, (err, results) => {
+            if (err) {
+                return res.status(500).json({ message: 'Lỗi server', error: err.message });
+            }
+            res.json(results);
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
 });
 
-// Add new document (admin)
+// Upload tài liệu mới (chỉ admin)
 router.post('/', auth, upload.single('file'), async (req, res) => {
-  // Check if user is admin
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Không có quyền truy cập' });
-  }
-
-  try {
-    const { title, description, category_id, is_premium, price } = req.body;
-    
-    if (!req.file) {
-      return res.status(400).json({ message: 'Không có file được tải lên' });
-    }
-
-    const isPremium = is_premium === 'true';
-    const filePath = req.file.path;
-    const fileSize = req.file.size;
-    const fileType = req.file.mimetype;
-
-    const query = `
-      INSERT INTO documents (
-        title, description, file_path, file_size, file_type, 
-        category_id, is_premium, price
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const params = [
-      title,
-      description,
-      filePath,
-      fileSize,
-      fileType,
-      category_id || null,
-      isPremium,
-      isPremium ? price : null
-    ];
-
-    db.query(query, params, (err, result) => {
-      if (err) {
-        console.error('Error adding document:', err);
-        return res.status(500).json({ message: 'Lỗi thêm tài liệu', error: err.message });
-      }
-      
-      res.status(201).json({ 
-        message: 'Thêm tài liệu thành công',
-        document_id: result.insertId
-      });
-    });
-  } catch (error) {
-    console.error('Error adding document:', error);
-    res.status(500).json({ message: 'Lỗi server', error: error.message });
-  }
-});
-
-// Delete document (admin)
-router.delete('/:id', auth, async (req, res) => {
-  // Check if user is admin
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Không có quyền truy cập' });
-  }
-
-  try {
-    const documentId = req.params.id;
-
-    // First, get the document to find the file path
-    db.query('SELECT file_path FROM documents WHERE id = ?', [documentId], (err, results) => {
-      if (err) {
-        console.error('Error fetching document:', err);
-        return res.status(500).json({ message: 'Lỗi server', error: err.message });
-      }
-
-      if (results.length === 0) {
-        return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
-      }
-
-      const filePath = results[0].file_path;
-
-      // Delete the document from the database
-      db.query('DELETE FROM documents WHERE id = ?', [documentId], (err, result) => {
-        if (err) {
-          console.error('Error deleting document:', err);
-          return res.status(500).json({ message: 'Lỗi xóa tài liệu', error: err.message });
+    try {
+        // Kiểm tra quyền admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
         }
 
-        // Try to delete the file from disk
-        try {
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        } catch (fileErr) {
-          console.error('Error deleting file:', fileErr);
-          // Continue even if file deletion fails
+        const { title, description, category_id, is_premium, price } = req.body;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
         }
 
-        res.json({ message: 'Xóa tài liệu thành công' });
-      });
-    });
-  } catch (error) {
-    console.error('Error deleting document:', error);
-    res.status(500).json({ message: 'Lỗi server', error: error.message });
-  }
-});
-
-// Update document (admin)
-router.put('/:id', auth, upload.single('file'), async (req, res) => {
-  // Check if user is admin
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Không có quyền truy cập' });
-  }
-
-  try {
-    const documentId = req.params.id;
-    const { title, description, category_id, is_premium, price } = req.body;
-    const isPremium = is_premium === 'true';
-
-    let updateFields = [];
-    let updateParams = [];
-
-    // Add fields to update
-    if (title) {
-      updateFields.push('title = ?');
-      updateParams.push(title);
-    }
-    
-    if (description !== undefined) {
-      updateFields.push('description = ?');
-      updateParams.push(description);
-    }
-    
-    if (category_id) {
-      updateFields.push('category_id = ?');
-      updateParams.push(category_id);
-    }
-    
-    if (is_premium !== undefined) {
-      updateFields.push('is_premium = ?');
-      updateParams.push(isPremium);
-    }
-    
-    if (price !== undefined && isPremium) {
-      updateFields.push('price = ?');
-      updateParams.push(price);
-    } else if (isPremium === false) {
-      updateFields.push('price = NULL');
-    }
-
-    // Handle file update
-    if (req.file) {
-      // Get the old file path first
-      db.query('SELECT file_path FROM documents WHERE id = ?', [documentId], (err, results) => {
-        if (err) {
-          console.error('Error fetching document:', err);
-          return res.status(500).json({ message: 'Lỗi server', error: err.message });
-        }
-
-        if (results.length === 0) {
-          return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
-        }
-
-        const oldFilePath = results[0].file_path;
-
-        // Update file information
-        updateFields.push('file_path = ?, file_size = ?, file_type = ?');
-        updateParams.push(req.file.path, req.file.size, req.file.mimetype);
-
-        // Complete the update query
-        updateParams.push(documentId);
-        const updateQuery = `
-          UPDATE documents 
-          SET ${updateFields.join(', ')}, updated_at = NOW()
-          WHERE id = ?
+        const query = `
+            INSERT INTO documents (
+                title, description, file_path, file_size, file_type, 
+                category_id, is_premium, price
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        db.query(updateQuery, updateParams, (err, result) => {
-          if (err) {
-            console.error('Error updating document:', err);
-            return res.status(500).json({ message: 'Lỗi cập nhật tài liệu', error: err.message });
-          }
-
-          // Try to delete the old file
-          try {
-            if (fs.existsSync(oldFilePath)) {
-              fs.unlinkSync(oldFilePath);
+        db.query(query, [
+            title,
+            description,
+            file.path,
+            file.size,
+            file.mimetype,
+            category_id || null,
+            is_premium === 'true',
+            price || null
+        ], (err, result) => {
+            if (err) {
+                return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
             }
-          } catch (fileErr) {
-            console.error('Error deleting old file:', fileErr);
-            // Continue even if file deletion fails
-          }
-
-          res.json({ message: 'Cập nhật tài liệu thành công' });
+            res.status(201).json({ 
+                message: 'Upload tài liệu thành công',
+                document_id: result.insertId
+            });
         });
-      });
-    } else {
-      // No file update, just update other fields
-      if (updateFields.length === 0) {
-        return res.status(400).json({ message: 'Không có thông tin để cập nhật' });
-      }
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
 
-      updateParams.push(documentId);
-      const updateQuery = `
-        UPDATE documents 
-        SET ${updateFields.join(', ')}, updated_at = NOW()
-        WHERE id = ?
-      `;
-
-      db.query(updateQuery, updateParams, (err, result) => {
-        if (err) {
-          console.error('Error updating document:', err);
-          return res.status(500).json({ message: 'Lỗi cập nhật tài liệu', error: err.message });
+// Cập nhật tài liệu (chỉ admin)
+router.put('/:id', auth, upload.single('file'), async (req, res) => {
+    try {
+        // Kiểm tra quyền admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
         }
 
-        res.json({ message: 'Cập nhật tài liệu thành công' });
-      });
+        const { id } = req.params;
+        const { title, description, category_id, is_premium, price } = req.body;
+        const file = req.file;
+
+        // Kiểm tra tài liệu có tồn tại không
+        db.query('SELECT * FROM documents WHERE id = ?', [id], (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+            }
+
+            const document = results[0];
+            let filePath = document.file_path;
+            let fileSize = document.file_size;
+            let fileType = document.file_type;
+
+            // Nếu có file mới, cập nhật thông tin file
+            if (file) {
+                // Xóa file cũ nếu tồn tại
+                if (fs.existsSync(document.file_path)) {
+                    fs.unlinkSync(document.file_path);
+                }
+                filePath = file.path;
+                fileSize = file.size;
+                fileType = file.mimetype;
+            }
+
+            const query = `
+                UPDATE documents 
+                SET title = ?, description = ?, file_path = ?, file_size = ?, 
+                    file_type = ?, category_id = ?, is_premium = ?, price = ?
+                WHERE id = ?
+            `;
+
+            db.query(query, [
+                title,
+                description,
+                filePath,
+                fileSize,
+                fileType,
+                category_id || null,
+                is_premium === 'true',
+                price || null,
+                id
+            ], (err, result) => {
+                if (err) {
+                    return res.status(400).json({ message: 'Lỗi cập nhật tài liệu', error: err.message });
+                }
+                res.json({ message: 'Cập nhật tài liệu thành công' });
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
-  } catch (error) {
-    console.error('Error updating document:', error);
-    res.status(500).json({ message: 'Lỗi server', error: error.message });
-  }
+});
+
+// Xóa tài liệu (chỉ admin)
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        // Kiểm tra quyền admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
+
+        const { id } = req.params;
+
+        // Kiểm tra tài liệu có tồn tại không
+        db.query('SELECT * FROM documents WHERE id = ?', [id], (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+            }
+
+            const document = results[0];
+
+            // Xóa file nếu tồn tại
+            if (fs.existsSync(document.file_path)) {
+                fs.unlinkSync(document.file_path);
+            }
+
+            // Xóa dữ liệu từ database
+            db.query('DELETE FROM documents WHERE id = ?', [id], (err, result) => {
+                if (err) {
+                    return res.status(400).json({ message: 'Lỗi xóa tài liệu', error: err.message });
+                }
+                res.json({ message: 'Xóa tài liệu thành công' });
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
 });
 
 module.exports = router;

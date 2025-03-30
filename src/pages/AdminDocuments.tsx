@@ -80,7 +80,7 @@ const AdminDocuments = () => {
     if (amount === undefined || amount === null) {
       return "0đ";
     }
-    return amount.toLocaleString("vi-VN") + "đ";
+    return amount.toLocaleString("vi-VN", { maximumFractionDigits: 0 }).replace(/,/g, ".") + "đ";
   };
 
   // Format date

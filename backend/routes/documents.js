@@ -1,17 +1,23 @@
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const db = require('../config/database');
 const auth = require('../middleware/auth');
 
 // Cấu hình multer cho upload file
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/');
+        const dir = 'uploads/documents';
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
+        cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
@@ -68,7 +74,10 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
             if (err) {
                 return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
             }
-            res.status(201).json({ message: 'Upload tài liệu thành công' });
+            res.status(201).json({ 
+                message: 'Upload tài liệu thành công',
+                document_id: result.insertId
+            });
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -89,6 +98,11 @@ router.get('/download/:id', auth, async (req, res) => {
             }
 
             const document = results[0];
+            
+            // Kiểm tra file có tồn tại không
+            if (!fs.existsSync(document.file_path)) {
+                return res.status(404).json({ message: 'File không tồn tại trên server' });
+            }
 
             // Kiểm tra nếu là tài liệu premium
             if (document.is_premium) {
@@ -130,7 +144,8 @@ router.get('/download/:id', auth, async (req, res) => {
                     const updateDownloadQuery = 'UPDATE documents SET download_count = download_count + 1 WHERE id = ?';
                     db.query(updateDownloadQuery, [documentId]);
 
-                    res.download(document.file_path);
+                    // Trả về file cho client
+                    res.download(document.file_path, path.basename(document.file_path));
                 });
             } else {
                 // Kiểm tra giới hạn tải của gói đăng ký
@@ -141,7 +156,11 @@ router.get('/download/:id', auth, async (req, res) => {
                     WHERE us.user_id = ? AND us.status = 'active' AND us.end_date > NOW()
                 `;
                 db.query(subscriptionQuery, [userId], (err, subResults) => {
-                    if (err || subResults.length === 0) {
+                    if (err) {
+                        return res.status(400).json({ message: 'Lỗi kiểm tra gói đăng ký', error: err.message });
+                    }
+                    
+                    if (subResults.length === 0) {
                         return res.status(400).json({ message: 'Bạn cần đăng ký gói để tải tài liệu' });
                     }
 
@@ -169,9 +188,31 @@ router.get('/download/:id', auth, async (req, res) => {
                     const updateDownloadQuery = 'UPDATE documents SET download_count = download_count + 1 WHERE id = ?';
                     db.query(updateDownloadQuery, [documentId]);
 
-                    res.download(document.file_path);
+                    // Trả về file cho client
+                    res.download(document.file_path, path.basename(document.file_path));
                 });
             }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
+// Chi tiết tài liệu
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const query = `
+            SELECT d.*, c.name as category_name 
+            FROM documents d 
+            LEFT JOIN categories c ON d.category_id = c.id
+            WHERE d.id = ?
+        `;
+        db.query(query, [id], (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+            }
+            res.json(results[0]);
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -213,4 +254,4 @@ router.get('/search', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;
