@@ -1,4 +1,3 @@
-
 import API from './api';
 
 export interface Document {
@@ -60,7 +59,18 @@ export const getDocumentById = async (id: string) => {
 export const getFeaturedDocuments = async () => {
   try {
     const response = await API.get('/documents/featured');
-    return response.data;
+    // Map the response to include isFree and previewAvailable properties
+    const documents: DocumentResponse[] = response.data.map((doc: Document) => ({
+      id: doc.id,
+      title: doc.title,
+      description: doc.description,
+      category: doc.category,
+      thumbnail: doc.thumbnail || '/placeholder.svg',
+      price: doc.price || 0,
+      isFree: !doc.is_premium,
+      previewAvailable: true // Mặc định cho phép xem trước
+    }));
+    return documents;
   } catch (error) {
     throw error;
   }
@@ -84,7 +94,6 @@ export const searchDocuments = async (query: string) => {
   }
 };
 
-// Lấy danh sách tài liệu của người dùng hiện tại
 export const getUserDocuments = async () => {
   try {
     const response = await API.get('/user/documents');
@@ -94,7 +103,6 @@ export const getUserDocuments = async () => {
   }
 };
 
-// Upload tài liệu mới
 export const uploadDocument = async (documentData: FormData) => {
   try {
     const response = await API.post('/documents/upload', documentData, {
@@ -108,7 +116,6 @@ export const uploadDocument = async (documentData: FormData) => {
   }
 };
 
-// Xóa tài liệu
 export const deleteDocument = async (id: string) => {
   try {
     const response = await API.delete(`/documents/${id}`);
@@ -118,7 +125,6 @@ export const deleteDocument = async (id: string) => {
   }
 };
 
-// Cập nhật thông tin tài liệu
 export const updateDocument = async (id: string, documentData: FormData) => {
   try {
     const response = await API.put(`/documents/${id}`, documentData, {
@@ -132,7 +138,6 @@ export const updateDocument = async (id: string, documentData: FormData) => {
   }
 };
 
-// Tải xuống tài liệu
 export const downloadDocument = async (id: string) => {
   try {
     const response = await API.get(`/documents/download/${id}`, {
@@ -156,7 +161,6 @@ export const downloadDocument = async (id: string) => {
   }
 };
 
-// Lấy nội dung xem trước của tài liệu
 export const getDocumentPreview = async (id: string) => {
   try {
     const response = await API.get(`/documents/${id}/preview`);
@@ -166,7 +170,6 @@ export const getDocumentPreview = async (id: string) => {
   }
 };
 
-// Kiểm tra xem người dùng có thể tải tài liệu không
 export const checkDownloadEligibility = async (id: string) => {
   try {
     const response = await API.get(`/documents/${id}/check-eligibility`);
@@ -176,7 +179,6 @@ export const checkDownloadEligibility = async (id: string) => {
   }
 };
 
-// Lấy thông tin gói đăng ký hiện tại của người dùng
 export const getCurrentSubscription = async () => {
   try {
     const response = await API.get('/subscriptions/current');

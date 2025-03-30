@@ -1,16 +1,15 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import DocumentCard from "./DocumentCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Document, getFeaturedDocuments } from "@/services/document.service";
+import { DocumentResponse, getFeaturedDocuments } from "@/services/document.service";
 import { useToast } from "@/hooks/use-toast";
 
 const FeaturedDocuments = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [visibleDocuments, setVisibleDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
+  const [visibleDocuments, setVisibleDocuments] = useState<DocumentResponse[]>([]);
   const [isShowingAll, setIsShowingAll] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
