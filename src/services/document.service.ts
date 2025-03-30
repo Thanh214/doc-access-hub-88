@@ -27,6 +27,12 @@ export interface DocumentResponse {
   previewAvailable: boolean;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  description: string;
+}
+
 export const getAllDocuments = async () => {
   try {
     const response = await API.get('/documents');
@@ -182,6 +188,15 @@ export const checkDownloadEligibility = async (id: string) => {
 export const getCurrentSubscription = async () => {
   try {
     const response = await API.get('/subscriptions/current');
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getAllCategories = async () => {
+  try {
+    const response = await API.get('/documents/categories');
     return response.data;
   } catch (error) {
     throw error;

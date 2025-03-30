@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -10,21 +9,37 @@ const auth = require('../middleware/auth');
 // Cấu hình multer cho upload file và ảnh
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        let dir = 'uploads/documents';
-        if (file.fieldname === 'thumbnail') {
-            dir = 'uploads/thumbnails';
-        }
+        const dir = 'uploads/documents';
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
         cb(null, dir);
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        // Lấy phần mở rộng của file gốc
+        const ext = path.extname(file.originalname);
+        // Tạo tên file mới với timestamp
+        cb(null, Date.now() + ext);
     }
 });
 
-const upload = multer({ storage: storage });
+const fileFilter = (req, file, cb) => {
+    // Kiểm tra loại file
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Không hỗ trợ định dạng file này'), false);
+    }
+};
+
+const upload = multer({ 
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // Giới hạn 10MB
+    }
+});
 
 // Lấy danh sách tài liệu
 router.get('/', async (req, res) => {
@@ -435,6 +450,23 @@ router.get('/featured/latest', async (req, res) => {
             res.json(results);
         });
     } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
+// Thêm route mới để lấy tất cả danh mục
+router.get('/categories', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM categories ORDER BY name';
+        db.query(query, (err, results) => {
+            if (err) {
+                console.error('Lỗi query:', err);
+                return res.status(500).json({ message: 'Lỗi server', error: err.message });
+            }
+            res.json(results);
+        });
+    } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });

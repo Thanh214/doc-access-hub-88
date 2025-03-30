@@ -15,7 +15,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, SlidersHorizontal, FileText } from "lucide-react";
-import { DocumentResponse, getAllDocuments, searchDocuments, getDocumentsByCategory } from "@/services/document.service";
+import { DocumentResponse, getAllDocuments, searchDocuments, getDocumentsByCategory, getAllCategories, Category } from "@/services/document.service";
 import { useToast } from "@/hooks/use-toast";
 
 const DocumentBrowser = () => {
@@ -28,35 +28,34 @@ const DocumentBrowser = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState("newest");
   const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
   
   useEffect(() => {
-    setIsLoaded(true);
-    
-    const fetchDocuments = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const data = await getAllDocuments();
-        setDocuments(data);
-        setFilteredDocuments(data);
+        const [documentsData, categoriesData] = await Promise.all([
+          getAllDocuments(),
+          getAllCategories()
+        ]);
         
-        // Extract unique categories
-        const uniqueCategories = Array.from(new Set(data.map(doc => doc.category)));
-        setCategories(uniqueCategories);
+        setDocuments(documentsData);
+        setFilteredDocuments(documentsData);
+        setCategories(categoriesData);
       } catch (error) {
-        console.error("Error fetching documents:", error);
+        console.error("Error fetching data:", error);
         toast({
           variant: "destructive",
           title: "Lỗi",
-          description: "Không thể tải danh sách tài liệu. Vui lòng thử lại sau.",
+          description: "Không thể tải dữ liệu. Vui lòng thử lại sau.",
         });
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchDocuments();
+    fetchData();
   }, [toast]);
   
   useEffect(() => {
@@ -193,7 +192,7 @@ const DocumentBrowser = () => {
                 
                 <div>
                   <h3 className="font-medium mb-3">Danh Mục</h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                     <div 
                       className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
                         "Tất Cả Danh Mục" === selectedCategory
@@ -206,15 +205,15 @@ const DocumentBrowser = () => {
                     </div>
                     {categories.map((category) => (
                       <div 
-                        key={category}
+                        key={category.id}
                         className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                          category === selectedCategory
+                          category.name === selectedCategory
                             ? "bg-primary/10 text-primary font-medium"
                             : "hover:bg-muted/60"
                         }`}
-                        onClick={() => setSelectedCategory(category)}
+                        onClick={() => setSelectedCategory(category.name)}
                       >
-                        {category}
+                        {category.name}
                       </div>
                     ))}
                   </div>
