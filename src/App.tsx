@@ -12,6 +12,7 @@ import Transactions from "@/pages/Transactions";
 import AdminDashboard from "@/pages/AdminDashboard";
 import NotFound from "@/pages/NotFound";
 import AdminDocuments from "@/pages/AdminDocuments";
+import AdminSettings from "./pages/AdminSettings";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/transactions" element={<Transactions />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/documents" element={<AdminDocuments />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
