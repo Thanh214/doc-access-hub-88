@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatCurrency, formatFileSize, formatDate } from "@/utils/formatters";
 
 interface Document {
   id: number;
@@ -53,8 +54,12 @@ const AdminDocuments = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+  const [documentToEdit, setDocumentToEdit] = useState<Document | null>(null);
+  const [documentToView, setDocumentToView] = useState<Document | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   // New document form state
@@ -66,40 +71,21 @@ const AdminDocuments = () => {
     price: ""
   });
 
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  // Format currency
-  const formatCurrency = (amount: number | null | undefined) => {
-    if (amount === undefined || amount === null) {
-      return "0đ";
-    }
-    return amount.toLocaleString("vi-VN", { maximumFractionDigits: 0 }).replace(/,/g, ".") + "đ";
-  };
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // Edit document form state
+  const [editDocument, setEditDocument] = useState({
+    title: "",
+    description: "",
+    category_id: "",
+    is_premium: false,
+    price: ""
+  });
 
   // Fetch documents and categories
   const fetchData = async () => {
     setIsLoading(true);
     try {
       // Fetch documents
-      const documentsResponse = await API.get("/documents");
+      const documentsResponse = await API.get("/admin/documents");
       setDocuments(documentsResponse.data);
       
       // Fetch categories
@@ -131,20 +117,36 @@ const AdminDocuments = () => {
     }
   };
 
-  // Handle form change
+  // Handle form change for new document
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewDocument(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle checkbox change
+  // Handle form change for edit document
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditDocument(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle checkbox change for new document
   const handleCheckboxChange = (checked: boolean) => {
     setNewDocument(prev => ({ ...prev, is_premium: checked }));
   };
 
-  // Handle select change
+  // Handle checkbox change for edit document
+  const handleEditCheckboxChange = (checked: boolean) => {
+    setEditDocument(prev => ({ ...prev, is_premium: checked }));
+  };
+
+  // Handle select change for new document
   const handleSelectChange = (value: string) => {
     setNewDocument(prev => ({ ...prev, category_id: value }));
+  };
+
+  // Handle select change for edit document
+  const handleEditSelectChange = (value: string) => {
+    setEditDocument(prev => ({ ...prev, category_id: value }));
   };
 
   // Add document
@@ -171,7 +173,7 @@ const AdminDocuments = () => {
       }
       formData.append("file", selectedFile);
 
-      await API.post("/documents", formData, {
+      await API.post("/admin/documents", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -205,12 +207,60 @@ const AdminDocuments = () => {
     }
   };
 
+  // Edit document
+  const handleEditDocument = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!documentToEdit) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("title", editDocument.title);
+      formData.append("description", editDocument.description);
+      formData.append("category_id", editDocument.category_id);
+      formData.append("is_premium", String(editDocument.is_premium));
+      
+      if (editDocument.is_premium && editDocument.price) {
+        formData.append("price", editDocument.price);
+      }
+      
+      if (selectedFile) {
+        formData.append("file", selectedFile);
+      }
+
+      await API.put(`/admin/documents/${documentToEdit.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast({
+        title: "Thành công",
+        description: "Tài liệu đã được cập nhật thành công",
+      });
+
+      setSelectedFile(null);
+      setIsEditDialogOpen(false);
+      setDocumentToEdit(null);
+      
+      // Refresh documents list
+      fetchData();
+    } catch (error) {
+      console.error("Error updating document:", error);
+      toast({
+        title: "Lỗi cập nhật",
+        description: "Đã xảy ra lỗi khi cập nhật tài liệu. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Delete document
   const handleDeleteDocument = async () => {
     if (!documentToDelete) return;
     
     try {
-      await API.delete(`/documents/${documentToDelete.id}`);
+      await API.delete(`/admin/documents/${documentToDelete.id}`);
       
       toast({
         title: "Thành công",
@@ -229,6 +279,25 @@ const AdminDocuments = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Open edit dialog with document data
+  const openEditDialog = (document: Document) => {
+    setDocumentToEdit(document);
+    setEditDocument({
+      title: document.title,
+      description: document.description || "",
+      category_id: document.category_id ? String(document.category_id) : "",
+      is_premium: document.is_premium,
+      price: document.price ? String(document.price) : ""
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  // Open view dialog with document data
+  const openViewDialog = (document: Document) => {
+    setDocumentToView(document);
+    setIsViewDialogOpen(true);
   };
 
   // Filter documents by search query
@@ -327,10 +396,18 @@ const AdminDocuments = () => {
                           <TableCell>{formatDate(doc.created_at)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button variant="ghost" size="icon">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => openViewDialog(doc)}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="icon">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => openEditDialog(doc)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button 
@@ -481,6 +558,205 @@ const AdminDocuments = () => {
                 <Button type="submit">Thêm tài liệu</Button>
               </DialogFooter>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog chỉnh sửa tài liệu */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Chỉnh sửa tài liệu</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditDocument}>
+              <div className="space-y-4 py-2">
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="edit-title">Tiêu đề</Label>
+                  <Input
+                    id="edit-title"
+                    name="title"
+                    placeholder="Nhập tiêu đề tài liệu"
+                    value={editDocument.title}
+                    onChange={handleEditFormChange}
+                    required
+                  />
+                </div>
+                
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="edit-description">Mô tả</Label>
+                  <Textarea
+                    id="edit-description"
+                    name="description"
+                    placeholder="Nhập mô tả tài liệu"
+                    value={editDocument.description}
+                    onChange={handleEditFormChange}
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="edit-category">Danh mục</Label>
+                  <Select 
+                    onValueChange={handleEditSelectChange}
+                    defaultValue={editDocument.category_id}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn danh mục" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={String(category.id)}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="edit-is_premium"
+                    checked={editDocument.is_premium}
+                    onCheckedChange={handleEditCheckboxChange}
+                  />
+                  <Label htmlFor="edit-is_premium" className="cursor-pointer">
+                    Tài liệu premium (có phí)
+                  </Label>
+                </div>
+                
+                {editDocument.is_premium && (
+                  <div className="grid w-full gap-1.5">
+                    <Label htmlFor="edit-price">Giá (VNĐ)</Label>
+                    <Input
+                      id="edit-price"
+                      name="price"
+                      type="number"
+                      placeholder="Nhập giá tài liệu"
+                      value={editDocument.price}
+                      onChange={handleEditFormChange}
+                      required={editDocument.is_premium}
+                    />
+                  </div>
+                )}
+                
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="edit-file">Tệp tài liệu (tùy chọn)</Label>
+                  <Input
+                    id="edit-file"
+                    type="file"
+                    onChange={handleFileChange}
+                  />
+                  {selectedFile ? (
+                    <p className="text-xs text-gray-500">
+                      File mới: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </p>
+                  ) : documentToEdit && (
+                    <p className="text-xs text-gray-500">
+                      File hiện tại: {documentToEdit.file_path.split('/').pop()} ({formatFileSize(documentToEdit.file_size)})
+                    </p>
+                  )}
+                </div>
+              </div>
+              <DialogFooter className="mt-4">
+                <Button variant="outline" type="button" onClick={() => setIsEditDialogOpen(false)}>
+                  Hủy
+                </Button>
+                <Button type="submit">Lưu thay đổi</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog xem chi tiết tài liệu */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Chi tiết tài liệu</DialogTitle>
+            </DialogHeader>
+            {documentToView && (
+              <div className="space-y-4">
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">ID:</div>
+                  <div className="col-span-2">{documentToView.id}</div>
+                </div>
+                
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Tiêu đề:</div>
+                  <div className="col-span-2">{documentToView.title}</div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Mô tả:</div>
+                  <div className="col-span-2">{documentToView.description || "Không có mô tả"}</div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Danh mục:</div>
+                  <div className="col-span-2">{documentToView.category_name || "Chưa phân loại"}</div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Loại:</div>
+                  <div className="col-span-2">
+                    <Badge variant={documentToView.is_premium ? "secondary" : "outline"}>
+                      {documentToView.is_premium ? "Premium" : "Miễn phí"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Giá:</div>
+                  <div className="col-span-2">
+                    {documentToView.is_premium ? formatCurrency(documentToView.price) : "Miễn phí"}
+                  </div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Định dạng:</div>
+                  <div className="col-span-2">{documentToView.file_type}</div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Kích thước:</div>
+                  <div className="col-span-2">{formatFileSize(documentToView.file_size)}</div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Lượt tải:</div>
+                  <div className="col-span-2">{documentToView.download_count}</div>
+                </div>
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Ngày tạo:</div>
+                  <div className="col-span-2">{formatDate(documentToView.created_at)}</div>
+                </div>
+
+                {documentToView.updated_at && (
+                  <div className="grid w-full grid-cols-3 gap-4">
+                    <div className="col-span-1 font-medium">Ngày cập nhật:</div>
+                    <div className="col-span-2">{formatDate(documentToView.updated_at)}</div>
+                  </div>
+                )}
+
+                <div className="grid w-full grid-cols-3 gap-4">
+                  <div className="col-span-1 font-medium">Đường dẫn file:</div>
+                  <div className="col-span-2 break-all">{documentToView.file_path}</div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+                Đóng
+              </Button>
+              {documentToView && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => openEditDialog(documentToView)}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Chỉnh sửa
+                </Button>
+              )}
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 

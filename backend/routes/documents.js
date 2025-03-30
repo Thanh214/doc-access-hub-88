@@ -23,16 +23,33 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Lấy danh sách tài liệu
+// Lấy danh sách tài liệu có thể tìm kiếm và lọc
 router.get('/', async (req, res) => {
     try {
-        const query = `
+        const { keyword, category_id } = req.query;
+        
+        let query = `
             SELECT d.*, c.name as category_name 
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
-            ORDER BY d.created_at DESC
+            WHERE 1=1
         `;
-        db.query(query, (err, results) => {
+        
+        const params = [];
+        
+        if (keyword) {
+            query += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
+            params.push(`%${keyword}%`, `%${keyword}%`);
+        }
+        
+        if (category_id) {
+            query += ` AND d.category_id = ?`;
+            params.push(category_id);
+        }
+        
+        query += ` ORDER BY d.created_at DESC`;
+        
+        db.query(query, params, (err, results) => {
             if (err) {
                 return res.status(500).json({ message: 'Lỗi server', error: err.message });
             }
@@ -219,31 +236,38 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Tìm kiếm tài liệu
-router.get('/search', async (req, res) => {
+// API lấy các tài liệu nổi bật (download nhiều nhất)
+router.get('/featured/popular', async (req, res) => {
     try {
-        const { keyword, category_id } = req.query;
-        let query = `
+        const query = `
             SELECT d.*, c.name as category_name 
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
-            WHERE 1=1
+            ORDER BY d.download_count DESC
+            LIMIT 8
         `;
-        const params = [];
+        db.query(query, (err, results) => {
+            if (err) {
+                return res.status(500).json({ message: 'Lỗi server', error: err.message });
+            }
+            res.json(results);
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
 
-        if (keyword) {
-            query += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
-            params.push(`%${keyword}%`, `%${keyword}%`);
-        }
-
-        if (category_id) {
-            query += ` AND d.category_id = ?`;
-            params.push(category_id);
-        }
-
-        query += ` ORDER BY d.created_at DESC`;
-
-        db.query(query, params, (err, results) => {
+// API lấy các tài liệu mới nhất
+router.get('/featured/latest', async (req, res) => {
+    try {
+        const query = `
+            SELECT d.*, c.name as category_name 
+            FROM documents d 
+            LEFT JOIN categories c ON d.category_id = c.id
+            ORDER BY d.created_at DESC
+            LIMIT 8
+        `;
+        db.query(query, (err, results) => {
             if (err) {
                 return res.status(500).json({ message: 'Lỗi server', error: err.message });
             }
