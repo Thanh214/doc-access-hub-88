@@ -32,19 +32,24 @@ const DocumentBrowser = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const { toast } = useToast();
   
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching data...');
+        
         const [documentsData, categoriesData] = await Promise.all([
           getAllDocuments(),
           getAllCategories()
         ]);
         
+        console.log('Documents:', documentsData);
+        console.log('Categories:', categoriesData);
+        
         setDocuments(documentsData);
         setFilteredDocuments(documentsData);
         setCategories(categoriesData);
-        setIsLoaded(true);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
@@ -54,33 +59,30 @@ const DocumentBrowser = () => {
         });
       } finally {
         setIsLoading(false);
+        setIsLoaded(true);
       }
     };
     
     fetchData();
   }, [toast]);
   
+  // Filter documents when search/filter criteria change
   useEffect(() => {
-    const filterDocuments = async () => {
-      setIsLoading(true);
-      
+    const filterDocuments = () => {
       try {
         let filtered = [...documents];
         
         // Apply search filter
         if (searchTerm) {
-          const searchResults = await searchDocuments(searchTerm);
-          filtered = searchResults;
+          filtered = filtered.filter(doc => 
+            doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            doc.description.toLowerCase().includes(searchTerm.toLowerCase())
+          );
         }
         
         // Apply category filter
         if (selectedCategory !== "Tất Cả Danh Mục") {
-          if (searchTerm) {
-            filtered = filtered.filter(doc => doc.category === selectedCategory);
-          } else {
-            const categoryResults = await getDocumentsByCategory(selectedCategory);
-            filtered = categoryResults;
-          }
+          filtered = filtered.filter(doc => doc.category === selectedCategory);
         }
         
         // Apply document type filter
@@ -91,31 +93,34 @@ const DocumentBrowser = () => {
         }
         
         // Apply sorting
-        if (sortOrder === "newest") {
-          // Giả sử id cao hơn là mới hơn
-          filtered = [...filtered].sort((a, b) => parseInt(b.id) - parseInt(a.id));
-        } else if (sortOrder === "oldest") {
-          filtered = [...filtered].sort((a, b) => parseInt(a.id) - parseInt(b.id));
-        } else if (sortOrder === "price-low") {
-          filtered = [...filtered].sort((a, b) => a.price - b.price);
-        } else if (sortOrder === "price-high") {
-          filtered = [...filtered].sort((a, b) => b.price - a.price);
-        }
+        filtered.sort((a, b) => {
+          switch (sortOrder) {
+            case "newest":
+              return new Date(b.id).getTime() - new Date(a.id).getTime();
+            case "oldest":
+              return new Date(a.id).getTime() - new Date(b.id).getTime();
+            case "price-low":
+              return a.price - b.price;
+            case "price-high":
+              return b.price - a.price;
+            default:
+              return 0;
+          }
+        });
         
         setFilteredDocuments(filtered);
       } catch (error) {
+        console.error("Error filtering documents:", error);
         toast({
           variant: "destructive",
           title: "Lỗi",
-          description: "Không thể lọc dữ liệu tài liệu. Vui lòng thử lại sau.",
+          description: "Không thể lọc dữ liệu tài liệu.",
         });
-      } finally {
-        setIsLoading(false);
       }
     };
     
     filterDocuments();
-  }, [searchTerm, selectedCategory, documentType, sortOrder, documents, toast]);
+  }, [searchTerm, selectedCategory, documentType, sortOrder, documents]);
   
   return (
     <div className={`min-h-screen flex flex-col transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}>

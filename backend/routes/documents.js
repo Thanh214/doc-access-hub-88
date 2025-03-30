@@ -9,7 +9,11 @@ const auth = require('../middleware/auth');
 // Cấu hình multer cho upload file và ảnh
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dir = 'uploads/documents';
+        let dir = 'uploads/documents';
+        // Nếu là thumbnail thì lưu vào thư mục thumbnails
+        if (file.fieldname === 'thumbnail') {
+            dir = 'uploads/thumbnails';
+        }
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -24,12 +28,28 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    // Kiểm tra loại file
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
+    if (file.fieldname === 'thumbnail') {
+        // Cho phép các định dạng ảnh
+        const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (allowedImageTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WEBP)'), false);
+        }
     } else {
-        cb(new Error('Không hỗ trợ định dạng file này'), false);
+        // Cho phép các định dạng tài liệu
+        const allowedDocTypes = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ];
+        if (allowedDocTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Chỉ chấp nhận file PDF, DOC, DOCX, XLS, XLSX'), false);
+        }
     }
 };
 
