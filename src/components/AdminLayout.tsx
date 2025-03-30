@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { users, fileText, barChart3, logOut, userCog, home } from "lucide-react";
+import { Users, FileText, BarChart3, LogOut, UserCog, Home } from "lucide-react";
 import { getCurrentUser } from "@/services/auth.service";
 import { useToast } from "@/hooks/use-toast";
 
@@ -48,7 +48,7 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
                 to="/admin"
                 className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
               >
-                <barChart3 className="h-5 w-5 mr-3 text-gray-500" />
+                <BarChart3 className="h-5 w-5 mr-3 text-gray-500" />
                 <span>Tổng quan</span>
               </Link>
             </li>
@@ -57,7 +57,7 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
                 to="/admin/users"
                 className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
               >
-                <users className="h-5 w-5 mr-3 text-gray-500" />
+                <Users className="h-5 w-5 mr-3 text-gray-500" />
                 <span>Người dùng</span>
               </Link>
             </li>
@@ -66,7 +66,7 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
                 to="/admin/documents"
                 className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
               >
-                <fileText className="h-5 w-5 mr-3 text-gray-500" />
+                <FileText className="h-5 w-5 mr-3 text-gray-500" />
                 <span>Tài liệu</span>
               </Link>
             </li>
@@ -75,7 +75,7 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
                 to="/"
                 className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
               >
-                <home className="h-5 w-5 mr-3 text-gray-500" />
+                <Home className="h-5 w-5 mr-3 text-gray-500" />
                 <span>Về trang chủ</span>
               </Link>
             </li>
@@ -84,7 +84,7 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
                 onClick={handleLogout}
                 className="flex w-full items-center px-6 py-3 text-red-600 hover:bg-gray-100"
               >
-                <logOut className="h-5 w-5 mr-3" />
+                <LogOut className="h-5 w-5 mr-3" />
                 <span>Đăng xuất</span>
               </button>
             </li>
