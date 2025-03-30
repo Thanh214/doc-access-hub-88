@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Filter, SlidersHorizontal, FileText } from "lucide-react";
 import { DocumentResponse, getAllDocuments, searchDocuments, getDocumentsByCategory, getAllCategories, Category } from "@/services/document.service";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DocumentBrowser = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -43,6 +44,7 @@ const DocumentBrowser = () => {
         setDocuments(documentsData);
         setFilteredDocuments(documentsData);
         setCategories(categoriesData);
+        setIsLoaded(true);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
@@ -192,31 +194,33 @@ const DocumentBrowser = () => {
                 
                 <div>
                   <h3 className="font-medium mb-3">Danh Mục</h3>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    <div 
-                      className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                        "Tất Cả Danh Mục" === selectedCategory
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "hover:bg-muted/60"
-                      }`}
-                      onClick={() => setSelectedCategory("Tất Cả Danh Mục")}
-                    >
-                      Tất Cả Danh Mục
-                    </div>
-                    {categories.map((category) => (
+                  <ScrollArea className="h-[300px] pr-2 categories-container">
+                    <div className="space-y-2">
                       <div 
-                        key={category.id}
                         className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                          category.name === selectedCategory
+                          "Tất Cả Danh Mục" === selectedCategory
                             ? "bg-primary/10 text-primary font-medium"
                             : "hover:bg-muted/60"
                         }`}
-                        onClick={() => setSelectedCategory(category.name)}
+                        onClick={() => setSelectedCategory("Tất Cả Danh Mục")}
                       >
-                        {category.name}
+                        Tất Cả Danh Mục
                       </div>
-                    ))}
-                  </div>
+                      {categories.map((category) => (
+                        <div 
+                          key={category.id}
+                          className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
+                            category.name === selectedCategory
+                              ? "bg-primary/10 text-primary font-medium"
+                              : "hover:bg-muted/60"
+                          }`}
+                          onClick={() => setSelectedCategory(category.name)}
+                        >
+                          {category.name}
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </div>
               </div>
             </div>

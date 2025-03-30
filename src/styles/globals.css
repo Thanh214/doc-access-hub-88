@@ -1,3 +1,4 @@
+
 /* Thêm vào cuối file */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -16,3 +17,10 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #555;
 } 
+
+/* Add height restriction and overflow for categories */
+.categories-container {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 5px;
+}

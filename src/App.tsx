@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import Index from "@/pages/Index";
@@ -15,6 +16,11 @@ import AdminDocuments from "@/pages/AdminDocuments";
 import AdminSettings from "./pages/AdminSettings";
 
 function App() {
+  useEffect(() => {
+    // Fix for document page not showing
+    document.title = "Doc Access Hub - Nền tảng chia sẻ tài liệu";
+  }, []);
+
   return (
     <Router>
       <Toaster />

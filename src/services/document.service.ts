@@ -33,20 +33,22 @@ export interface Category {
   description: string;
 }
 
+const mapDocumentToResponse = (doc: Document): DocumentResponse => ({
+  id: doc.id,
+  title: doc.title,
+  description: doc.description,
+  category: doc.category,
+  thumbnail: doc.thumbnail || '/placeholder.svg',
+  price: doc.price || 0,
+  isFree: !doc.is_premium,
+  previewAvailable: true // Default to allow preview
+});
+
 export const getAllDocuments = async () => {
   try {
     const response = await API.get('/documents');
-    // Chuyển đổi dữ liệu từ backend sang format frontend
-    const documents: DocumentResponse[] = response.data.map((doc: Document) => ({
-      id: doc.id,
-      title: doc.title,
-      description: doc.description,
-      category: doc.category,
-      thumbnail: doc.thumbnail || '/placeholder.svg',
-      price: doc.price || 0,
-      isFree: !doc.is_premium,
-      previewAvailable: true // Mặc định cho phép xem trước
-    }));
+    // Convert data from backend to frontend format
+    const documents: DocumentResponse[] = response.data.map(mapDocumentToResponse);
     return documents;
   } catch (error) {
     throw error;
@@ -66,16 +68,7 @@ export const getFeaturedDocuments = async () => {
   try {
     const response = await API.get('/documents/featured');
     // Map the response to include isFree and previewAvailable properties
-    const documents: DocumentResponse[] = response.data.map((doc: Document) => ({
-      id: doc.id,
-      title: doc.title,
-      description: doc.description,
-      category: doc.category,
-      thumbnail: doc.thumbnail || '/placeholder.svg',
-      price: doc.price || 0,
-      isFree: !doc.is_premium,
-      previewAvailable: true // Mặc định cho phép xem trước
-    }));
+    const documents: DocumentResponse[] = response.data.map(mapDocumentToResponse);
     return documents;
   } catch (error) {
     throw error;
@@ -152,7 +145,7 @@ export const downloadDocument = async (id: string) => {
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    // Lấy tên file từ Content-Disposition header hoặc dùng tên mặc định
+    // Get filename from Content-Disposition header or use default name
     const contentDisposition = response.headers['content-disposition'];
     const fileName = contentDisposition 
       ? contentDisposition.split('filename=')[1].replace(/"/g, '') 
@@ -198,6 +191,34 @@ export const getAllCategories = async () => {
   try {
     const response = await API.get('/documents/categories');
     return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const purchaseDocument = async (documentId: string) => {
+  try {
+    const response = await API.post(`/documents/${documentId}/purchase`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const subscribeToPlan = async (planId: string) => {
+  try {
+    const response = await API.post(`/subscriptions/subscribe`, { planId });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getPurchasedDocuments = async () => {
+  try {
+    const response = await API.get('/user/purchased-documents');
+    const documents: DocumentResponse[] = response.data.map(mapDocumentToResponse);
+    return documents;
   } catch (error) {
     throw error;
   }
