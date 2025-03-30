@@ -26,10 +26,15 @@ const upload = multer({ storage: storage });
 router.get('/', async (req, res) => {
     try {
         const query = `
-            SELECT d.*, c.name as category_name, u.full_name as uploader_name
+            SELECT 
+                d.*,
+                c.name as category_name,
+                u.full_name as uploader_name,
+                u.username as uploader_username
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
             LEFT JOIN users u ON d.user_id = u.id
+            WHERE d.status = 'active' OR d.status IS NULL
             ORDER BY d.created_at DESC
         `;
         db.query(query, (err, results) => {
@@ -40,7 +45,9 @@ router.get('/', async (req, res) => {
             // Format price for each document
             results = results.map(doc => ({
                 ...doc,
-                price: doc.price ? Number(doc.price).toLocaleString('vi-VN') + 'đ' : '0đ'
+                price: doc.price ? Number(doc.price) : 0,
+                file_size: doc.file_size ? Number(doc.file_size) : 0,
+                download_count: doc.download_count ? Number(doc.download_count) : 0
             }));
             
             res.json(results);
@@ -55,6 +62,7 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     try {
         const { title, description, category_id, is_premium, price } = req.body;
         const file = req.file;
+        const userId = req.user.id; // Lấy user_id từ token
 
         if (!file) {
             return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
@@ -63,9 +71,9 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
         const query = `
             INSERT INTO documents (
                 title, description, file_path, file_size, file_type, 
-                category_id, is_premium, price
+                category_id, is_premium, price, user_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         db.query(query, [
@@ -76,7 +84,8 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
             file.mimetype,
             category_id || null,
             is_premium === 'true',
-            price || null
+            price || null,
+            userId
         ], (err, result) => {
             if (err) {
                 return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });

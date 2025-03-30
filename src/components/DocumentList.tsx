@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, Download, Star, Book, Clock, Tag } from 'lucide-react';
+import { FileText, Download, Star, Book, Clock, Tag, User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate, formatFileSize } from '@/utils/format';
@@ -18,6 +17,9 @@ interface Document {
   download_count: number;
   created_at: string;
   is_premium: boolean;
+  uploader_name?: string;
+  uploader_username?: string;
+  status: string;
 }
 
 interface DocumentListProps {
@@ -114,6 +116,12 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, onPurchase, isAd
                 <Clock className="h-3.5 w-3.5 mr-1 text-primary/70" />
                 <span>{formatDate(document.created_at)}</span>
               </div>
+              {document.uploader_name && (
+                <div className="flex items-center">
+                  <User className="h-3.5 w-3.5 mr-1 text-primary/70" />
+                  <span>{document.uploader_name}</span>
+                </div>
+              )}
             </div>
           </div>
           
