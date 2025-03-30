@@ -8,7 +8,6 @@ export interface Document {
   price: number;
   file_path?: string;
   file_size?: number;
-  thumbnail?: string;
   download_count: number;
   created_at: string;
   is_premium: boolean;
@@ -27,28 +26,20 @@ export interface DocumentResponse {
   previewAvailable: boolean;
 }
 
-export interface Category {
-  id: number;
-  name: string;
-  description: string;
-}
-
-const mapDocumentToResponse = (doc: Document): DocumentResponse => ({
-  id: doc.id,
-  title: doc.title,
-  description: doc.description,
-  category: doc.category,
-  thumbnail: doc.thumbnail || '/placeholder.svg',
-  price: doc.price || 0,
-  isFree: !doc.is_premium,
-  previewAvailable: true // Default to allow preview
-});
-
 export const getAllDocuments = async () => {
   try {
     const response = await API.get('/documents');
-    // Convert data from backend to frontend format
-    const documents: DocumentResponse[] = response.data.map(mapDocumentToResponse);
+    // Chuyển đổi dữ liệu từ backend sang format frontend
+    const documents: DocumentResponse[] = response.data.map((doc: Document) => ({
+      id: doc.id,
+      title: doc.title,
+      description: doc.description,
+      category: doc.category,
+      thumbnail: '/placeholder.svg', // Placeholder cho thumbnail
+      price: doc.price || 0,
+      isFree: !doc.is_premium,
+      previewAvailable: true // Mặc định cho phép xem trước
+    }));
     return documents;
   } catch (error) {
     throw error;
@@ -67,9 +58,7 @@ export const getDocumentById = async (id: string) => {
 export const getFeaturedDocuments = async () => {
   try {
     const response = await API.get('/documents/featured');
-    // Map the response to include isFree and previewAvailable properties
-    const documents: DocumentResponse[] = response.data.map(mapDocumentToResponse);
-    return documents;
+    return response.data;
   } catch (error) {
     throw error;
   }
@@ -93,132 +82,119 @@ export const searchDocuments = async (query: string) => {
   }
 };
 
+// Mới thêm: Lấy danh sách tài liệu của người dùng hiện tại
 export const getUserDocuments = async () => {
   try {
-    const response = await API.get('/user/documents');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const uploadDocument = async (documentData: FormData) => {
-  try {
-    const response = await API.post('/documents/upload', documentData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    // Giả lập dữ liệu vì chưa có API endpoint thực tế
+    // Trong thực tế, bạn sẽ gọi API đến backend
+    return [
+      {
+        id: "1",
+        title: "Tài liệu luyện thi THPT Quốc Gia môn Toán",
+        description: "Bộ tài liệu đầy đủ dành cho học sinh luyện thi THPT Quốc Gia môn Toán với các dạng bài tập từ cơ bản đến nâng cao.",
+        category: "Giáo dục",
+        thumbnail: "/placeholder.svg",
+        price: 50000,
+        isFree: false,
+        previewAvailable: true
+      },
+      {
+        id: "2",
+        title: "Luật Doanh Nghiệp 2020",
+        description: "Tài liệu cập nhật đầy đủ về Luật Doanh Nghiệp 2020 với các điều khoản và hướng dẫn chi tiết.",
+        category: "Pháp luật",
+        thumbnail: "/placeholder.svg",
+        price: 0,
+        isFree: true,
+        previewAvailable: false
+      },
+      {
+        id: "3",
+        title: "Học tiếng Anh giao tiếp cơ bản",
+        description: "Tài liệu giúp người học nắm vững các kỹ năng giao tiếp tiếng Anh cơ bản trong cuộc sống hàng ngày.",
+        category: "Ngoại ngữ",
+        thumbnail: "/placeholder.svg",
+        price: 30000,
+        isFree: false,
+        previewAvailable: true
+      },
+      {
+        id: "4",
+        title: "Lập trình cơ bản với Python",
+        description: "Tài liệu hướng dẫn lập trình Python từ cơ bản đến nâng cao cho người mới bắt đầu.",
+        category: "Công nghệ",
+        thumbnail: "/placeholder.svg",
+        price: 75000,
+        isFree: false,
+        previewAvailable: true
       }
-    });
-    return response.data;
+    ];
   } catch (error) {
     throw error;
   }
 };
 
+// Mới thêm: Upload tài liệu mới
+export const uploadDocument = async (documentData: Omit<Document, 'id'>) => {
+  try {
+    // Trong thực tế, bạn sẽ gọi API POST đến backend
+    // const response = await API.post('/documents/upload', documentData);
+    // return response.data;
+    
+    // Trả về dữ liệu giả lập
+    return {
+      success: true,
+      message: "Tài liệu đã được tải lên thành công",
+      document: {
+        id: Math.random().toString(36).substring(2, 9),
+        ...documentData
+      }
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Mới thêm: Xóa tài liệu
 export const deleteDocument = async (id: string) => {
   try {
-    const response = await API.delete(`/documents/${id}`);
-    return response.data;
+    // Trong thực tế, bạn sẽ gọi API DELETE đến backend
+    // const response = await API.delete(`/documents/${id}`);
+    // return response.data;
+    
+    // Trả về dữ liệu giả lập
+    return {
+      success: true,
+      message: "Tài liệu đã được xóa thành công"
+    };
   } catch (error) {
     throw error;
   }
 };
 
-export const updateDocument = async (id: string, documentData: FormData) => {
+// Mới thêm: Cập nhật thông tin tài liệu
+export const updateDocument = async (id: string, documentData: Partial<Document>) => {
   try {
-    const response = await API.put(`/documents/${id}`, documentData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    // Trong thực tế, bạn sẽ gọi API PUT đến backend
+    // const response = await API.put(`/documents/${id}`, documentData);
+    // return response.data;
+    
+    // Trả về dữ liệu giả lập
+    return {
+      success: true,
+      message: "Tài liệu đã được cập nhật thành công",
+      document: {
+        id,
+        title: "Tài liệu đã cập nhật",
+        description: "Mô tả mới",
+        category: "Danh mục mới",
+        thumbnail: "/placeholder.svg",
+        price: 50000,
+        isFree: false,
+        previewAvailable: true,
+        ...documentData
       }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const downloadDocument = async (id: string) => {
-  try {
-    const response = await API.get(`/documents/download/${id}`, {
-      responseType: 'blob'
-    });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    // Get filename from Content-Disposition header or use default name
-    const contentDisposition = response.headers['content-disposition'];
-    const fileName = contentDisposition 
-      ? contentDisposition.split('filename=')[1].replace(/"/g, '') 
-      : `document-${id}.pdf`;
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    return { success: true };
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getDocumentPreview = async (id: string) => {
-  try {
-    const response = await API.get(`/documents/${id}/preview`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const checkDownloadEligibility = async (id: string) => {
-  try {
-    const response = await API.get(`/documents/${id}/check-eligibility`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getCurrentSubscription = async () => {
-  try {
-    const response = await API.get('/subscriptions/current');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getAllCategories = async () => {
-  try {
-    const response = await API.get('/documents/categories');
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const purchaseDocument = async (documentId: string) => {
-  try {
-    const response = await API.post(`/documents/${documentId}/purchase`);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const subscribeToPlan = async (planId: string) => {
-  try {
-    const response = await API.post(`/subscriptions/subscribe`, { planId });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
-};
-
-export const getPurchasedDocuments = async () => {
-  try {
-    const response = await API.get('/user/purchased-documents');
-    const documents: DocumentResponse[] = response.data.map(mapDocumentToResponse);
-    return documents;
+    };
   } catch (error) {
     throw error;
   }

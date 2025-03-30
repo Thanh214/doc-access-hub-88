@@ -15,9 +15,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, SlidersHorizontal, FileText } from "lucide-react";
-import { DocumentResponse, getAllDocuments, searchDocuments, getDocumentsByCategory, getAllCategories, Category } from "@/services/document.service";
+import { DocumentResponse, getAllDocuments, searchDocuments, getDocumentsByCategory } from "@/services/document.service";
 import { useToast } from "@/hooks/use-toast";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DocumentBrowser = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -29,35 +28,35 @@ const DocumentBrowser = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState("newest");
   const [isLoading, setIsLoading] = useState(true);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const { toast } = useToast();
   
   useEffect(() => {
-    const fetchData = async () => {
+    setIsLoaded(true);
+    
+    const fetchDocuments = async () => {
       try {
         setIsLoading(true);
-        const [documentsData, categoriesData] = await Promise.all([
-          getAllDocuments(),
-          getAllCategories()
-        ]);
+        const data = await getAllDocuments();
+        setDocuments(data);
+        setFilteredDocuments(data);
         
-        setDocuments(documentsData);
-        setFilteredDocuments(documentsData);
-        setCategories(categoriesData);
-        setIsLoaded(true);
+        // Extract unique categories
+        const uniqueCategories = Array.from(new Set(data.map(doc => doc.category)));
+        setCategories(uniqueCategories);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching documents:", error);
         toast({
           variant: "destructive",
           title: "Lỗi",
-          description: "Không thể tải dữ liệu. Vui lòng thử lại sau.",
+          description: "Không thể tải danh sách tài liệu. Vui lòng thử lại sau.",
         });
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchData();
+    fetchDocuments();
   }, [toast]);
   
   useEffect(() => {
@@ -194,33 +193,31 @@ const DocumentBrowser = () => {
                 
                 <div>
                   <h3 className="font-medium mb-3">Danh Mục</h3>
-                  <ScrollArea className="h-[300px] pr-2 categories-container">
-                    <div className="space-y-2">
+                  <div className="space-y-2">
+                    <div 
+                      className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
+                        "Tất Cả Danh Mục" === selectedCategory
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "hover:bg-muted/60"
+                      }`}
+                      onClick={() => setSelectedCategory("Tất Cả Danh Mục")}
+                    >
+                      Tất Cả Danh Mục
+                    </div>
+                    {categories.map((category) => (
                       <div 
+                        key={category}
                         className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                          "Tất Cả Danh Mục" === selectedCategory
+                          category === selectedCategory
                             ? "bg-primary/10 text-primary font-medium"
                             : "hover:bg-muted/60"
                         }`}
-                        onClick={() => setSelectedCategory("Tất Cả Danh Mục")}
+                        onClick={() => setSelectedCategory(category)}
                       >
-                        Tất Cả Danh Mục
+                        {category}
                       </div>
-                      {categories.map((category) => (
-                        <div 
-                          key={category.id}
-                          className={`px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                            category.name === selectedCategory
-                              ? "bg-primary/10 text-primary font-medium"
-                              : "hover:bg-muted/60"
-                          }`}
-                          onClick={() => setSelectedCategory(category.name)}
-                        >
-                          {category.name}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

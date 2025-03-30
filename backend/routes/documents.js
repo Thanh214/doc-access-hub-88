@@ -6,7 +6,7 @@ const fs = require('fs');
 const db = require('../config/database');
 const auth = require('../middleware/auth');
 
-// Cấu hình multer cho upload file và ảnh
+// Cấu hình multer cho upload file
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const dir = 'uploads/documents';
@@ -16,30 +16,11 @@ const storage = multer.diskStorage({
         cb(null, dir);
     },
     filename: function (req, file, cb) {
-        // Lấy phần mở rộng của file gốc
-        const ext = path.extname(file.originalname);
-        // Tạo tên file mới với timestamp
-        cb(null, Date.now() + ext);
+        cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
-const fileFilter = (req, file, cb) => {
-    // Kiểm tra loại file
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Không hỗ trợ định dạng file này'), false);
-    }
-};
-
-const upload = multer({ 
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // Giới hạn 10MB
-    }
-});
+const upload = multer({ storage: storage });
 
 // Lấy danh sách tài liệu
 router.get('/', async (req, res) => {
@@ -98,7 +79,6 @@ router.get('/', async (req, res) => {
                 price: doc.price ? Number(doc.price) : 0,
                 file_path: doc.file_path,
                 file_size: doc.file_size ? Number(doc.file_size) : 0,
-                thumbnail: doc.thumbnail || null,
                 download_count: doc.download_count ? Number(doc.download_count) : 0,
                 created_at: doc.created_at,
                 is_premium: Boolean(doc.is_premium),
@@ -114,26 +94,26 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Upload tài liệu mới với khả năng upload thumbnail
-router.post('/', auth, upload.fields([
-    { name: 'file', maxCount: 1 },
-    { name: 'thumbnail', maxCount: 1 }
-]), async (req, res) => {
+// Upload tài liệu mới
+router.post('/', auth, upload.single('file'), async (req, res) => {
     try {
         const { title, description, category_id, is_premium, price } = req.body;
-        const files = req.files;
+        const file = req.file;
         const userId = req.user.id; // Lấy user_id từ token
 
-        if (!files || !files.file) {
+        if (!file) {
             return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
         }
 
-        const file = files.file[0];
-        const thumbnail = files.thumbnail ? files.thumbnail[0].path : null;
+        const query = `
+            INSERT INTO documents (
+                title, description, file_path, file_size, file_type, 
+                category_id, is_premium, price, uploader_id
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
-        let insertFields = 'title, description, file_path, file_size, file_type, category_id, is_premium, price, uploader_id';
-        let insertValues = '?, ?, ?, ?, ?, ?, ?, ?, ?';
-        let params = [
+        db.query(query, [
             title,
             description,
             file.path,
@@ -143,20 +123,7 @@ router.post('/', auth, upload.fields([
             is_premium === 'true',
             price || null,
             userId
-        ];
-
-        if (thumbnail) {
-            insertFields += ', thumbnail';
-            insertValues += ', ?';
-            params.push(thumbnail);
-        }
-
-        const query = `
-            INSERT INTO documents (${insertFields})
-            VALUES (${insertValues})
-        `;
-
-        db.query(query, params, (err, result) => {
+        ], (err, result) => {
             if (err) {
                 return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
             }
@@ -164,113 +131,6 @@ router.post('/', auth, upload.fields([
                 message: 'Upload tài liệu thành công',
                 document_id: result.insertId
             });
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
-    }
-});
-
-// Xem trước tài liệu
-router.get('/:id/preview', async (req, res) => {
-    try {
-        const documentId = req.params.id;
-        
-        // Trả về một đoạn HTML preview giả lập
-        // Trong ứng dụng thực tế, bạn có thể tạo preview từ file PDF hoặc trả về đường dẫn tới file preview
-        const previewHtml = `
-            <h1 class="text-2xl font-bold mb-4">Đây là phần xem trước tài liệu</h1>
-            <p class="mb-3">Đây là nội dung xem trước của tài liệu. Trong môi trường thực tế, bạn sẽ cần một dịch vụ chuyển đổi tài liệu để tạo ra phần xem trước này.</p>
-            <p class="mb-3">Các định dạng tài liệu phổ biến như PDF, DOCX, PPTX sẽ cần công cụ chuyên biệt để tạo preview HTML.</p>
-            <div class="border p-4 rounded-md bg-gray-50 my-4">
-                <h2 class="text-xl font-semibold mb-2">Ví dụ về nội dung tài liệu</h2>
-                <p>Đây là một đoạn văn bản mẫu từ tài liệu. Nội dung đầy đủ sẽ được hiển thị khi bạn mua hoặc tải tài liệu về.</p>
-            </div>
-            <div class="my-4">
-                <h3 class="text-lg font-semibold">Một số điểm chính trong tài liệu:</h3>
-                <ul class="list-disc pl-6 mt-2 space-y-1">
-                    <li>Điểm quan trọng thứ nhất</li>
-                    <li>Điểm quan trọng thứ hai</li>
-                    <li>Điểm quan trọng thứ ba</li>
-                    <li>Kết luận và đề xuất</li>
-                </ul>
-            </div>
-        `;
-        
-        res.json({ 
-            preview: previewHtml,
-            pages: Math.floor(Math.random() * 20) + 5 // Số trang giả lập
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
-    }
-});
-
-// Kiểm tra xem người dùng có đủ điều kiện để tải tài liệu không
-router.get('/:id/check-eligibility', auth, async (req, res) => {
-    try {
-        const documentId = req.params.id;
-        const userId = req.user.id;
-
-        // Lấy thông tin tài liệu
-        const docQuery = 'SELECT * FROM documents WHERE id = ?';
-        db.query(docQuery, [documentId], (err, docResults) => {
-            if (err || docResults.length === 0) {
-                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
-            }
-
-            const document = docResults[0];
-            
-            // Nếu tài liệu premium, kiểm tra số dư
-            if (document.is_premium) {
-                const userQuery = 'SELECT balance FROM users WHERE id = ?';
-                db.query(userQuery, [userId], (err, userResults) => {
-                    if (err || userResults.length === 0) {
-                        return res.status(400).json({ message: 'Lỗi kiểm tra số dư' });
-                    }
-
-                    const userBalance = userResults[0].balance;
-                    
-                    res.json({
-                        eligible: userBalance >= document.price,
-                        reason: userBalance >= document.price ? null : 'insufficient_balance',
-                        requiredBalance: document.price,
-                        currentBalance: userBalance
-                    });
-                });
-            } else {
-                // Kiểm tra gói đăng ký cho tài liệu miễn phí
-                const subscriptionQuery = `
-                    SELECT us.*, sp.download_limit 
-                    FROM user_subscriptions us
-                    JOIN subscription_packages sp ON us.package_id = sp.id
-                    WHERE us.user_id = ? AND us.status = 'active' AND us.end_date > NOW()
-                `;
-                db.query(subscriptionQuery, [userId], (err, subResults) => {
-                    if (err) {
-                        return res.status(400).json({ message: 'Lỗi kiểm tra gói đăng ký', error: err.message });
-                    }
-                    
-                    if (subResults.length === 0) {
-                        return res.json({
-                            eligible: false,
-                            reason: 'no_subscription',
-                            message: 'Bạn cần đăng ký gói để tải tài liệu miễn phí'
-                        });
-                    }
-
-                    const subscription = subResults[0];
-                    
-                    res.json({
-                        eligible: subscription.remaining_downloads > 0,
-                        reason: subscription.remaining_downloads > 0 ? null : 'download_limit_reached',
-                        subscription: {
-                            package_name: subscription.package_name,
-                            remaining_downloads: subscription.remaining_downloads,
-                            end_date: subscription.end_date
-                        }
-                    });
-                });
-            }
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -343,7 +203,7 @@ router.get('/download/:id', auth, async (req, res) => {
             } else {
                 // Kiểm tra giới hạn tải của gói đăng ký
                 const subscriptionQuery = `
-                    SELECT us.*, sp.download_limit, sp.name as package_name
+                    SELECT us.*, sp.download_limit 
                     FROM user_subscriptions us
                     JOIN subscription_packages sp ON us.package_id = sp.id
                     WHERE us.user_id = ? AND us.status = 'active' AND us.end_date > NOW()
@@ -450,23 +310,6 @@ router.get('/featured/latest', async (req, res) => {
             res.json(results);
         });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
-    }
-});
-
-// Thêm route mới để lấy tất cả danh mục
-router.get('/categories', async (req, res) => {
-    try {
-        const query = 'SELECT * FROM categories ORDER BY name';
-        db.query(query, (err, results) => {
-            if (err) {
-                console.error('Lỗi query:', err);
-                return res.status(500).json({ message: 'Lỗi server', error: err.message });
-            }
-            res.json(results);
-        });
-    } catch (error) {
-        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
