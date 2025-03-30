@@ -35,45 +35,45 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex bg-green-50">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-sm">
-        <div className="p-6">
-          <h2 className="text-xl font-bold text-primary">Admin TàiLiệuVN</h2>
+      <div className="w-64 bg-white shadow-sm border-r border-green-100">
+        <div className="p-6 bg-green-600 text-white">
+          <h2 className="text-xl font-bold">Admin TàiLiệuVN</h2>
         </div>
         <nav className="mt-2">
           <ul className="space-y-1">
             <li>
               <Link
                 to="/admin"
-                className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+                className="flex items-center px-6 py-3 text-gray-700 hover:bg-green-100"
               >
-                <BarChart3 className="h-5 w-5 mr-3 text-gray-500" />
+                <BarChart3 className="h-5 w-5 mr-3 text-green-600" />
                 <span>Tổng quan</span>
               </Link>
             </li>
             <li>
               <Link
                 to="/admin/documents"
-                className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+                className="flex items-center px-6 py-3 text-gray-700 hover:bg-green-100"
               >
-                <FileText className="h-5 w-5 mr-3 text-gray-500" />
+                <FileText className="h-5 w-5 mr-3 text-green-600" />
                 <span>Tài liệu</span>
               </Link>
             </li>
             <li className="mt-auto">
               <Link
-                to="/"
-                className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
+                to="/documents"
+                className="flex items-center px-6 py-3 text-gray-700 hover:bg-green-100"
               >
-                <Home className="h-5 w-5 mr-3 text-gray-500" />
-                <span>Về trang chủ</span>
+                <FileText className="h-5 w-5 mr-3 text-green-600" />
+                <span>Xem trang tài liệu</span>
               </Link>
             </li>
             <li>
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center px-6 py-3 text-red-600 hover:bg-gray-100"
+                className="flex w-full items-center px-6 py-3 text-red-600 hover:bg-green-100"
               >
                 <LogOut className="h-5 w-5 mr-3" />
                 <span>Đăng xuất</span>
@@ -85,8 +85,8 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-sm px-6 py-4">
-          <h1 className="text-xl font-bold">{title}</h1>
+        <header className="bg-white shadow-sm px-6 py-4 border-b border-green-100">
+          <h1 className="text-xl font-bold text-green-800">{title}</h1>
           {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
         </header>
         <main className="flex-1 p-6">{children}</main>

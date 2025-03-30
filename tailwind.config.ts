@@ -63,7 +63,34 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// New vibrant colors
+				// New palette with green and pink
+				"soft-pink": "#FFDEE2",
+				"soft-green": "#F2FCE2",
+				"green": {
+          50: "#F2FCE2",
+          100: "#E2F7C2",
+          200: "#C7EF8C",
+          300: "#A9E555",
+          400: "#8BD42A",
+          500: "#72B41F",
+          600: "#5A9116",
+          700: "#436D0E",
+          800: "#2C4807",
+          900: "#152401"
+        },
+        "pink": {
+          50: "#FFF0F2",
+          100: "#FFDEE2",
+          200: "#FFBDC6",
+          300: "#FF9CA9",
+          400: "#FF7A8D",
+          500: "#FF5872",
+          600: "#CC475B",
+          700: "#993544",
+          800: "#66232E",
+          900: "#331217"
+        },
+				// Vibrant colors
 				"vibrant-1": "#FE6479",
 				"vibrant-2": "#F9FFB6",
 				"vibrant-3": "#E2FFAC",

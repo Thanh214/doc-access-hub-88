@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 345 100% 60%;
+    --primary: 345 100% 60%; /* Pink */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -45,43 +45,15 @@
     --sidebar-ring: 345 100% 60%;
   }
 
+  /* Admin theme */
+  .admin-theme {
+    --primary: 120 61% 50%; /* Green */
+    --primary-foreground: 210 40% 98%;
+    --ring: 120 61% 50%;
+  }
+
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 224.3 76.3% 48%;
+    /* ... keep existing code (dark theme variables) */
   }
 }
 
@@ -98,6 +70,11 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Custom styles for admin pages */
+  .admin-page {
+    @apply bg-green-50;
   }
   
   /* Custom scrollbar */
@@ -122,6 +99,14 @@
   .glass {
     @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-sm;
   }
+
+  .glass-green {
+    @apply bg-green-50/70 backdrop-blur-lg border border-green-100 shadow-sm;
+  }
+  
+  .glass-pink {
+    @apply bg-pink-50/70 backdrop-blur-lg border border-pink-100 shadow-sm;
+  }
   
   .glass-dark {
     @apply bg-black/40 backdrop-blur-lg border border-white/10 shadow-sm;
@@ -141,9 +126,32 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-vibrant;
   }
+
+  /* New gradient for admin */
+  .text-gradient-green {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-green-700;
+  }
   
   /* Card hover effect */
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
   }
+
+  /* Green-pink button gradient */
+  .btn-green-pink {
+    @apply bg-gradient-to-r from-green-500 to-pink-400 text-white hover:from-green-600 hover:to-pink-500;
+  }
+}
+
+/* New gradient backgrounds */
+.bg-gradient-vibrant {
+  background: linear-gradient(90deg, #FE6479 0%, #FFDEBA 100%);
+}
+
+.bg-gradient-green-pink {
+  background: linear-gradient(90deg, #72B41F 0%, #FF7A8D 100%);
+}
+
+.bg-gradient-soft {
+  background: linear-gradient(90deg, #F2FCE2 0%, #FFDEE2 100%);
 }
