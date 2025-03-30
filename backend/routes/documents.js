@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -23,36 +22,27 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Lấy danh sách tài liệu có thể tìm kiếm và lọc
+// Lấy danh sách tài liệu
 router.get('/', async (req, res) => {
     try {
-        const { keyword, category_id } = req.query;
-        
-        let query = `
-            SELECT d.*, c.name as category_name 
+        const query = `
+            SELECT d.*, c.name as category_name, u.full_name as uploader_name
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
-            WHERE 1=1
+            LEFT JOIN users u ON d.user_id = u.id
+            ORDER BY d.created_at DESC
         `;
-        
-        const params = [];
-        
-        if (keyword) {
-            query += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
-            params.push(`%${keyword}%`, `%${keyword}%`);
-        }
-        
-        if (category_id) {
-            query += ` AND d.category_id = ?`;
-            params.push(category_id);
-        }
-        
-        query += ` ORDER BY d.created_at DESC`;
-        
-        db.query(query, params, (err, results) => {
+        db.query(query, (err, results) => {
             if (err) {
                 return res.status(500).json({ message: 'Lỗi server', error: err.message });
             }
+            
+            // Format price for each document
+            results = results.map(doc => ({
+                ...doc,
+                price: doc.price ? Number(doc.price).toLocaleString('vi-VN') + 'đ' : '0đ'
+            }));
+            
             res.json(results);
         });
     } catch (error) {

@@ -97,5 +97,6 @@ INSERT INTO subscription_packages (name, price, download_limit, duration_days, d
 ('Gói Cao Cấp', 200000, 100, 30, 'Gói cao cấp cho người dùng chuyên nghiệp');
 
 -- Thêm tài khoản admin mặc định
-INSERT INTO users (username, email, password, full_name, role) VALUES
-('admin', 'admin@example.com', '$2a$10$YourHashedPasswordHere', 'Administrator', 'admin');
+-- Mật khẩu: admin123 (đã được mã hóa bằng bcrypt)
+INSERT INTO users (email, password, full_name, role, balance) VALUES 
+('admin@tailieuvn.com', '$2a$10$8OuAgqj.SdXnGHXz0S0Jz.YYT4hFHx.yo0XG2c.YuoQsKZiKJ5YyG', 'Administrator', 'admin', 0);

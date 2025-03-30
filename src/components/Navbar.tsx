@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatCurrency } from '../utils/format';
 
 interface User {
   id: number;
@@ -136,7 +136,7 @@ const Navbar: React.FC = () => {
                   <div className="flex flex-col items-start text-sm">
                     <span className="font-medium">{user.full_name || user.email}</span>
                     <span className="text-xs text-muted-foreground">
-                      {user.balance?.toLocaleString()}đ
+                      {formatCurrency(user.balance)}
                     </span>
                   </div>
                 </Button>
@@ -182,7 +182,7 @@ const Navbar: React.FC = () => {
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center space-x-2">
           {user && (
-            <span className="text-sm mr-2">{user.balance?.toLocaleString()}đ</span>
+            <span className="text-sm mr-2">{formatCurrency(user.balance)}</span>
           )}
           <button 
             className="text-foreground/90"
