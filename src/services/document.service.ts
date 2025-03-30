@@ -1,4 +1,3 @@
-
 import API from './api';
 
 export interface Document {
@@ -6,7 +5,22 @@ export interface Document {
   title: string;
   description: string;
   category: string;
-  thumbnail: string;
+  price: number;
+  file_path?: string;
+  file_size?: number;
+  download_count: number;
+  created_at: string;
+  is_premium: boolean;
+  uploader_name?: string;
+  status: string;
+}
+
+export interface DocumentResponse {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  thumbnail?: string;
   price: number;
   isFree: boolean;
   previewAvailable: boolean;
@@ -15,7 +29,18 @@ export interface Document {
 export const getAllDocuments = async () => {
   try {
     const response = await API.get('/documents');
-    return response.data;
+    // Chuyển đổi dữ liệu từ backend sang format frontend
+    const documents: DocumentResponse[] = response.data.map((doc: Document) => ({
+      id: doc.id,
+      title: doc.title,
+      description: doc.description,
+      category: doc.category,
+      thumbnail: '/placeholder.svg', // Placeholder cho thumbnail
+      price: doc.price || 0,
+      isFree: !doc.is_premium,
+      previewAvailable: true // Mặc định cho phép xem trước
+    }));
+    return documents;
   } catch (error) {
     throw error;
   }

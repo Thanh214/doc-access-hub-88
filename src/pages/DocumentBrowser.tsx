@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -16,13 +15,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, SlidersHorizontal, FileText } from "lucide-react";
-import { Document, getAllDocuments, searchDocuments, getDocumentsByCategory } from "@/services/document.service";
+import { DocumentResponse, getAllDocuments, searchDocuments, getDocumentsByCategory } from "@/services/document.service";
 import { useToast } from "@/hooks/use-toast";
 
 const DocumentBrowser = () => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
+  const [filteredDocuments, setFilteredDocuments] = useState<DocumentResponse[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất Cả Danh Mục");
   const [documentType, setDocumentType] = useState("all");
@@ -38,21 +37,13 @@ const DocumentBrowser = () => {
     const fetchDocuments = async () => {
       try {
         setIsLoading(true);
-        const response = await getAllDocuments();
-        setDocuments(response.documents);
+        const data = await getAllDocuments();
+        setDocuments(data);
+        setFilteredDocuments(data);
         
-        // Fixed: Properly type the categories array
-        const allCategories = response.documents
-          .map(doc => doc.category)
-          .filter((category): category is string => 
-            typeof category === 'string' && category.trim() !== ''
-          );
-        
-        // Create a unique set of categories
-        const uniqueCategories: string[] = Array.from(new Set(allCategories));
-        
+        // Extract unique categories
+        const uniqueCategories = Array.from(new Set(data.map(doc => doc.category)));
         setCategories(uniqueCategories);
-        setFilteredDocuments(response.documents);
       } catch (error) {
         console.error("Error fetching documents:", error);
         toast({
