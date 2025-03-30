@@ -9,11 +9,7 @@ const auth = require('../middleware/auth');
 // Cấu hình multer cho upload file và ảnh
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        let dir = 'uploads/documents';
-        // Nếu là thumbnail thì lưu vào thư mục thumbnails
-        if (file.fieldname === 'thumbnail') {
-            dir = 'uploads/thumbnails';
-        }
+        const dir = 'uploads/documents';
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -28,28 +24,12 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    if (file.fieldname === 'thumbnail') {
-        // Cho phép các định dạng ảnh
-        const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (allowedImageTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF, WEBP)'), false);
-        }
+    // Kiểm tra loại file
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
     } else {
-        // Cho phép các định dạng tài liệu
-        const allowedDocTypes = [
-            'application/pdf',
-            'application/msword',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ];
-        if (allowedDocTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Chỉ chấp nhận file PDF, DOC, DOCX, XLS, XLSX'), false);
-        }
+        cb(new Error('Không hỗ trợ định dạng file này'), false);
     }
 };
 
@@ -68,25 +48,14 @@ router.get('/', async (req, res) => {
         
         let query = `
             SELECT 
-                d.id,
-                d.title,
-                d.description,
-                d.file_path,
-                d.file_size,
-                d.file_type,
-                d.is_premium,
-                d.price,
-                d.download_count,
-                d.created_at,
-                d.status,
-                d.thumbnail,
+                d.*,
                 c.name as category_name,
                 u.full_name as uploader_name,
                 u.email as uploader_email
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
             LEFT JOIN users u ON d.uploader_id = u.id
-            WHERE (d.status = 'active' OR d.status IS NULL)
+            WHERE 1=1
         `;
         
         const params = [];
@@ -108,21 +77,16 @@ router.get('/', async (req, res) => {
         } else if (type === 'premium') {
             query += ` AND d.is_premium = true`;
         }
+
+        // Chỉ lấy tài liệu active
+        query += ` AND (d.status = 'active' OR d.status IS NULL)`;
         
         query += ` ORDER BY d.created_at DESC`;
 
-        console.log('Executing query:', query);
-        console.log('With params:', params);
-
         db.query(query, params, (err, results) => {
             if (err) {
-                console.error('Database error:', err);
-                return res.status(500).json({ 
-                    message: 'Lỗi server', 
-                    error: err.message,
-                    sqlMessage: err.sqlMessage,
-                    sqlState: err.sqlState 
-                });
+                console.error('Lỗi query:', err);
+                return res.status(500).json({ message: 'Lỗi server', error: err.message });
             }
             
             // Format dữ liệu trước khi trả về
@@ -130,77 +94,70 @@ router.get('/', async (req, res) => {
                 id: doc.id,
                 title: doc.title,
                 description: doc.description,
-                category_name: doc.category_name || 'Chưa phân loại',
+                category: doc.category_name,
                 price: doc.price ? Number(doc.price) : 0,
                 file_path: doc.file_path,
                 file_size: doc.file_size ? Number(doc.file_size) : 0,
-                file_type: doc.file_type || 'Không xác định',
+                thumbnail: doc.thumbnail || null,
                 download_count: doc.download_count ? Number(doc.download_count) : 0,
                 created_at: doc.created_at,
                 is_premium: Boolean(doc.is_premium),
-                status: doc.status || 'active',
-                thumbnail: doc.thumbnail || null,
-                uploader_name: doc.uploader_name || doc.uploader_email || 'Admin',
-                uploader_email: doc.uploader_email
+                uploader_name: doc.uploader_name || doc.uploader_email,
+                status: doc.status || 'active'
             }));
             
-            // Log để debug
-            console.log('Formatted documents:', JSON.stringify(formattedResults, null, 2));
-            
-            console.log(`Found ${formattedResults.length} documents`);
             res.json(formattedResults);
         });
     } catch (error) {
-        console.error('Server error:', error);
-        res.status(500).json({ 
-            message: 'Lỗi server', 
-            error: error.message 
-        });
+        console.error('Lỗi server:', error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
 
-// Upload tài liệu mới
+// Upload tài liệu mới với khả năng upload thumbnail
 router.post('/', auth, upload.fields([
     { name: 'file', maxCount: 1 },
     { name: 'thumbnail', maxCount: 1 }
 ]), async (req, res) => {
     try {
-        console.log('Files:', req.files);
-        console.log('Body:', req.body);
-        
         const { title, description, category_id, is_premium, price } = req.body;
         const files = req.files;
-        const userId = req.user.id;
+        const userId = req.user.id; // Lấy user_id từ token
 
         if (!files || !files.file) {
-            return res.status(400).json({ message: 'Vui lòng chọn file tài liệu để upload' });
+            return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
         }
 
         const file = files.file[0];
-        const thumbnail = files.thumbnail ? files.thumbnail[0] : null;
+        const thumbnail = files.thumbnail ? files.thumbnail[0].path : null;
 
-        const query = `
-            INSERT INTO documents (
-                title, description, file_path, file_size, file_type, 
-                category_id, is_premium, price, uploader_id, thumbnail
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        db.query(query, [
+        let insertFields = 'title, description, file_path, file_size, file_type, category_id, is_premium, price, uploader_id';
+        let insertValues = '?, ?, ?, ?, ?, ?, ?, ?, ?';
+        let params = [
             title,
             description,
-            file.path.replace(/\\/g, '/'), // Chuyển đổi dấu \ thành / cho đường dẫn file
+            file.path,
             file.size,
             file.mimetype,
             category_id || null,
             is_premium === 'true',
             price || null,
-            userId,
-            thumbnail ? thumbnail.path.replace(/\\/g, '/') : null
-        ], (err, result) => {
+            userId
+        ];
+
+        if (thumbnail) {
+            insertFields += ', thumbnail';
+            insertValues += ', ?';
+            params.push(thumbnail);
+        }
+
+        const query = `
+            INSERT INTO documents (${insertFields})
+            VALUES (${insertValues})
+        `;
+
+        db.query(query, params, (err, result) => {
             if (err) {
-                console.error('Lỗi khi insert:', err);
                 return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
             }
             res.status(201).json({ 
@@ -209,7 +166,6 @@ router.post('/', auth, upload.fields([
             });
         });
     } catch (error) {
-        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });

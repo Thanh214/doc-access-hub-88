@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { FileText, Plus, Search, RefreshCw, Eye, Trash2, Edit, Image, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -604,36 +605,11 @@ const AdminDocuments = () => {
                 )}
                 
                 <div className="grid w-full gap-1.5">
-                  <Label htmlFor="file">Tệp tài liệu</Label>
-                  <Input
-                    id="file"
-                    name="file"
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    required
-                    className="transition-all focus:border-primary focus:ring-primary"
-                  />
-                  {selectedFile && (
-                    <motion.p 
-                      className="text-xs text-gray-500 mt-1 flex items-center"
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <FileText className="h-3 w-3 mr-1" />
-                      {selectedFile.name} ({formatFileSize(selectedFile.size)})
-                    </motion.p>
-                  )}
-                </div>
-
-                <div className="grid w-full gap-1.5">
                   <Label htmlFor="thumbnail">Ảnh thumbnail (tùy chọn)</Label>
                   <div className="flex flex-col space-y-2">
                     <div className="relative">
                       <Input
                         id="thumbnail"
-                        name="thumbnail"
                         type="file"
                         accept="image/*"
                         ref={thumbnailInputRef}
@@ -676,6 +652,29 @@ const AdminDocuments = () => {
                       </AnimatePresence>
                     </div>
                   </div>
+                </div>
+                
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="file">Tệp tài liệu</Label>
+                  <Input
+                    id="file"
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    required
+                    className="transition-all focus:border-primary focus:ring-primary"
+                  />
+                  {selectedFile && (
+                    <motion.p 
+                      className="text-xs text-gray-500 mt-1 flex items-center"
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <FileText className="h-3 w-3 mr-1" />
+                      {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </motion.p>
+                  )}
                 </div>
               </div>
               <DialogFooter className="mt-4">
@@ -780,6 +779,56 @@ const AdminDocuments = () => {
                     />
                   </div>
                 )}
+                
+                <div className="grid w-full gap-1.5">
+                  <Label htmlFor="edit-thumbnail">Ảnh thumbnail (tùy chọn)</Label>
+                  <div className="flex flex-col space-y-2">
+                    <div className="relative">
+                      <Input
+                        id="edit-thumbnail"
+                        type="file"
+                        accept="image/*"
+                        ref={thumbnailInputRef}
+                        onChange={handleThumbnailChange}
+                        className="transition-all focus:border-amber-500 focus:ring-amber-500"
+                      />
+                      
+                      <div className="mt-2 flex items-center space-x-4">
+                        {(selectedThumbnail || (documentToEdit && documentToEdit.thumbnail)) && (
+                          <motion.div
+                            variants={thumbnailVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            className="relative"
+                          >
+                            <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden">
+                              {selectedThumbnail ? (
+                                <img
+                                  ref={thumbnailPreviewRef}
+                                  alt="Thumbnail preview"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : documentToEdit && documentToEdit.thumbnail ? (
+                                <img
+                                  src={documentToEdit.thumbnail.startsWith('http') ? documentToEdit.thumbnail : `/${documentToEdit.thumbnail}`}
+                                  alt="Current thumbnail"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/placeholder.svg';
+                                  }}
+                                />
+                              ) : null}
+                            </div>
+                            <p className="text-xs text-center mt-1">
+                              {selectedThumbnail ? 'File mới' : 'File hiện tại'}
+                            </p>
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="grid w-full gap-1.5">
                   <Label htmlFor="edit-file">Tệp tài liệu (tùy chọn)</Label>
