@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { login } from "@/services/auth.service";
@@ -41,45 +41,38 @@ const Login = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col bg-pattern-lines">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow flex items-center justify-center pt-20 pb-20">
+      <main className="flex-grow flex items-center justify-center pt-28 pb-20">
         <div className="w-full max-w-md mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="auth-card"
+            className="bg-white rounded-lg shadow-md p-8"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-vibrant opacity-20 rounded-bl-full"></div>
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h1 className="text-3xl font-bold text-gradient mb-2">Đăng Nhập</h1>
               <p className="text-muted-foreground">
                 Nhập thông tin đăng nhập của bạn để tiếp tục
               </p>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-medium">
                   Email
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MailIcon className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 input-enhanced"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="email@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
               </div>
               
               <div className="space-y-2">
@@ -92,16 +85,12 @@ const Login = () => {
                   </a>
                 </div>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <LockIcon className="h-5 w-5 text-gray-400" />
-                  </div>
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 input-enhanced"
                     required
                     disabled={isLoading}
                   />
@@ -119,28 +108,17 @@ const Login = () => {
                 </div>
               </div>
               
-              <Button 
-                type="submit" 
-                className="w-full h-11 text-base shadow-md hover:shadow-lg transition-all duration-300" 
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
             </form>
             
-            <div className="mt-8 text-center">
+            <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
                 Chưa có tài khoản?{" "}
                 <Link to="/register" className="text-primary hover:underline font-medium">
                   Đăng ký ngay
                 </Link>
-              </p>
-            </div>
-            
-            <div className="relative mt-8 pt-8 border-t">
-              <div className="absolute left-0 top-0 w-12 h-12 bg-accent opacity-20 rounded-br-full -translate-y-1/2"></div>
-              <p className="text-center text-sm text-muted-foreground">
-                Bằng việc đăng nhập, bạn đồng ý với <a href="#" className="underline">Điều khoản dịch vụ</a> và <a href="#" className="underline">Chính sách bảo mật</a> của chúng tôi.
               </p>
             </div>
           </motion.div>

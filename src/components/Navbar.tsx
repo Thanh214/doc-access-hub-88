@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -80,30 +79,18 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  // Determine if the user is an admin
-  const isAdmin = user?.role === 'admin';
-
-  // Apply the new color theme based on user role
-  const bgClass = isAdmin 
-    ? "bg-green-50/80 backdrop-blur-md shadow-sm" 
-    : "bg-white/80 backdrop-blur-md shadow-sm";
-  
-  const transparentBgClass = isAdmin 
-    ? "bg-transparent" 
-    : "bg-transparent";
-
   return (
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? bgClass
-          : transparentBgClass
+          ? "bg-white/80 backdrop-blur-md shadow-sm py-2" 
+          : "bg-transparent py-4"
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link 
           to="/" 
-          className={`text-2xl font-bold transition-all duration-300 hover:opacity-80 ${isAdmin ? 'text-green-600' : 'text-gradient'}`}
+          className="text-2xl font-bold text-gradient transition-all duration-300 hover:opacity-80"
         >
           TàiLiệuVN
         </Link>
@@ -111,33 +98,27 @@ const Navbar: React.FC = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center justify-center absolute left-1/2 transform -translate-x-1/2">
           <nav className="flex items-center space-x-8">
-            {!isAdmin && (
-              <Link 
-                to="/" 
-                className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
-              >
-                <Home className="h-4 w-4" />
-                <span>Trang Chủ</span>
-              </Link>
-            )}
-
+            <Link 
+              to="/" 
+              className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
+            >
+              <Home className="h-4 w-4" />
+              <span>Trang Chủ</span>
+            </Link>
             <Link 
               to="/documents" 
-              className={`flex items-center space-x-1 text-foreground/90 hover:${isAdmin ? 'text-green-600' : 'text-primary'} transition-colors ${location.pathname === '/documents' ? (isAdmin ? 'text-green-600' : 'text-primary') + ' font-medium' : ''}`}
+              className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
             >
               <FileText className="h-4 w-4" />
               <span>Tài Liệu</span>
             </Link>
-            
-            {!isAdmin && (
-              <Link 
-                to="/pricing" 
-                className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
-              >
-                <Wallet className="h-4 w-4" />
-                <span>Bảng Giá</span>
-              </Link>
-            )}
+            <Link 
+              to="/pricing" 
+              className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
+            >
+              <Wallet className="h-4 w-4" />
+              <span>Bảng Giá</span>
+            </Link>
           </nav>
         </div>
         
@@ -146,24 +127,17 @@ const Navbar: React.FC = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className={`rounded-full h-10 px-4 flex items-center gap-2 ${isAdmin ? 'border-green-200 hover:bg-green-100' : ''}`}>
-                  <Avatar className={`h-7 w-7 ${isAdmin ? 'bg-green-600' : 'bg-primary'}`}>
-                    <AvatarFallback className={`${isAdmin ? 'bg-green-600' : 'bg-primary'} text-white`}>
+                <Button variant="outline" className="rounded-full h-10 px-4 flex items-center gap-2">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="bg-primary text-white">
                       {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start text-sm">
                     <span className="font-medium">{user.full_name || user.email}</span>
-                    {!isAdmin && (
-                      <span className="text-xs text-muted-foreground">
-                        {formatCurrency(user.balance)}
-                      </span>
-                    )}
-                    {isAdmin && (
-                      <span className="text-xs text-green-600 font-medium">
-                        Admin
-                      </span>
-                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {formatCurrency(user.balance)}
+                    </span>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -174,12 +148,10 @@ const Navbar: React.FC = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/profile">Thông tin cá nhân</Link>
                   </DropdownMenuItem>
-                  {!isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/transactions">Lịch sử giao dịch</Link>
-                    </DropdownMenuItem>
-                  )}
-                  {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/transactions">Lịch sử giao dịch</Link>
+                  </DropdownMenuItem>
+                  {user.role === 'admin' && (
                     <DropdownMenuItem asChild>
                       <Link to="/admin">Quản lý hệ thống</Link>
                     </DropdownMenuItem>
@@ -209,7 +181,7 @@ const Navbar: React.FC = () => {
         
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center space-x-2">
-          {user && !isAdmin && (
+          {user && (
             <span className="text-sm mr-2">{formatCurrency(user.balance)}</span>
           )}
           <button 
@@ -229,55 +201,47 @@ const Navbar: React.FC = () => {
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.3 }}
-          className={`md:hidden absolute top-full left-0 right-0 border-b animate-fade-in ${isAdmin ? 'bg-green-50' : 'bg-background'}`}
+          className="md:hidden absolute top-full left-0 right-0 bg-background border-b animate-fade-in"
         >
           <div className="container mx-auto px-4 py-4 space-y-4">
             <nav className="flex flex-col space-y-3">
-              {!isAdmin && (
-                <Link 
-                  to="/" 
-                  className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  Trang Chủ
-                </Link>
-              )}
-              
+              <Link 
+                to="/" 
+                className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Trang Chủ
+              </Link>
               <Link 
                 to="/documents" 
-                className={`flex items-center text-foreground/90 hover:${isAdmin ? 'text-green-600' : 'text-primary'} transition-colors py-2 ${location.pathname === '/documents' ? (isAdmin ? 'text-green-600' : 'text-primary') + ' font-medium' : ''}`}
+                className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <FileText className="h-4 w-4 mr-2" />
                 Tài Liệu
               </Link>
-              
-              {!isAdmin && (
-                <Link 
-                  to="/pricing" 
-                  className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Bảng Giá
-                </Link>
-              )}
+              <Link 
+                to="/pricing" 
+                className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                Bảng Giá
+              </Link>
               
               <div className="pt-2 border-t">
                 {user ? (
                   <div className="flex flex-col space-y-2">
                     <div className="flex items-center mb-2">
-                      <Avatar className={`h-8 w-8 mr-2 ${isAdmin ? 'bg-green-600' : 'bg-primary'}`}>
-                        <AvatarFallback className={`${isAdmin ? 'bg-green-600' : 'bg-primary'} text-white`}>
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarFallback className="bg-primary text-white">
                           {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">{user.full_name || user.email}</div>
-                        <div className={`text-xs ${isAdmin ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>
-                          {isAdmin ? 'Admin' : user.email}
-                        </div>
+                        <div className="text-xs text-muted-foreground">{user.email}</div>
                       </div>
                     </div>
                     <Button variant="outline" asChild className="justify-start">
@@ -286,22 +250,12 @@ const Navbar: React.FC = () => {
                         Thông tin cá nhân
                       </Link>
                     </Button>
-                    {!isAdmin && (
-                      <Button variant="outline" asChild className="justify-start">
-                        <Link to="/transactions" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Wallet className="h-4 w-4 mr-2" />
-                          Lịch sử giao dịch
-                        </Link>
-                      </Button>
-                    )}
-                    {isAdmin && (
-                      <Button variant="outline" asChild className="justify-start">
-                        <Link to="/admin" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
-                          <User className="h-4 w-4 mr-2" />
-                          Quản lý hệ thống
-                        </Link>
-                      </Button>
-                    )}
+                    <Button variant="outline" asChild className="justify-start">
+                      <Link to="/transactions" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Wallet className="h-4 w-4 mr-2" />
+                        Lịch sử giao dịch
+                      </Link>
+                    </Button>
                     <Button variant="outline" className="justify-start text-red-500" onClick={() => {
                       handleLogout();
                       setIsMobileMenuOpen(false);

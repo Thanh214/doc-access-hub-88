@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FileText, BarChart3, LogOut, Home, User } from "lucide-react";
+import { FileText, BarChart3, LogOut, Home } from "lucide-react";
 import { getCurrentUser } from "@/services/auth.service";
 import { useToast } from "@/hooks/use-toast";
 
@@ -35,74 +35,61 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen flex bg-green-50 bg-pattern-dots">
+    <div className="min-h-screen flex bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-green-100">
-        <div className="p-6 bg-gradient-admin text-white">
-          <h2 className="text-xl font-bold">Admin TàiLiệuVN</h2>
-          <div className="text-xs text-green-100 mt-1">Quản trị hệ thống</div>
+      <div className="w-64 bg-white shadow-sm">
+        <div className="p-6">
+          <h2 className="text-xl font-bold text-primary">Admin TàiLiệuVN</h2>
         </div>
-        <nav className="mt-4">
-          <ul className="space-y-1 p-2">
+        <nav className="mt-2">
+          <ul className="space-y-1">
             <li>
               <Link
                 to="/admin"
-                className="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
               >
-                <BarChart3 className="h-5 w-5 mr-3 text-green-600" />
+                <BarChart3 className="h-5 w-5 mr-3 text-gray-500" />
                 <span>Tổng quan</span>
               </Link>
             </li>
             <li>
               <Link
                 to="/admin/documents"
-                className="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
               >
-                <FileText className="h-5 w-5 mr-3 text-green-600" />
+                <FileText className="h-5 w-5 mr-3 text-gray-500" />
                 <span>Tài liệu</span>
               </Link>
             </li>
-            <li>
+            <li className="mt-auto">
               <Link
-                to="/admin/users"
-                className="flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                to="/"
+                className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
               >
-                <User className="h-5 w-5 mr-3 text-green-600" />
-                <span>Người dùng</span>
+                <Home className="h-5 w-5 mr-3 text-gray-500" />
+                <span>Về trang chủ</span>
               </Link>
             </li>
-            
-            <div className="pt-4 mt-4 border-t border-green-100">
-              <li>
-                <Link
-                  to="/documents"
-                  className="flex items-center px-4 py-3 rounded-lg text-gray-600 hover:bg-green-50 hover:text-green-700 transition-colors"
-                >
-                  <Home className="h-5 w-5 mr-3 text-green-600" />
-                  <span>Xem trang chính</span>
-                </Link>
-              </li>
-              <li>
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <LogOut className="h-5 w-5 mr-3" />
-                  <span>Đăng xuất</span>
-                </button>
-              </li>
-            </div>
+            <li>
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center px-6 py-3 text-red-600 hover:bg-gray-100"
+              >
+                <LogOut className="h-5 w-5 mr-3" />
+                <span>Đăng xuất</span>
+              </button>
+            </li>
           </ul>
         </nav>
       </div>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-md px-6 py-4 border-b border-green-100">
-          <h1 className="text-xl font-bold text-green-800">{title}</h1>
+        <header className="bg-white shadow-sm px-6 py-4">
+          <h1 className="text-xl font-bold">{title}</h1>
           {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
         </header>
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
   );
