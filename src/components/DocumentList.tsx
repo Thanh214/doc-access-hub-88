@@ -18,7 +18,6 @@ interface Document {
   created_at: string;
   is_premium: boolean;
   uploader_name?: string;
-  uploader_username?: string;
   status: string;
 }
 

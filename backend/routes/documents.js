@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
                 d.*,
                 c.name as category_name,
                 u.full_name as uploader_name,
-                u.username as uploader_username
+                u.email as uploader_email
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
             LEFT JOIN users u ON d.user_id = u.id
@@ -82,8 +82,7 @@ router.get('/', async (req, res) => {
                 download_count: doc.download_count ? Number(doc.download_count) : 0,
                 created_at: doc.created_at,
                 is_premium: Boolean(doc.is_premium),
-                uploader_name: doc.uploader_name,
-                uploader_username: doc.uploader_username,
+                uploader_name: doc.uploader_name || doc.uploader_email,
                 status: doc.status || 'active'
             }));
             
