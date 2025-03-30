@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { FileText, Plus, Search, RefreshCw, Eye, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -62,7 +61,6 @@ const AdminDocuments = () => {
   const [documentToView, setDocumentToView] = useState<Document | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
-  // New document form state
   const [newDocument, setNewDocument] = useState({
     title: "",
     description: "",
@@ -71,7 +69,6 @@ const AdminDocuments = () => {
     price: ""
   });
 
-  // Edit document form state
   const [editDocument, setEditDocument] = useState({
     title: "",
     description: "",
@@ -80,15 +77,12 @@ const AdminDocuments = () => {
     price: ""
   });
 
-  // Fetch documents and categories
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch documents
       const documentsResponse = await API.get("/admin/documents");
       setDocuments(documentsResponse.data);
       
-      // Fetch categories
       const categoriesResponse = await API.get("/categories");
       setCategories(categoriesResponse.data);
     } catch (error) {
@@ -103,53 +97,44 @@ const AdminDocuments = () => {
     }
   };
 
-  // Refresh data
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await fetchData();
     setIsRefreshing(false);
   };
 
-  // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
   };
 
-  // Handle form change for new document
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewDocument(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle form change for edit document
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEditDocument(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle checkbox change for new document
   const handleCheckboxChange = (checked: boolean) => {
     setNewDocument(prev => ({ ...prev, is_premium: checked }));
   };
 
-  // Handle checkbox change for edit document
   const handleEditCheckboxChange = (checked: boolean) => {
     setEditDocument(prev => ({ ...prev, is_premium: checked }));
   };
 
-  // Handle select change for new document
   const handleSelectChange = (value: string) => {
     setNewDocument(prev => ({ ...prev, category_id: value }));
   };
 
-  // Handle select change for edit document
   const handleEditSelectChange = (value: string) => {
     setEditDocument(prev => ({ ...prev, category_id: value }));
   };
 
-  // Add document
   const handleAddDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -184,7 +169,6 @@ const AdminDocuments = () => {
         description: "Tài liệu đã được tải lên thành công",
       });
 
-      // Reset form
       setNewDocument({
         title: "",
         description: "",
@@ -195,7 +179,6 @@ const AdminDocuments = () => {
       setSelectedFile(null);
       setIsAddDialogOpen(false);
       
-      // Refresh documents list
       fetchData();
     } catch (error) {
       console.error("Error uploading document:", error);
@@ -207,12 +190,11 @@ const AdminDocuments = () => {
     }
   };
 
-  // Edit document
   const handleEditDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!documentToEdit) return;
-
+    
     try {
       const formData = new FormData();
       formData.append("title", editDocument.title);
@@ -243,7 +225,6 @@ const AdminDocuments = () => {
       setIsEditDialogOpen(false);
       setDocumentToEdit(null);
       
-      // Refresh documents list
       fetchData();
     } catch (error) {
       console.error("Error updating document:", error);
@@ -255,7 +236,6 @@ const AdminDocuments = () => {
     }
   };
 
-  // Delete document
   const handleDeleteDocument = async () => {
     if (!documentToDelete) return;
     
@@ -267,7 +247,6 @@ const AdminDocuments = () => {
         description: "Tài liệu đã được xóa thành công",
       });
 
-      // Refresh documents list
       fetchData();
       setIsDeleteDialogOpen(false);
       setDocumentToDelete(null);
@@ -281,7 +260,6 @@ const AdminDocuments = () => {
     }
   };
 
-  // Open edit dialog with document data
   const openEditDialog = (document: Document) => {
     setDocumentToEdit(document);
     setEditDocument({
@@ -294,13 +272,11 @@ const AdminDocuments = () => {
     setIsEditDialogOpen(true);
   };
 
-  // Open view dialog with document data
   const openViewDialog = (document: Document) => {
     setDocumentToView(document);
     setIsViewDialogOpen(true);
   };
 
-  // Filter documents by search query
   const filteredDocuments = documents.filter(doc => 
     doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -462,7 +438,6 @@ const AdminDocuments = () => {
           </Card>
         )}
 
-        {/* Dialog thêm tài liệu */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -561,7 +536,6 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog chỉnh sửa tài liệu */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -649,10 +623,12 @@ const AdminDocuments = () => {
                     <p className="text-xs text-gray-500">
                       File mới: {selectedFile.name} ({formatFileSize(selectedFile.size)})
                     </p>
-                  ) : documentToEdit && (
+                  ) : documentToEdit && documentToEdit.file_path ? (
                     <p className="text-xs text-gray-500">
                       File hiện tại: {documentToEdit.file_path.split('/').pop()} ({formatFileSize(documentToEdit.file_size)})
                     </p>
+                  ) : (
+                    <p className="text-xs text-gray-500">Chưa có file</p>
                   )}
                 </div>
               </div>
@@ -666,7 +642,6 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog xem chi tiết tài liệu */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -739,7 +714,9 @@ const AdminDocuments = () => {
 
                 <div className="grid w-full grid-cols-3 gap-4">
                   <div className="col-span-1 font-medium">Đường dẫn file:</div>
-                  <div className="col-span-2 break-all">{documentToView.file_path}</div>
+                  <div className="col-span-2 break-all">
+                    {documentToView.file_path || "Không có đường dẫn file"}
+                  </div>
                 </div>
               </div>
             )}
@@ -760,7 +737,6 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog xóa tài liệu */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
