@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
                 u.email as uploader_email
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
-            LEFT JOIN users u ON d.user_id = u.id
+            LEFT JOIN users u ON d.uploader_id = u.id
             WHERE 1=1
         `;
         
@@ -108,7 +108,7 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
         const query = `
             INSERT INTO documents (
                 title, description, file_path, file_size, file_type, 
-                category_id, is_premium, price, user_id
+                category_id, is_premium, price, uploader_id
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
