@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { User, Menu, X, LogIn, FileText, Wallet, Home } from "lucide-react";
-import { motion } from "framer-motion";
+import { User, Menu, X, LogIn, FileText, Wallet, Home, Book, UserPlus, SlidersHorizontal } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import axios from 'axios';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,6 +33,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -79,46 +81,81 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
+  const navbarVariants = {
+    hidden: { y: -100 },
+    visible: { 
+      y: 0,
+      transition: { 
+        type: "spring", 
+        stiffness: 100,
+        damping: 20
+      }
+    }
+  };
+
+  const menuItemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <header 
+    <motion.header 
+      initial="hidden"
+      animate="visible"
+      variants={navbarVariants}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? "bg-white/80 backdrop-blur-md shadow-sm py-2" 
+          ? "bg-white/90 backdrop-blur-md shadow-lg py-2" 
           : "bg-transparent py-4"
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
         <Link 
           to="/" 
-          className="text-2xl font-bold text-gradient transition-all duration-300 hover:opacity-80"
+          className="text-2xl font-bold text-primary hover:scale-105 transition-all duration-300"
         >
-          TàiLiệuVN
+          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center">
+            <Book className="h-6 w-6 mr-2 text-primary" />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-pink-400">
+              TàiLiệuVN
+            </span>
+          </motion.div>
         </Link>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center justify-center absolute left-1/2 transform -translate-x-1/2">
           <nav className="flex items-center space-x-8">
-            <Link 
-              to="/" 
-              className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
-            >
-              <Home className="h-4 w-4" />
-              <span>Trang Chủ</span>
-            </Link>
-            <Link 
-              to="/documents" 
-              className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
-            >
-              <FileText className="h-4 w-4" />
-              <span>Tài Liệu</span>
-            </Link>
-            <Link 
-              to="/pricing" 
-              className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
-            >
-              <Wallet className="h-4 w-4" />
-              <span>Bảng Giá</span>
-            </Link>
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <Link 
+                to="/" 
+                className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
+              >
+                <Home className="h-4 w-4" />
+                <span>Trang Chủ</span>
+              </Link>
+            </motion.div>
+            
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <Link 
+                to="/documents" 
+                className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Tài Liệu</span>
+              </Link>
+            </motion.div>
+            
+            {!isAdmin && (
+              <motion.div whileHover={{ scale: 1.05 }}>
+                <Link 
+                  to="/pricing" 
+                  className={`flex items-center space-x-1 text-foreground/90 hover:text-primary transition-colors ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
+                >
+                  <Wallet className="h-4 w-4" />
+                  <span>Bảng Giá</span>
+                </Link>
+              </motion.div>
+            )}
           </nav>
         </div>
         
@@ -127,7 +164,7 @@ const Navbar: React.FC = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full h-10 px-4 flex items-center gap-2">
+                <Button variant="outline" className="rounded-full h-10 px-4 flex items-center gap-2 hover:bg-primary/10 hover:border-primary transition-all duration-300">
                   <Avatar className="h-7 w-7">
                     <AvatarFallback className="bg-primary text-white">
                       {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
@@ -135,164 +172,292 @@ const Navbar: React.FC = () => {
                   </Avatar>
                   <div className="flex flex-col items-start text-sm">
                     <span className="font-medium">{user.full_name || user.email}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatCurrency(user.balance)}
-                    </span>
+                    {!isAdmin && (
+                      <span className="text-xs text-muted-foreground">
+                        {formatCurrency(user.balance)}
+                      </span>
+                    )}
+                    {isAdmin && (
+                      <span className="text-xs text-emerald-600 font-medium">
+                        Quản trị viên
+                      </span>
+                    )}
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuContent className="w-56 shadow-lg border border-primary/10 animate-in slide-in-from-top-5 fade-in-20" align="end">
                 <DropdownMenuLabel>Tài khoản của tôi</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem asChild>
-                    <Link to="/profile">Thông tin cá nhân</Link>
+                    <Link to="/profile" className="cursor-pointer flex items-center">
+                      <User className="mr-2 h-4 w-4 text-primary" />
+                      <span>Thông tin cá nhân</span>
+                    </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/transactions">Lịch sử giao dịch</Link>
-                  </DropdownMenuItem>
-                  {user.role === 'admin' && (
+                  
+                  {!isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin">Quản lý hệ thống</Link>
+                      <Link to="/transactions" className="cursor-pointer flex items-center">
+                        <Wallet className="mr-2 h-4 w-4 text-primary" />
+                        <span>Lịch sử giao dịch</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer flex items-center">
+                        <SlidersHorizontal className="mr-2 h-4 w-4 text-emerald-600" />
+                        <span>Quản lý hệ thống</span>
+                      </Link>
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-500">
-                  Đăng xuất
+                <DropdownMenuItem onClick={handleLogout} className="text-red-500 cursor-pointer focus:text-red-500 focus:bg-red-50">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  <span>Đăng xuất</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" asChild>
-                <Link to="/login" className="flex items-center gap-1">
-                  <LogIn className="h-4 w-4 mr-1" />
-                  Đăng Nhập
-                </Link>
-              </Button>
+            <div className="flex items-center space-x-3">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="ghost" asChild className="hover:bg-primary/10 transition-all">
+                  <Link to="/login" className="flex items-center gap-1">
+                    <LogIn className="h-4 w-4 mr-1 text-primary" />
+                    <span>Đăng Nhập</span>
+                  </Link>
+                </Button>
+              </motion.div>
               
-              <Button variant="default" asChild>
-                <Link to="/register">Đăng Ký</Link>
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button variant="default" asChild className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all">
+                  <Link to="/register" className="flex items-center gap-1">
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    <span>Đăng Ký</span>
+                  </Link>
+                </Button>
+              </motion.div>
             </div>
           )}
         </div>
         
         {/* Mobile menu button */}
         <div className="md:hidden flex items-center space-x-2">
-          {user && (
-            <span className="text-sm mr-2">{formatCurrency(user.balance)}</span>
+          {user && !isAdmin && (
+            <span className="text-sm mr-2 font-medium text-primary">{formatCurrency(user.balance)}</span>
           )}
           <button 
-            className="text-foreground/90"
+            className="text-foreground/90 bg-white/80 p-2 rounded-full shadow-sm hover:bg-primary/10 transition-all"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? "Đóng menu" : "Mở menu"}
           >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {isMobileMenuOpen ? 
+              <X className="h-5 w-5 text-primary" /> : 
+              <Menu className="h-5 w-5 text-primary" />
+            }
           </button>
         </div>
       </div>
       
       {/* Mobile menu */}
-      {isMobileMenuOpen && (
-        <motion.div 
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-          className="md:hidden absolute top-full left-0 right-0 bg-background border-b animate-fade-in"
-        >
-          <div className="container mx-auto px-4 py-4 space-y-4">
-            <nav className="flex flex-col space-y-3">
-              <Link 
-                to="/" 
-                className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/' ? 'text-primary font-medium' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Home className="h-4 w-4 mr-2" />
-                Trang Chủ
-              </Link>
-              <Link 
-                to="/documents" 
-                className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/documents' ? 'text-primary font-medium' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Tài Liệu
-              </Link>
-              <Link 
-                to="/pricing" 
-                className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 ${location.pathname === '/pricing' ? 'text-primary font-medium' : ''}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                Bảng Giá
-              </Link>
-              
-              <div className="pt-2 border-t">
-                {user ? (
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center mb-2">
-                      <Avatar className="h-8 w-8 mr-2">
-                        <AvatarFallback className="bg-primary text-white">
-                          {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{user.full_name || user.email}</div>
-                        <div className="text-xs text-muted-foreground">{user.email}</div>
-                      </div>
-                    </div>
-                    <Button variant="outline" asChild className="justify-start">
-                      <Link to="/profile" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
-                        <User className="h-4 w-4 mr-2" />
-                        Thông tin cá nhân
-                      </Link>
-                    </Button>
-                    <Button variant="outline" asChild className="justify-start">
-                      <Link to="/transactions" className="flex items-center" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Wallet className="h-4 w-4 mr-2" />
-                        Lịch sử giao dịch
-                      </Link>
-                    </Button>
-                    <Button variant="outline" className="justify-start text-red-500" onClick={() => {
-                      handleLogout();
-                      setIsMobileMenuOpen(false);
-                    }}>
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Đăng Xuất
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col space-y-2">
-                    <Button variant="ghost" asChild className="justify-start">
-                      <Link 
-                        to="/login" 
-                        className="flex items-center"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <LogIn className="h-4 w-4 mr-2" />
-                        Đăng Nhập
-                      </Link>
-                    </Button>
-                    
-                    <Button variant="default" asChild>
-                      <Link 
-                        to="/register"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        Đăng Ký
-                      </Link>
-                    </Button>
-                  </div>
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg border-b border-primary/10 shadow-lg rounded-b-xl overflow-hidden"
+          >
+            <div className="container mx-auto px-4 py-6 space-y-6">
+              <nav className="flex flex-col space-y-4">
+                <motion.div 
+                  variants={menuItemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  transition={{ delay: 0.1 }}
+                >
+                  <Link 
+                    to="/" 
+                    className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5 ${location.pathname === '/' ? 'text-primary font-medium bg-primary/5' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Home className="h-5 w-5 mr-3 text-primary" />
+                    <span>Trang Chủ</span>
+                  </Link>
+                </motion.div>
+                
+                <motion.div 
+                  variants={menuItemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  transition={{ delay: 0.2 }}
+                >
+                  <Link 
+                    to="/documents" 
+                    className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5 ${location.pathname === '/documents' ? 'text-primary font-medium bg-primary/5' : ''}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <FileText className="h-5 w-5 mr-3 text-primary" />
+                    <span>Tài Liệu</span>
+                  </Link>
+                </motion.div>
+                
+                {!isAdmin && (
+                  <motion.div 
+                    variants={menuItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Link 
+                      to="/pricing" 
+                      className={`flex items-center text-foreground/90 hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-primary/5 ${location.pathname === '/pricing' ? 'text-primary font-medium bg-primary/5' : ''}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Wallet className="h-5 w-5 mr-3 text-primary" />
+                      <span>Bảng Giá</span>
+                    </Link>
+                  </motion.div>
                 )}
-              </div>
-            </nav>
-          </div>
-        </motion.div>
-      )}
-    </header>
+                
+                <div className="pt-4 mt-4 border-t border-primary/10">
+                  {user ? (
+                    <div className="flex flex-col space-y-3">
+                      <motion.div 
+                        variants={menuItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ delay: 0.4 }}
+                        className="flex items-center mb-3 p-3 bg-primary/5 rounded-lg"
+                      >
+                        <Avatar className="h-10 w-10 mr-3">
+                          <AvatarFallback className="bg-primary text-white">
+                            {user.full_name ? user.full_name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium text-primary">{user.full_name || user.email}</div>
+                          <div className="text-xs text-muted-foreground">{user.email}</div>
+                          {isAdmin && <div className="text-xs text-emerald-600 font-medium mt-1">Quản trị viên</div>}
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div 
+                        variants={menuItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ delay: 0.5 }}
+                      >
+                        <Link 
+                          to="/profile" 
+                          className="flex items-center py-2 px-3 rounded-lg hover:bg-primary/5 text-foreground/90 hover:text-primary transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <User className="h-5 w-5 mr-3 text-primary" />
+                          <span>Thông tin cá nhân</span>
+                        </Link>
+                      </motion.div>
+                      
+                      {!isAdmin && (
+                        <motion.div 
+                          variants={menuItemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          transition={{ delay: 0.6 }}
+                        >
+                          <Link 
+                            to="/transactions" 
+                            className="flex items-center py-2 px-3 rounded-lg hover:bg-primary/5 text-foreground/90 hover:text-primary transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <Wallet className="h-5 w-5 mr-3 text-primary" />
+                            <span>Lịch sử giao dịch</span>
+                          </Link>
+                        </motion.div>
+                      )}
+                      
+                      {isAdmin && (
+                        <motion.div 
+                          variants={menuItemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          transition={{ delay: 0.6 }}
+                        >
+                          <Link 
+                            to="/admin" 
+                            className="flex items-center py-2 px-3 rounded-lg hover:bg-emerald-50 text-emerald-700 transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <SlidersHorizontal className="h-5 w-5 mr-3 text-emerald-600" />
+                            <span>Quản lý hệ thống</span>
+                          </Link>
+                        </motion.div>
+                      )}
+                      
+                      <motion.div 
+                        variants={menuItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ delay: 0.7 }}
+                      >
+                        <button 
+                          className="flex w-full items-center py-2 px-3 rounded-lg hover:bg-red-50 text-red-500 transition-colors" 
+                          onClick={() => {
+                            handleLogout();
+                            setIsMobileMenuOpen(false);
+                          }}
+                        >
+                          <LogIn className="h-5 w-5 mr-3" />
+                          <span>Đăng Xuất</span>
+                        </button>
+                      </motion.div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col space-y-3">
+                      <motion.div 
+                        variants={menuItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ delay: 0.4 }}
+                      >
+                        <Link 
+                          to="/login" 
+                          className="flex w-full items-center py-3 px-4 rounded-lg bg-white text-primary border border-primary/20 hover:bg-primary/5 transition-colors"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <LogIn className="h-5 w-5 mr-3" />
+                          <span>Đăng Nhập</span>
+                        </Link>
+                      </motion.div>
+                      
+                      <motion.div 
+                        variants={menuItemVariants}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ delay: 0.5 }}
+                      >
+                        <Link 
+                          to="/register"
+                          className="flex w-full items-center py-3 px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors shadow-md"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <UserPlus className="h-5 w-5 mr-3" />
+                          <span>Đăng Ký</span>
+                        </Link>
+                      </motion.div>
+                    </div>
+                  )}
+                </div>
+              </nav>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   );
 };
 
