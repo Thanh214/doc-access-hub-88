@@ -68,14 +68,25 @@ router.get('/', async (req, res) => {
         
         let query = `
             SELECT 
-                d.*,
+                d.id,
+                d.title,
+                d.description,
+                d.file_path,
+                d.file_size,
+                d.file_type,
+                d.is_premium,
+                d.price,
+                d.download_count,
+                d.created_at,
+                d.status,
+                d.thumbnail,
                 c.name as category_name,
                 u.full_name as uploader_name,
                 u.email as uploader_email
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
             LEFT JOIN users u ON d.uploader_id = u.id
-            WHERE d.status = 'active' OR d.status IS NULL
+            WHERE (d.status = 'active' OR d.status IS NULL)
         `;
         
         const params = [];
@@ -100,13 +111,18 @@ router.get('/', async (req, res) => {
         
         query += ` ORDER BY d.created_at DESC`;
 
-        console.log('Query:', query);
-        console.log('Params:', params);
+        console.log('Executing query:', query);
+        console.log('With params:', params);
 
         db.query(query, params, (err, results) => {
             if (err) {
-                console.error('Lỗi query:', err);
-                return res.status(500).json({ message: 'Lỗi server', error: err.message });
+                console.error('Database error:', err);
+                return res.status(500).json({ 
+                    message: 'Lỗi server', 
+                    error: err.message,
+                    sqlMessage: err.sqlMessage,
+                    sqlState: err.sqlState 
+                });
             }
             
             // Format dữ liệu trước khi trả về
@@ -114,25 +130,32 @@ router.get('/', async (req, res) => {
                 id: doc.id,
                 title: doc.title,
                 description: doc.description,
-                category: doc.category_name,
+                category_name: doc.category_name || 'Chưa phân loại',
                 price: doc.price ? Number(doc.price) : 0,
                 file_path: doc.file_path,
                 file_size: doc.file_size ? Number(doc.file_size) : 0,
+                file_type: doc.file_type || 'Không xác định',
                 download_count: doc.download_count ? Number(doc.download_count) : 0,
                 created_at: doc.created_at,
                 is_premium: Boolean(doc.is_premium),
-                isFree: !doc.is_premium,
-                uploader_name: doc.uploader_name || doc.uploader_email,
                 status: doc.status || 'active',
-                thumbnail: doc.thumbnail || '/placeholder.svg',
-                previewAvailable: true
+                thumbnail: doc.thumbnail || null,
+                uploader_name: doc.uploader_name || doc.uploader_email || 'Admin',
+                uploader_email: doc.uploader_email
             }));
             
+            // Log để debug
+            console.log('Formatted documents:', JSON.stringify(formattedResults, null, 2));
+            
+            console.log(`Found ${formattedResults.length} documents`);
             res.json(formattedResults);
         });
     } catch (error) {
-        console.error('Lỗi server:', error);
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ 
+            message: 'Lỗi server', 
+            error: error.message 
+        });
     }
 });
 
