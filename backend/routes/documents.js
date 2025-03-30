@@ -75,7 +75,7 @@ router.get('/', async (req, res) => {
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
             LEFT JOIN users u ON d.uploader_id = u.id
-            WHERE 1=1
+            WHERE d.status = 'active' OR d.status IS NULL
         `;
         
         const params = [];
@@ -97,11 +97,11 @@ router.get('/', async (req, res) => {
         } else if (type === 'premium') {
             query += ` AND d.is_premium = true`;
         }
-
-        // Chỉ lấy tài liệu active
-        query += ` AND (d.status = 'active' OR d.status IS NULL)`;
         
         query += ` ORDER BY d.created_at DESC`;
+
+        console.log('Query:', query);
+        console.log('Params:', params);
 
         db.query(query, params, (err, results) => {
             if (err) {
@@ -118,12 +118,14 @@ router.get('/', async (req, res) => {
                 price: doc.price ? Number(doc.price) : 0,
                 file_path: doc.file_path,
                 file_size: doc.file_size ? Number(doc.file_size) : 0,
-                thumbnail: doc.thumbnail || null,
                 download_count: doc.download_count ? Number(doc.download_count) : 0,
                 created_at: doc.created_at,
                 is_premium: Boolean(doc.is_premium),
+                isFree: !doc.is_premium,
                 uploader_name: doc.uploader_name || doc.uploader_email,
-                status: doc.status || 'active'
+                status: doc.status || 'active',
+                thumbnail: doc.thumbnail || '/placeholder.svg',
+                previewAvailable: true
             }));
             
             res.json(formattedResults);
@@ -134,50 +136,48 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Upload tài liệu mới với khả năng upload thumbnail
+// Upload tài liệu mới
 router.post('/', auth, upload.fields([
     { name: 'file', maxCount: 1 },
     { name: 'thumbnail', maxCount: 1 }
 ]), async (req, res) => {
     try {
+        console.log('Files:', req.files);
+        console.log('Body:', req.body);
+        
         const { title, description, category_id, is_premium, price } = req.body;
         const files = req.files;
-        const userId = req.user.id; // Lấy user_id từ token
+        const userId = req.user.id;
 
         if (!files || !files.file) {
-            return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
+            return res.status(400).json({ message: 'Vui lòng chọn file tài liệu để upload' });
         }
 
         const file = files.file[0];
-        const thumbnail = files.thumbnail ? files.thumbnail[0].path : null;
+        const thumbnail = files.thumbnail ? files.thumbnail[0] : null;
 
-        let insertFields = 'title, description, file_path, file_size, file_type, category_id, is_premium, price, uploader_id';
-        let insertValues = '?, ?, ?, ?, ?, ?, ?, ?, ?';
-        let params = [
+        const query = `
+            INSERT INTO documents (
+                title, description, file_path, file_size, file_type, 
+                category_id, is_premium, price, uploader_id, thumbnail
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.query(query, [
             title,
             description,
-            file.path,
+            file.path.replace(/\\/g, '/'), // Chuyển đổi dấu \ thành / cho đường dẫn file
             file.size,
             file.mimetype,
             category_id || null,
             is_premium === 'true',
             price || null,
-            userId
-        ];
-
-        if (thumbnail) {
-            insertFields += ', thumbnail';
-            insertValues += ', ?';
-            params.push(thumbnail);
-        }
-
-        const query = `
-            INSERT INTO documents (${insertFields})
-            VALUES (${insertValues})
-        `;
-
-        db.query(query, params, (err, result) => {
+            userId,
+            thumbnail ? thumbnail.path.replace(/\\/g, '/') : null
+        ], (err, result) => {
             if (err) {
+                console.error('Lỗi khi insert:', err);
                 return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
             }
             res.status(201).json({ 
@@ -186,6 +186,7 @@ router.post('/', auth, upload.fields([
             });
         });
     } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
