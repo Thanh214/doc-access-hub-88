@@ -25,7 +25,9 @@ const upload = multer({ storage: storage });
 // Lấy danh sách tài liệu
 router.get('/', async (req, res) => {
     try {
-        const query = `
+        const { keyword, category_id, type } = req.query;
+        
+        let query = `
             SELECT 
                 d.*,
                 c.name as category_name,
@@ -34,25 +36,61 @@ router.get('/', async (req, res) => {
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
             LEFT JOIN users u ON d.user_id = u.id
-            WHERE d.status = 'active' OR d.status IS NULL
-            ORDER BY d.created_at DESC
+            WHERE 1=1
         `;
-        db.query(query, (err, results) => {
+        
+        const params = [];
+
+        // Thêm điều kiện tìm kiếm
+        if (keyword) {
+            query += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
+            params.push(`%${keyword}%`, `%${keyword}%`);
+        }
+
+        if (category_id) {
+            query += ` AND d.category_id = ?`;
+            params.push(category_id);
+        }
+
+        // Lọc theo loại tài liệu
+        if (type === 'free') {
+            query += ` AND d.is_premium = false`;
+        } else if (type === 'premium') {
+            query += ` AND d.is_premium = true`;
+        }
+
+        // Chỉ lấy tài liệu active
+        query += ` AND (d.status = 'active' OR d.status IS NULL)`;
+        
+        query += ` ORDER BY d.created_at DESC`;
+
+        db.query(query, params, (err, results) => {
             if (err) {
+                console.error('Lỗi query:', err);
                 return res.status(500).json({ message: 'Lỗi server', error: err.message });
             }
             
-            // Format price for each document
-            results = results.map(doc => ({
-                ...doc,
+            // Format dữ liệu trước khi trả về
+            const formattedResults = results.map(doc => ({
+                id: doc.id,
+                title: doc.title,
+                description: doc.description,
+                category: doc.category_name,
                 price: doc.price ? Number(doc.price) : 0,
+                file_path: doc.file_path,
                 file_size: doc.file_size ? Number(doc.file_size) : 0,
-                download_count: doc.download_count ? Number(doc.download_count) : 0
+                download_count: doc.download_count ? Number(doc.download_count) : 0,
+                created_at: doc.created_at,
+                is_premium: Boolean(doc.is_premium),
+                uploader_name: doc.uploader_name,
+                uploader_username: doc.uploader_username,
+                status: doc.status || 'active'
             }));
             
-            res.json(results);
+            res.json(formattedResults);
         });
     } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });

@@ -26,9 +26,15 @@ interface DocumentListProps {
   documents: Document[];
   onPurchase?: (documentId: string) => void;
   isAdmin?: boolean;
+  isLoading?: boolean;
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({ documents, onPurchase, isAdmin = false }) => {
+const DocumentList: React.FC<DocumentListProps> = ({ 
+  documents, 
+  onPurchase, 
+  isAdmin = false,
+  isLoading = false 
+}) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -44,7 +50,15 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, onPurchase, isAd
     visible: { y: 0, opacity: 1 }
   };
 
-  if (documents.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!documents || documents.length === 0) {
     return (
       <motion.div 
         className="text-center py-16 px-4 bg-gradient-to-b from-white to-primary/5 rounded-2xl border border-primary/10"
