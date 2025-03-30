@@ -29,11 +29,32 @@ exports.getStats = async (req, res) => {
     );
     const activeSubscriptions = subscriptionsResult[0].count;
 
+    // Get deposit summary
+    const [depositResult] = await pool.query(
+      "SELECT SUM(amount) as total FROM transactions WHERE type = 'deposit' AND status = 'completed'"
+    );
+    const totalDeposits = depositResult[0].total || 0;
+
+    // Get purchase summary
+    const [purchaseResult] = await pool.query(
+      "SELECT SUM(amount) as total FROM transactions WHERE type = 'purchase' AND status = 'completed'"
+    );
+    const totalPurchases = purchaseResult[0].total || 0;
+
+    // Get document download count
+    const [downloadResult] = await pool.query(
+      "SELECT SUM(download_count) as total FROM documents"
+    );
+    const totalDownloads = downloadResult[0].total || 0;
+
     res.status(200).json({
       totalUsers,
       totalDocuments,
+      totalDeposits,
+      totalPurchases,
       totalRevenue,
-      activeSubscriptions
+      activeSubscriptions,
+      totalDownloads
     });
   } catch (error) {
     console.error('Error getting admin stats:', error);
@@ -94,6 +115,48 @@ exports.getTransactions = async (req, res) => {
     res.status(200).json(transactions);
   } catch (error) {
     console.error('Error getting transactions:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// Get transaction summary
+exports.getTransactionSummary = async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Không có quyền truy cập' });
+    }
+
+    // Get summary by transaction type
+    const [typeSummary] = await pool.query(
+      `SELECT 
+        type, 
+        COUNT(*) as count, 
+        SUM(amount) as total 
+      FROM transactions 
+      WHERE status = 'completed' 
+      GROUP BY type`
+    );
+
+    // Get summary by day (last 7 days)
+    const [dailySummary] = await pool.query(
+      `SELECT 
+        DATE(created_at) as date, 
+        type,
+        COUNT(*) as count, 
+        SUM(amount) as total 
+      FROM transactions 
+      WHERE status = 'completed' AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+      GROUP BY DATE(created_at), type
+      ORDER BY date DESC`
+    );
+
+    res.status(200).json({
+      typeSummary,
+      dailySummary
+    });
+  } catch (error) {
+    console.error('Error getting transaction summary:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 };

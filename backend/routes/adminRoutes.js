@@ -16,4 +16,7 @@ router.get('/documents', verifyToken, adminController.getDocuments);
 // Get all transactions
 router.get('/transactions', verifyToken, adminController.getTransactions);
 
+// Get transaction summary
+router.get('/transaction-summary', verifyToken, adminController.getTransactionSummary);
+
 module.exports = router;
