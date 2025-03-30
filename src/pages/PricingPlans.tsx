@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, SparklesIcon } from "lucide-react";
 import { PaymentModal } from "@/components/PaymentModal";
 
 const PricingPlans = () => {
@@ -103,19 +103,24 @@ const PricingPlans = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-pattern-lines">
       <Navbar />
       
-      <main className="flex-grow pt-28 pb-20">
+      <main className="flex-grow pt-24 pb-20">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center justify-center p-1 mb-4 rounded-full bg-pink-100 text-pink-800 text-sm font-medium">
+              <SparklesIcon className="h-4 w-4 mr-1" />
+              <span>Nâng cấp trải nghiệm của bạn</span>
+            </div>
+            
             <motion.h1 
-              className="text-4xl font-bold mb-4"
+              className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-vibrant"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              Gói Đăng Ký Phù Hợp Với Nhu Cầu Của Bạn
+              Gói Đăng Ký Phù Hợp Với Nhu Cầu
             </motion.h1>
             <motion.p 
               className="text-xl text-muted-foreground mb-8"
@@ -135,16 +140,17 @@ const PricingPlans = () => {
               <Tabs
                 defaultValue="monthly"
                 onValueChange={(value) => setBillingCycle(value as "monthly" | "yearly")}
-                className="bg-muted inline-flex p-1 rounded-lg"
+                className="bg-muted inline-flex p-1 rounded-full"
               >
                 <TabsList className="bg-transparent grid grid-cols-2 w-[300px]">
-                  <TabsTrigger value="monthly">Hàng Tháng</TabsTrigger>
-                  <TabsTrigger value="yearly">Hàng Năm</TabsTrigger>
+                  <TabsTrigger value="monthly" className="rounded-full">Hàng Tháng</TabsTrigger>
+                  <TabsTrigger value="yearly" className="rounded-full">Hàng Năm</TabsTrigger>
                 </TabsList>
               </Tabs>
               
               {billingCycle === "yearly" && (
                 <div className="mt-2 text-sm text-green-600 font-medium">
+                  <CheckIcon className="inline h-4 w-4 mr-1" />
                   Tiết kiệm tới 18% với thanh toán hàng năm
                 </div>
               )}
@@ -166,46 +172,49 @@ const PricingPlans = () => {
           </div>
           
           <motion.div 
-            className="mt-20 bg-muted/50 rounded-xl p-8 max-w-4xl mx-auto"
+            className="mt-20 rounded-2xl overflow-hidden p-8 max-w-4xl mx-auto relative glass"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
           >
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-4">Câu Hỏi Thường Gặp</h2>
-              <p className="text-muted-foreground">
-                Giải đáp những thắc mắc phổ biến về gói đăng ký của chúng tôi
-              </p>
-            </div>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-2">Tôi có thể hủy đăng ký bất cứ lúc nào không?</h3>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-soft opacity-30"></div>
+            <div className="relative z-10">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold mb-4">Câu Hỏi Thường Gặp</h2>
                 <p className="text-muted-foreground">
-                  Có, bạn có thể hủy đăng ký của mình bất cứ lúc nào. Khi hủy, bạn vẫn có thể sử dụng gói đăng ký cho đến hết thời hạn thanh toán hiện tại.
+                  Giải đáp những thắc mắc phổ biến về gói đăng ký của chúng tôi
                 </p>
               </div>
               
-              <div>
-                <h3 className="font-semibold mb-2">Tôi có thể nâng cấp hoặc hạ cấp gói đăng ký không?</h3>
-                <p className="text-muted-foreground">
-                  Có, bạn có thể dễ dàng nâng cấp hoặc hạ cấp gói đăng ký của mình bất cứ lúc nào. Khi nâng cấp, bạn sẽ chỉ phải trả phần chênh lệch cho thời gian còn lại.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">Tài liệu cao cấp có gì khác biệt so với tài liệu miễn phí?</h3>
-                <p className="text-muted-foreground">
-                  Tài liệu cao cấp thường là nội dung độc quyền, nghiên cứu chuyên sâu hoặc tài liệu chuyên môn có giá trị cao được tạo bởi các chuyên gia hàng đầu trong lĩnh vực. Chúng cung cấp thông tin chi tiết và chuyên môn hơn so với tài liệu miễn phí.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">Làm thế nào để thanh toán?</h3>
-                <p className="text-muted-foreground">
-                  Chúng tôi chấp nhận thanh toán qua các hình thức phổ biến như Momo, ZaloPay, thẻ tín dụng, và chuyển khoản ngân hàng. Tất cả các giao dịch đều được bảo mật.
-                </p>
+              <div className="space-y-6">
+                <div className="p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-colors duration-300">
+                  <h3 className="font-semibold mb-2">Tôi có thể hủy đăng ký bất cứ lúc nào không?</h3>
+                  <p className="text-muted-foreground">
+                    Có, bạn có thể hủy đăng ký của mình bất cứ lúc nào. Khi hủy, bạn vẫn có thể sử dụng gói đăng ký cho đến hết thời hạn thanh toán hiện tại.
+                  </p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-colors duration-300">
+                  <h3 className="font-semibold mb-2">Tôi có thể nâng cấp hoặc hạ cấp gói đăng ký không?</h3>
+                  <p className="text-muted-foreground">
+                    Có, bạn có thể dễ dàng nâng cấp hoặc hạ cấp gói đăng ký của mình bất cứ lúc nào. Khi nâng cấp, bạn sẽ chỉ phải trả phần chênh lệch cho thời gian còn lại.
+                  </p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-colors duration-300">
+                  <h3 className="font-semibold mb-2">Tài liệu cao cấp có gì khác biệt so với tài liệu miễn phí?</h3>
+                  <p className="text-muted-foreground">
+                    Tài liệu cao cấp thường là nội dung độc quyền, nghiên cứu chuyên sâu hoặc tài liệu chuyên môn có giá trị cao được tạo bởi các chuyên gia hàng đầu trong lĩnh vực. Chúng cung cấp thông tin chi tiết và chuyên môn hơn so với tài liệu miễn phí.
+                  </p>
+                </div>
+                
+                <div className="p-4 rounded-xl bg-white/50 hover:bg-white/80 transition-colors duration-300">
+                  <h3 className="font-semibold mb-2">Làm thế nào để thanh toán?</h3>
+                  <p className="text-muted-foreground">
+                    Chúng tôi chấp nhận thanh toán qua các hình thức phổ biến như Momo, ZaloPay, thẻ tín dụng, và chuyển khoản ngân hàng. Tất cả các giao dịch đều được bảo mật.
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -221,7 +230,7 @@ const PricingPlans = () => {
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
               Liên hệ với đội ngũ hỗ trợ của chúng tôi. Chúng tôi luôn sẵn sàng giải đáp mọi thắc mắc của bạn.
             </p>
-            <Button size="lg">Liên Hệ Hỗ Trợ</Button>
+            <Button size="lg" className="rounded-full shadow-lg">Liên Hệ Hỗ Trợ</Button>
           </motion.div>
         </div>
       </main>

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Eye } from "lucide-react";
+import { Download, Eye, Clock, Award } from "lucide-react";
 import { formatCurrency } from '../utils/format';
 import { useToast } from "@/hooks/use-toast";
 import { getCurrentUser } from '@/services/auth.service';
@@ -63,8 +63,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3, 4, 5, 6].map((item) => (
-          <Card key={item} className="animate-pulse h-[280px]">
-            <div className="h-40 bg-gray-200 rounded-t-lg"></div>
+          <Card key={item} className="animate-pulse h-[280px] overflow-hidden rounded-xl">
+            <div className="h-40 bg-gray-200 rounded-t-xl"></div>
             <div className="p-4 space-y-3">
               <div className="h-4 bg-gray-200 rounded w-3/4"></div>
               <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -95,28 +95,36 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {documents.map((document) => (
-        <Card key={document.id} className="overflow-hidden flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
-          <div className="aspect-[16/9] bg-gray-100 relative">
-            <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-              <svg 
-                className="h-16 w-16" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={1} 
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
-                />
-              </svg>
+        <Card key={document.id} className="overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300 rounded-xl border-gray-100">
+          <div className="aspect-[16/9] bg-gradient-soft relative">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-20 w-20 rounded-full bg-white/70 backdrop-blur-sm flex items-center justify-center shadow-md">
+                <svg 
+                  className="h-10 w-10 text-primary" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={1.5} 
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" 
+                  />
+                </svg>
+              </div>
             </div>
+            
+            {document.is_premium && (
+              <Badge variant="secondary" className="absolute top-2 right-2 bg-gradient-vibrant text-white border-none">
+                <Award className="h-3 w-3 mr-1" /> Premium
+              </Badge>
+            )}
           </div>
           
           <div className="flex-1 p-4">
             {document.category && (
-              <Badge variant="secondary" className="mb-2">
+              <Badge variant="outline" className="mb-2 text-xs">
                 {document.category}
               </Badge>
             )}
@@ -141,6 +149,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
                   <Button 
                     variant="outline" 
                     size="sm" 
+                    className="rounded-lg"
                     asChild
                   >
                     <Link to={`/documents/${document.id}`}>
@@ -153,6 +162,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
                     <Button 
                       variant="default" 
                       size="sm"
+                      className="rounded-lg"
                       asChild
                     >
                       <Link to={`/documents/${document.id}`}>
@@ -164,6 +174,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
                     <Button 
                       variant="default" 
                       size="sm"
+                      className="rounded-lg"
                       onClick={() => handlePurchase(document)}
                     >
                       <Download className="h-4 w-4 mr-1" />
@@ -172,6 +183,13 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, isLoading }) => 
                   )}
                 </div>
               </div>
+              
+              {document.created_at && (
+                <div className="flex items-center text-xs text-muted-foreground mt-2">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {new Date(document.created_at).toLocaleDateString('vi-VN')}
+                </div>
+              )}
             </div>
           </div>
         </Card>
