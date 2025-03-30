@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Users, FileText, BarChart3, LogOut, UserCog, Home } from "lucide-react";
+import { FileText, BarChart3, LogOut, Home } from "lucide-react";
 import { getCurrentUser } from "@/services/auth.service";
 import { useToast } from "@/hooks/use-toast";
 
@@ -50,15 +50,6 @@ const AdminLayout = ({ children, title, description }: AdminLayoutProps) => {
               >
                 <BarChart3 className="h-5 w-5 mr-3 text-gray-500" />
                 <span>Tổng quan</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/admin/users"
-                className="flex items-center px-6 py-3 text-gray-700 hover:bg-gray-100"
-              >
-                <Users className="h-5 w-5 mr-3 text-gray-500" />
-                <span>Người dùng</span>
               </Link>
             </li>
             <li>
