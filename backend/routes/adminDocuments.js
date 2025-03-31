@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -32,9 +31,10 @@ router.get('/', auth, async (req, res) => {
         }
 
         const query = `
-            SELECT d.*, c.name as category_name 
+            SELECT d.*, c.name as category_name, u.username as uploader_name 
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
+            LEFT JOIN users u ON d.uploader_id = u.id
             ORDER BY d.created_at DESC
         `;
         db.query(query, (err, results) => {
@@ -66,9 +66,9 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
         const query = `
             INSERT INTO documents (
                 title, description, file_path, file_size, file_type, 
-                category_id, is_premium, price
+                category_id, is_premium, price, uploader_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         db.query(query, [
@@ -79,7 +79,8 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
             file.mimetype,
             category_id || null,
             is_premium === 'true',
-            price || null
+            price || null,
+            req.user.id  // Thêm ID người dùng đăng tài liệu
         ], (err, result) => {
             if (err) {
                 return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
@@ -187,6 +188,71 @@ router.delete('/:id', auth, async (req, res) => {
                 }
                 res.json({ message: 'Xóa tài liệu thành công' });
             });
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
+// Thêm route xem trước tài liệu
+router.get('/preview/:id', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        db.query('SELECT file_path, file_type FROM documents WHERE id = ?', [id], (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+            }
+            
+            const document = results[0];
+            if (!fs.existsSync(document.file_path)) {
+                return res.status(404).json({ message: 'File không tồn tại' });
+            }
+            
+            // Đọc file và trả về nội dung
+            fs.readFile(document.file_path, (err, data) => {
+                if (err) {
+                    return res.status(500).json({ message: 'Lỗi đọc file', error: err.message });
+                }
+                
+                res.setHeader('Content-Type', document.file_type);
+                res.send(data);
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
+// Thêm route download tài liệu
+router.get('/download/:id', auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        db.query('SELECT file_path, file_type, title FROM documents WHERE id = ?', [id], (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+            }
+            
+            const document = results[0];
+            if (!fs.existsSync(document.file_path)) {
+                return res.status(404).json({ message: 'File không tồn tại' });
+            }
+            
+            // Cập nhật số lượt tải
+            db.query('UPDATE documents SET download_count = download_count + 1 WHERE id = ?', [id], (err) => {
+                if (err) {
+                    console.error('Lỗi cập nhật lượt tải:', err);
+                }
+            });
+            
+            // Trả về file cho người dùng tải xuống
+            const fileName = path.basename(document.file_path);
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Type', document.file_type);
+            
+            const fileStream = fs.createReadStream(document.file_path);
+            fileStream.pipe(res);
         });
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server', error: error.message });

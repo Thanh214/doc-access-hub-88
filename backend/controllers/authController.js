@@ -67,7 +67,7 @@ exports.login = async (req, res) => {
     
     // Tạo JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email, full_name: user.full_name, role: user.role },
+      { id: user.id, email: user.email, full_name: user.full_name },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -78,29 +78,8 @@ exports.login = async (req, res) => {
       user: {
         id: user.id,
         full_name: user.full_name,
-        email: user.email,
-        role: user.role
+        email: user.email
       }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
-// Lấy thông tin người dùng
-exports.getProfile = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    
-    // Lấy thông tin người dùng từ database
-    const [users] = await pool.query('SELECT id, email, full_name, balance, role FROM users WHERE id = ?', [userId]);
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy người dùng' });
-    }
-    
-    res.status(200).json({
-      user: users[0]
     });
   } catch (error) {
     console.error(error);
