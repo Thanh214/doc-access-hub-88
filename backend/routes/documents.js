@@ -174,9 +174,11 @@ router.get('/download/:id', auth, async (req, res) => {
             }
 
             const document = results[0];
+            const filePath = document.file_path.replace(/\\/g, '/');
             
             // Kiểm tra file có tồn tại không
             if (!fs.existsSync(document.file_path)) {
+                console.error('File không tồn tại:', document.file_path);
                 return res.status(404).json({ message: 'File không tồn tại trên server' });
             }
 
@@ -270,6 +272,7 @@ router.get('/download/:id', auth, async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
@@ -295,6 +298,14 @@ router.get('/:id', async (req, res) => {
             }
 
             const document = results[0];
+            
+            // Kiểm tra file có tồn tại không
+            const filePath = document.file_path.replace(/\\/g, '/');
+            if (!fs.existsSync(document.file_path)) {
+                console.error('File không tồn tại:', document.file_path);
+                return res.status(404).json({ message: 'File không tồn tại' });
+            }
+
             // Format dữ liệu trước khi trả về
             const formattedDoc = {
                 id: document.id,
@@ -302,14 +313,14 @@ router.get('/:id', async (req, res) => {
                 description: document.description,
                 category_name: document.category_name || 'Chưa phân loại',
                 price: document.price ? Number(document.price) : 0,
-                file_path: document.file_path,
+                file_path: filePath, // Đường dẫn đã được format
                 file_size: document.file_size ? Number(document.file_size) : 0,
                 file_type: document.file_type || 'Không xác định',
                 download_count: document.download_count ? Number(document.download_count) : 0,
                 created_at: document.created_at,
                 is_premium: Boolean(document.is_premium),
                 status: document.status || 'active',
-                thumbnail: document.thumbnail || null,
+                thumbnail: document.thumbnail ? document.thumbnail.replace(/\\/g, '/') : null,
                 uploader_name: document.uploader_name || document.uploader_email || 'Admin',
                 uploader_email: document.uploader_email
             };
