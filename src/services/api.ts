@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 // Tạo một instance axios với URL cơ sở API
@@ -7,6 +6,7 @@ const API = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true // Thêm credentials
 });
 
 // Interceptor để thêm token vào header nếu người dùng đã đăng nhập
@@ -17,5 +17,18 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Interceptor để xử lý lỗi
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token hết hạn hoặc không hợp lệ
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;

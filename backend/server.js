@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -20,13 +19,24 @@ if (!fs.existsSync(documentsDir)) {
   fs.mkdirSync(documentsDir, { recursive: true });
 }
 
+// Cấu hình CORS
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'http://192.168.1.224:8080'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 // Middleware
-app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Make uploads directory accessible
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static files với cấu hình CORS
+app.use('/uploads', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));

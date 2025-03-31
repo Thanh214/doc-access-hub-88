@@ -1,11 +1,15 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Lock, AlertCircle } from "lucide-react";
+import { Download, Lock, AlertCircle, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { PaymentModal } from "./PaymentModal";
+import { Document, Page, pdfjs } from 'react-pdf';
+import API from '@/services/api';
+
+// Cấu hình worker cho react-pdf
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 interface DocumentPreviewProps {
   id: string;
@@ -19,6 +23,8 @@ interface DocumentPreviewProps {
   pages: number;
   fileSize: string;
   dateAdded: string;
+  documentId: string;
+  fileType: string;
 }
 
 const DocumentPreview = ({
@@ -33,14 +39,165 @@ const DocumentPreview = ({
   pages,
   fileSize,
   dateAdded,
+  documentId,
+  fileType,
 }: DocumentPreviewProps) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [scale, setScale] = useState(1);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
   
+  useEffect(() => {
+    const fetchPreview = async () => {
+      try {
+        const response = await API.get(`/documents/preview/${documentId}`, {
+          responseType: 'blob'
+        });
+        const url = URL.createObjectURL(response.data);
+        setPreviewUrl(url);
+        setError(null);
+      } catch (err: any) {
+        console.error('Lỗi tải xem trước:', err);
+        setError(err.response?.data?.message || 'Không thể tải xem trước tài liệu');
+      }
+    };
+
+    fetchPreview();
+
+    // Cleanup
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [documentId]);
+
+  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    setNumPages(numPages);
+  };
+
+  const previousPage = () => {
+    setPageNumber(page => Math.max(page - 1, 1));
+  };
+
+  const nextPage = () => {
+    setPageNumber(page => Math.min(page + 1, numPages));
+  };
+
+  const zoomIn = () => {
+    setScale(scale => Math.min(scale + 0.2, 3));
+  };
+
+  const zoomOut = () => {
+    setScale(scale => Math.max(scale - 0.2, 0.5));
+  };
+
+  if (error) {
+    return (
+      <Card className="p-6 text-center text-red-500">
+        <p>{error}</p>
+      </Card>
+    );
+  }
+
+  if (!previewUrl) {
+    return (
+      <Card className="p-6 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4">Đang tải xem trước...</p>
+      </Card>
+    );
+  }
+
+  const renderPreview = () => {
+    const type = fileType.toLowerCase();
+
+    if (type.includes('pdf')) {
+      return (
+        <div className="flex flex-col items-center">
+          <div className="flex gap-2 mb-4">
+            <Button onClick={previousPage} disabled={pageNumber <= 1}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="py-2">
+              Trang {pageNumber} / {numPages}
+            </span>
+            <Button onClick={nextPage} disabled={pageNumber >= numPages}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button onClick={zoomIn}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button onClick={zoomOut}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </div>
+          <Document
+            file={previewUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            loading={
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            }
+            error={
+              <p className="text-red-500">Không thể tải tài liệu PDF</p>
+            }
+          >
+            <Page
+              pageNumber={pageNumber}
+              scale={scale}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
+            />
+          </Document>
+        </div>
+      );
+    }
+
+    if (type.includes('image')) {
+      return (
+        <div className="flex flex-col items-center">
+          <div className="flex gap-2 mb-4">
+            <Button onClick={zoomIn}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button onClick={zoomOut}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </div>
+          <img
+            src={previewUrl}
+            alt="Preview"
+            style={{ transform: `scale(${scale})` }}
+            className="max-w-full transition-transform duration-200"
+          />
+        </div>
+      );
+    }
+
+    if (type.includes('text') || type.includes('rtf')) {
+      return (
+        <iframe
+          src={previewUrl}
+          className="w-full h-[600px] border-0"
+          title="Text preview"
+        />
+      );
+    }
+
+    return (
+      <div className="text-center p-6">
+        <p>Không hỗ trợ xem trước định dạng này</p>
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -126,7 +283,7 @@ const DocumentPreview = ({
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                  <div dangerouslySetInnerHTML={{ __html: previewContent }} />
+                  {renderPreview()}
                 </motion.div>
                 
                 {isPreviewExpanded && (
