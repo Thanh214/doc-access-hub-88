@@ -95,36 +95,47 @@ router.get('/', async (req, res) => {
 });
 
 // Upload tài liệu mới
-router.post('/', auth, upload.single('file'), async (req, res) => {
+router.post('/', auth, upload.fields([
+    { name: 'file', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 }
+]), async (req, res) => {
     try {
+        console.log('Files:', req.files);
+        console.log('Body:', req.body);
+        
         const { title, description, category_id, is_premium, price } = req.body;
-        const file = req.file;
-        const userId = req.user.id; // Lấy user_id từ token
+        const files = req.files;
+        const userId = req.user.id;
 
-        if (!file) {
-            return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
+        if (!files || !files.file) {
+            return res.status(400).json({ message: 'Vui lòng chọn file tài liệu để upload' });
         }
+
+        const file = files.file[0];
+        const thumbnail = files.thumbnail ? files.thumbnail[0] : null;
 
         const query = `
             INSERT INTO documents (
                 title, description, file_path, file_size, file_type, 
-                category_id, is_premium, price, uploader_id
+                category_id, is_premium, price, uploader_id, thumbnail
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         db.query(query, [
             title,
             description,
-            file.path,
+            file.path.replace(/\\/g, '/'), // Chuyển đổi dấu \ thành / cho đường dẫn file
             file.size,
             file.mimetype,
             category_id || null,
             is_premium === 'true',
             price || null,
-            userId
+            userId, // Lưu ID của người upload
+            thumbnail ? thumbnail.path.replace(/\\/g, '/') : null
         ], (err, result) => {
             if (err) {
+                console.error('Lỗi khi insert:', err);
                 return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
             }
             res.status(201).json({ 
@@ -133,6 +144,7 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
             });
         });
     } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
