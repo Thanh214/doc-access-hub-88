@@ -6,79 +6,28 @@ const fs = require('fs');
 const db = require('../config/database');
 const auth = require('../middleware/auth');
 
-// Kiểm tra và tạo thư mục uploads nếu chưa tồn tại
-const uploadDir = path.join(__dirname, '..', 'uploads');
-const documentsDir = path.join(uploadDir, 'documents');
-
-try {
-    if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-        console.log('Đã tạo thư mục uploads');
-    }
-    if (!fs.existsSync(documentsDir)) {
-        fs.mkdirSync(documentsDir, { recursive: true });
-        console.log('Đã tạo thư mục documents');
-    }
-
-    // Kiểm tra quyền ghi
-    fs.accessSync(documentsDir, fs.constants.W_OK);
-    console.log('Thư mục có quyền ghi');
-} catch (error) {
-    console.error('Lỗi khi kiểm tra/tạo thư mục:', error);
-}
+// Serve static files from uploads directory
+router.use('/uploads', express.static('uploads'));
 
 // Cấu hình multer cho upload file
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, documentsDir);
+        const dir = 'uploads/documents';
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        cb(null, dir);
     },
     filename: function (req, file, cb) {
+        // Thêm timestamp vào tên file để tránh trùng lặp
         const timestamp = Date.now();
-        // Chuyển tên file thành không dấu và an toàn
-        const originalName = file.originalname
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-zA-Z0-9.]/g, '_');
-        
-        const ext = path.extname(originalName);
+        const ext = path.extname(file.originalname);
         const filename = `${timestamp}${ext}`;
-        
-        console.log('Tên file gốc:', file.originalname);
-        console.log('Tên file sau khi xử lý:', filename);
-        
         cb(null, filename);
     }
 });
 
-const fileFilter = (req, file, cb) => {
-    // Kiểm tra loại file
-    const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        'text/plain',
-        'image/jpeg',
-        'image/png'
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Loại file không được hỗ trợ'), false);
-    }
-};
-
-const upload = multer({ 
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 10 * 1024 * 1024 // Giới hạn 10MB
-    }
-});
+const upload = multer({ storage: storage });
 
 // Lấy danh sách tài liệu
 router.get('/', async (req, res) => {
@@ -447,13 +396,11 @@ router.get('/preview/:id', auth, async (req, res) => {
             }
 
             const document = results[0];
-            const filePath = path.join(__dirname, '..', document.file_path.replace(/\\/g, '/'));
-            
-            console.log('Preview file path:', filePath);
+            const filePath = document.file_path.replace(/\\/g, '/');
             
             // Kiểm tra file có tồn tại không
-            if (!fs.existsSync(filePath)) {
-                console.error('File không tồn tại:', filePath);
+            if (!fs.existsSync(document.file_path)) {
+                console.error('File không tồn tại:', document.file_path);
                 return res.status(404).json({ message: 'File không tồn tại trên server' });
             }
 
@@ -463,23 +410,23 @@ router.get('/preview/:id', auth, async (req, res) => {
             if (fileType.includes('pdf')) {
                 // PDF files
                 res.setHeader('Content-Type', 'application/pdf');
-                res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
-                fs.createReadStream(filePath).pipe(res);
+                res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
+                fs.createReadStream(document.file_path).pipe(res);
             } 
             else if (fileType.includes('image')) {
                 // Image files
                 res.setHeader('Content-Type', document.file_type);
-                res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
-                fs.createReadStream(filePath).pipe(res);
+                res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
+                fs.createReadStream(document.file_path).pipe(res);
             }
             else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
                 // Text files
-                fs.readFile(filePath, 'utf8', (err, data) => {
+                fs.readFile(document.file_path, 'utf8', (err, data) => {
                     if (err) {
                         console.error('Lỗi đọc file:', err);
                         return res.status(500).json({ message: 'Lỗi đọc file' });
                     }
-                    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                    res.setHeader('Content-Type', 'text/plain');
                     res.send(data);
                 });
             }

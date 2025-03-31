@@ -1,4 +1,3 @@
-
  -- Tạo database
 CREATE DATABASE IF NOT EXISTS doc_access_hub;
 USE doc_access_hub;
@@ -62,11 +61,9 @@ CREATE TABLE documents (
     is_premium BOOLEAN DEFAULT FALSE,
     price DECIMAL(10,2),
     download_count INT DEFAULT 0,
-    uploader_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(id),
-    FOREIGN KEY (uploader_id) REFERENCES users(id)
+    FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
 -- Bảng download_history
@@ -103,7 +100,3 @@ INSERT INTO subscription_packages (name, price, download_limit, duration_days, d
 -- Mật khẩu: admin123 (đã được mã hóa bằng bcrypt)
 INSERT INTO users (email, password, full_name, role, balance) VALUES 
 ('admin@tailieuvn.com', '$2a$10$8OuAgqj.SdXnGHXz0S0Jz.YYT4hFHx.yo0XG2c.YuoQsKZiKJ5YyG', 'Administrator', 'admin', 0);
-
--- Nếu đã có bảng documents, hãy thêm trường uploader_id
--- ALTER TABLE documents ADD COLUMN uploader_id INT AFTER download_count;
--- ALTER TABLE documents ADD FOREIGN KEY (uploader_id) REFERENCES users(id);
