@@ -95,44 +95,67 @@ router.get('/', async (req, res) => {
 });
 
 // Upload tài liệu mới
-router.post('/', auth, upload.single('file'), async (req, res) => {
+router.post('/', auth, upload.fields([
+    { name: 'file', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 }
+]), async (req, res) => {
     try {
+        console.log('Files:', req.files);
+        console.log('Body:', req.body);
+        console.log('User:', req.user);
+        
         const { title, description, category_id, is_premium, price } = req.body;
-        const file = req.file;
-        const userId = req.user.id; // Lấy user_id từ token
+        const files = req.files;
+        const userId = req.user.id;
 
-        if (!file) {
-            return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
+        if (!files || !files.file) {
+            return res.status(400).json({ message: 'Vui lòng chọn file tài liệu để upload' });
         }
 
-        const query = `
-            INSERT INTO documents (
-                title, description, file_path, file_size, file_type, 
-                category_id, is_premium, price, uploader_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+        const file = files.file[0];
+        const thumbnail = files.thumbnail ? files.thumbnail[0] : null;
 
-        db.query(query, [
-            title,
-            description,
-            file.path,
-            file.size,
-            file.mimetype,
-            category_id || null,
-            is_premium === 'true',
-            price || null,
-            userId
-        ], (err, result) => {
-            if (err) {
-                return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
+        // Kiểm tra user có tồn tại không
+        const userQuery = 'SELECT id FROM users WHERE id = ?';
+        db.query(userQuery, [userId], (err, userResults) => {
+            if (err || userResults.length === 0) {
+                console.error('Lỗi kiểm tra user:', err);
+                return res.status(400).json({ message: 'Không tìm thấy người dùng' });
             }
-            res.status(201).json({ 
-                message: 'Upload tài liệu thành công',
-                document_id: result.insertId
+
+            const query = `
+                INSERT INTO documents (
+                    title, description, file_path, file_size, file_type, 
+                    category_id, is_premium, price, uploader_id, thumbnail
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            db.query(query, [
+                title,
+                description,
+                file.path.replace(/\\/g, '/'),
+                file.size,
+                file.mimetype,
+                category_id || null,
+                is_premium === 'true',
+                price || null,
+                userId,
+                thumbnail ? thumbnail.path.replace(/\\/g, '/') : null
+            ], (err, result) => {
+                if (err) {
+                    console.error('Lỗi khi insert:', err);
+                    return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
+                }
+                console.log('Upload thành công:', result);
+                res.status(201).json({ 
+                    message: 'Upload tài liệu thành công',
+                    document_id: result.insertId
+                });
             });
         });
     } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
@@ -256,18 +279,46 @@ router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const query = `
-            SELECT d.*, c.name as category_name 
+            SELECT 
+                d.*,
+                c.name as category_name,
+                u.full_name as uploader_name,
+                u.email as uploader_email
             FROM documents d 
             LEFT JOIN categories c ON d.category_id = c.id
+            LEFT JOIN users u ON d.uploader_id = u.id
             WHERE d.id = ?
         `;
         db.query(query, [id], (err, results) => {
             if (err || results.length === 0) {
                 return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
             }
-            res.json(results[0]);
+
+            const document = results[0];
+            // Format dữ liệu trước khi trả về
+            const formattedDoc = {
+                id: document.id,
+                title: document.title,
+                description: document.description,
+                category_name: document.category_name || 'Chưa phân loại',
+                price: document.price ? Number(document.price) : 0,
+                file_path: document.file_path,
+                file_size: document.file_size ? Number(document.file_size) : 0,
+                file_type: document.file_type || 'Không xác định',
+                download_count: document.download_count ? Number(document.download_count) : 0,
+                created_at: document.created_at,
+                is_premium: Boolean(document.is_premium),
+                status: document.status || 'active',
+                thumbnail: document.thumbnail || null,
+                uploader_name: document.uploader_name || document.uploader_email || 'Admin',
+                uploader_email: document.uploader_email
+            };
+
+            console.log('Document details:', formattedDoc);
+            res.json(formattedDoc);
         });
     } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
