@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,7 +15,6 @@ import AdminDocuments from "@/pages/AdminDocuments";
 import AdminSettings from "./pages/AdminSettings";
 
 function App() {
-  console.log("App component rendering");
   return (
     <Router>
       <Toaster />
