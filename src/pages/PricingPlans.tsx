@@ -163,11 +163,18 @@ const PricingPlans = () => {
                     title={plan.name}
                     description={plan.description}
                     price={billingPeriod === "monthly" ? plan.price_monthly : plan.price_yearly}
-                    billingPeriod={billingPeriod}
+                    duration={billingPeriod === "monthly" ? "tháng" : "năm"}
                     features={plan.features}
                     highlighted={plan.highlighted}
                     badge={plan.badge}
                     planId={plan.id}
+                    onSelect={() => {
+                      // Add subscription selection logic here
+                      toast({
+                        title: "Đã chọn gói",
+                        description: `Bạn đã chọn gói ${plan.name}`,
+                      });
+                    }}
                   />
                 </motion.div>
               ))}
