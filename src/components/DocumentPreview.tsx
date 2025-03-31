@@ -1,5 +1,12 @@
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import mammoth from 'mammoth';
+import * as XLSX from 'xlsx';
+import ReactPlayer from 'react-player';
+import Papa from 'papaparse';
+import axios from 'axios';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,268 +15,150 @@ import { motion } from "framer-motion";
 import { PaymentModal } from "./PaymentModal";
 
 interface DocumentPreviewProps {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  thumbnail?: string;
-  previewContent: string;
-  price: number;
-  isFree: boolean;
-  pages: number;
-  fileSize: string;
-  dateAdded: string;
+  fileUrl: string;
+  fileType: string;
+  className?: string;
 }
 
-const DocumentPreview = ({
-  id,
-  title,
-  description,
-  category,
-  thumbnail,
-  previewContent,
-  price,
-  isFree,
-  pages,
-  fileSize,
-  dateAdded,
-}: DocumentPreviewProps) => {
+export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
+  fileUrl,
+  fileType,
+  className = ''
+}) => {
+  const [content, setContent] = useState<string>('');
+  const [error, setError] = useState<string>('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
-  
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-  };
-  
-  return (
-    <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <motion.div 
-          className="lg:col-span-2"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
-            <div className="p-6">
-              <motion.h1 
-                className="text-2xl font-bold mb-2 text-gradient"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-              >
-                {title}
-              </motion.h1>
-              <motion.div 
-                className="flex flex-wrap gap-2 mb-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-              >
-                <Badge variant="secondary" className="bg-vibrant-1 text-white">{category}</Badge>
-                <Badge variant="outline">{pages} trang</Badge>
-                <Badge variant="outline">{fileSize}</Badge>
-                <Badge variant="outline">Ngày thêm: {dateAdded}</Badge>
-              </motion.div>
-              <motion.p 
-                className="text-muted-foreground mb-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-              >
-                {description}
-              </motion.p>
-              
-              <div className="relative mb-6">
-                {!isFree && (
-                  <motion.div 
-                    className={`absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-t from-background via-background/95 to-transparent ${isPreviewExpanded ? "h-[70%] pointer-events-none" : "h-full"}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                  >
-                    <motion.div 
-                      className="text-center"
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.6, duration: 0.5 }}
-                    >
-                      <Lock className="h-10 w-10 text-primary mb-3 mx-auto animate-pulse-scale" />
-                      <h3 className="text-lg font-medium mb-2">Tài Liệu Cao Cấp</h3>
-                      <p className="text-center text-muted-foreground mb-4 max-w-xs">
-                        Mua tài liệu này với giá {formatPrice(price)} để xem toàn bộ nội dung
-                      </p>
-                      <Button 
-                        onClick={() => setShowPaymentModal(true)}
-                        className="pointer-events-auto bg-gradient-vibrant hover:opacity-90"
-                      >
-                        Mua Ngay
-                      </Button>
-                    </motion.div>
-                  </motion.div>
-                )}
-                
-                {isFree && !isPreviewExpanded && (
-                  <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-background to-transparent flex items-end justify-center p-4">
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setIsPreviewExpanded(true)}
-                    >
-                      Xem Thêm
-                    </Button>
-                  </div>
-                )}
-                
-                <motion.div 
-                  className={`prose max-w-none ${isPreviewExpanded ? '' : 'max-h-[500px] overflow-hidden'}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                >
-                  <div dangerouslySetInnerHTML={{ __html: previewContent }} />
-                </motion.div>
-                
-                {isPreviewExpanded && (
-                  <div className="mt-6 text-center">
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setIsPreviewExpanded(false)}
-                    >
-                      Thu Gọn
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card className="sticky top-24 shadow-md hover:shadow-lg transition-all duration-300 border-accent/30">
-            <div className="p-6">
-              {thumbnail && (
-                <img 
-                  src={thumbnail} 
-                  alt={title} 
-                  className="w-full h-40 object-cover rounded-md mb-6 shadow-sm"
-                />
-              )}
-              
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold mb-4 text-gradient">Thông Tin Tài Liệu</h3>
-                <ul className="space-y-3">
-                  <motion.li 
-                    className="flex justify-between bg-muted/40 p-3 rounded-md"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3, duration: 0.3 }}
-                  >
-                    <span className="text-muted-foreground">Danh mục:</span>
-                    <span className="font-medium">{category}</span>
-                  </motion.li>
-                  <motion.li 
-                    className="flex justify-between bg-muted/40 p-3 rounded-md"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.3 }}
-                  >
-                    <span className="text-muted-foreground">Số trang:</span>
-                    <span className="font-medium">{pages}</span>
-                  </motion.li>
-                  <motion.li 
-                    className="flex justify-between bg-muted/40 p-3 rounded-md"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.3 }}
-                  >
-                    <span className="text-muted-foreground">Kích thước:</span>
-                    <span className="font-medium">{fileSize}</span>
-                  </motion.li>
-                  <motion.li 
-                    className="flex justify-between bg-muted/40 p-3 rounded-md"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.3 }}
-                  >
-                    <span className="text-muted-foreground">Ngày thêm:</span>
-                    <span className="font-medium">{dateAdded}</span>
-                  </motion.li>
-                  <motion.li 
-                    className="flex justify-between bg-muted/40 p-3 rounded-md"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.7, duration: 0.3 }}
-                  >
-                    <span className="text-muted-foreground">Giá:</span>
-                    <span className="font-medium">
-                      {isFree ? (
-                        <Badge variant="secondary" className="bg-green-500 text-white">Miễn Phí</Badge>
-                      ) : (
-                        formatPrice(price)
-                      )}
-                    </span>
-                  </motion.li>
-                </ul>
-              </div>
-              
-              {isFree ? (
-                <motion.div 
-                  className="space-y-4"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.3 }}
-                >
-                  <div className="bg-yellow-50 border border-yellow-100 rounded-md p-4 flex items-start">
-                    <AlertCircle className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" />
-                    <p className="text-sm text-yellow-700">
-                      Tài liệu miễn phí yêu cầu đăng ký để tải xuống. Bạn có thể xem trực tiếp không giới hạn.
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    className="w-full bg-gradient-vibrant hover:opacity-90"
-                    onClick={() => setShowPaymentModal(true)}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Đăng Ký Để Tải Xuống
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.3 }}
-                >
-                  <Button 
-                    className="w-full bg-gradient-vibrant hover:opacity-90"
-                    onClick={() => setShowPaymentModal(true)}
-                  >
-                    <Lock className="mr-2 h-4 w-4" />
-                    Mua Tài Liệu
-                  </Button>
-                </motion.div>
-              )}
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-      
-      {showPaymentModal && (
-        <PaymentModal 
-          docId={id}
-          docTitle={title}
-          docPrice={price}
-          isFree={isFree}
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        setIsLoading(true);
+        const type = fileType.toLowerCase();
+
+        if (type.includes('msword') || type.includes('wordprocessingml')) {
+          const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+          const result = await mammoth.convertToHtml({ arrayBuffer: response.data });
+          setContent(result.value);
+        }
+        else if (type.includes('sheet') || type.includes('excel')) {
+          const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
+          const workbook = XLSX.read(response.data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const data = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          setContent(JSON.stringify(data, null, 2));
+        }
+        else if (type.includes('text') || type.includes('csv')) {
+          const response = await axios.get(fileUrl);
+          if (type.includes('csv')) {
+            Papa.parse(response.data, {
+              complete: (results) => {
+                setContent(JSON.stringify(results.data, null, 2));
+              },
+              error: (error) => {
+                setError(`Lỗi đọc file CSV: ${error.message}`);
+              }
+            });
+          } else {
+            setContent(response.data);
+          }
+        }
+      } catch (err) {
+        setError(`Lỗi khi tải nội dung: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (fileUrl) {
+      loadContent();
+    }
+  }, [fileUrl, fileType]);
+
+  const renderPreview = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    const type = fileType.toLowerCase();
+
+    if (type.includes('pdf')) {
+      return (
+        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+          <div style={{ height: '750px' }}>
+            <Viewer fileUrl={fileUrl} />
+          </div>
+        </Worker>
+      );
+    }
+
+    if (type.includes('video')) {
+      return (
+        <ReactPlayer
+          url={fileUrl}
+          controls
+          width="100%"
+          height="auto"
         />
+      );
+    }
+
+    if (type.includes('image')) {
+      return (
+        <img 
+          src={fileUrl} 
+          alt="Preview" 
+          className="max-w-full h-auto"
+        />
+      );
+    }
+
+    if (type.includes('msword') || type.includes('wordprocessingml')) {
+      return (
+        <div className="p-4 bg-white rounded-lg">
+          <div dangerouslySetInnerHTML={{ __html: content }} />
+        </div>
+      );
+    }
+
+    if (type.includes('sheet') || type.includes('excel')) {
+      return (
+        <div className="p-4 bg-white rounded-lg overflow-auto">
+          <pre className="whitespace-pre-wrap">{content}</pre>
+        </div>
+      );
+    }
+
+    if (type.includes('text') || type.includes('csv')) {
+      return (
+        <div className="p-4 bg-white rounded-lg overflow-auto">
+          <pre className="whitespace-pre-wrap">{content}</pre>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4 bg-gray-100 rounded-lg text-center">
+        <p>Không hỗ trợ xem trước loại file này</p>
+        <p className="text-sm text-gray-500">({fileType})</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className={`document-preview ${className}`}>
+      {error ? (
+        <div className="p-4 bg-red-50 text-red-600 rounded-lg">
+          {error}
+        </div>
+      ) : (
+        renderPreview()
       )}
-    </>
+    </div>
   );
 };
-
-export default DocumentPreview;
