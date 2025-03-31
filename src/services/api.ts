@@ -18,4 +18,14 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+// Thêm interceptor phản hồi để xử lý lỗi
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Xử lý lỗi toàn cục
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
+
 export default API;

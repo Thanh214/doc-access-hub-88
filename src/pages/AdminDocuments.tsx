@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FileText, Plus, Search, RefreshCw, Eye, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatCurrency, formatFileSize, formatDate } from "@/utils/formatters";
 
 interface Document {
@@ -56,10 +58,14 @@ const AdminDocuments = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
   const [documentToEdit, setDocumentToEdit] = useState<Document | null>(null);
   const [documentToView, setDocumentToView] = useState<Document | null>(null);
+  const [documentToPreview, setDocumentToPreview] = useState<Document | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   
   const [newDocument, setNewDocument] = useState({
     title: "",
@@ -112,7 +118,12 @@ const AdminDocuments = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      
+      // Hiển thị kích thước file đã chọn ngay lập tức
+      const fileSize = formatFileSize(file.size);
+      console.log(`Selected file: ${file.name}, size: ${fileSize}`);
     }
   };
 
@@ -284,6 +295,92 @@ const AdminDocuments = () => {
     setIsViewDialogOpen(true);
   };
 
+  const openPreviewDialog = async (document: Document) => {
+    setDocumentToPreview(document);
+    setPreviewError(null);
+    setPreviewUrl(null);
+    setIsPreviewDialogOpen(true);
+    
+    try {
+      // Đối với các file có thể xem trước (PDF, hình ảnh, văn bản)
+      if (document.file_path) {
+        const fileType = document.file_type.toLowerCase();
+        
+        // Tạo URL xem trước
+        const previewEndpoint = `/admin/documents/${document.id}/preview`;
+        const url = `${API.defaults.baseURL}${previewEndpoint}`;
+        
+        setPreviewUrl(url);
+      } else {
+        setPreviewError("Không có file để xem trước");
+      }
+    } catch (error) {
+      console.error("Error previewing document:", error);
+      setPreviewError("Không thể xem trước tài liệu này");
+    }
+  };
+
+  const renderPreview = () => {
+    if (previewError) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-red-500">{previewError}</p>
+        </div>
+      );
+    }
+
+    if (!documentToPreview || !previewUrl) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+
+    const fileType = documentToPreview.file_type.toLowerCase();
+
+    if (fileType.includes('pdf')) {
+      return (
+        <iframe
+          src={previewUrl}
+          className="w-full h-full border-0"
+          title="PDF preview"
+          onError={() => setPreviewError("Không thể xem trước PDF này")}
+        />
+      );
+    } else if (fileType.includes('image')) {
+      return (
+        <div className="w-full h-full flex items-center justify-center">
+          <img 
+            src={previewUrl} 
+            alt={documentToPreview.title}
+            className="max-w-full max-h-full object-contain" 
+            onError={() => setPreviewError("Không thể tải hình ảnh này")}
+          />
+        </div>
+      );
+    } else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword') || fileType.includes('officedocument')) {
+      return (
+        <div className="w-full h-full bg-white p-4 overflow-auto">
+          <object
+            data={previewUrl}
+            type={documentToPreview.file_type}
+            className="w-full h-full"
+            onError={() => setPreviewError("Không thể xem trước tài liệu này")}
+          >
+            <p>Không hỗ trợ xem trước tài liệu này trong trình duyệt của bạn</p>
+          </object>
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">Không hỗ trợ xem trước loại file {documentToPreview.file_type}</p>
+        </div>
+      );
+    }
+  };
+
   const filteredDocuments = documents.filter(doc => 
     doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     doc.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -383,13 +480,23 @@ const AdminDocuments = () => {
                                 variant="ghost" 
                                 size="icon"
                                 onClick={() => openViewDialog(doc)}
+                                title="Xem chi tiết"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button 
                                 variant="ghost" 
                                 size="icon"
+                                onClick={() => openPreviewDialog(doc)}
+                                title="Xem trước tài liệu"
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
                                 onClick={() => openEditDialog(doc)}
+                                title="Chỉnh sửa"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -400,6 +507,7 @@ const AdminDocuments = () => {
                                   setDocumentToDelete(doc);
                                   setIsDeleteDialogOpen(true);
                                 }}
+                                title="Xóa"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -445,10 +553,14 @@ const AdminDocuments = () => {
           </Card>
         )}
 
+        {/* Dialog Thêm tài liệu */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Thêm tài liệu mới</DialogTitle>
+              <DialogDescription>
+                Điền thông tin chi tiết về tài liệu mới
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddDocument}>
               <div className="space-y-4 py-2">
@@ -483,11 +595,13 @@ const AdminDocuments = () => {
                       <SelectValue placeholder="Chọn danh mục" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={String(category.id)}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      <ScrollArea className="h-[200px]">
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={String(category.id)}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -543,10 +657,14 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Dialog Chỉnh sửa tài liệu */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Chỉnh sửa tài liệu</DialogTitle>
+              <DialogDescription>
+                Chỉnh sửa thông tin tài liệu
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditDocument}>
               <div className="space-y-4 py-2">
@@ -584,11 +702,13 @@ const AdminDocuments = () => {
                       <SelectValue placeholder="Chọn danh mục" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={String(category.id)}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      <ScrollArea className="h-[200px]">
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={String(category.id)}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
                     </SelectContent>
                   </Select>
                 </div>
@@ -649,10 +769,14 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Dialog Xem chi tiết */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Chi tiết tài liệu</DialogTitle>
+              <DialogDescription>
+                Thông tin chi tiết về tài liệu
+              </DialogDescription>
             </DialogHeader>
             {documentToView && (
               <div className="space-y-4">
@@ -734,7 +858,22 @@ const AdminDocuments = () => {
               {documentToView && (
                 <Button 
                   variant="outline" 
-                  onClick={() => openEditDialog(documentToView)}
+                  onClick={() => {
+                    setIsViewDialogOpen(false);
+                    openPreviewDialog(documentToView);
+                  }}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Xem trước
+                </Button>
+              )}
+              {documentToView && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsViewDialogOpen(false);
+                    openEditDialog(documentToView);
+                  }}
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Chỉnh sửa
@@ -744,10 +883,46 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
+        {/* Dialog Xem trước tài liệu */}
+        <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
+          <DialogContent className="sm:max-w-[800px] sm:max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Xem trước tài liệu</DialogTitle>
+              <DialogDescription>
+                {documentToPreview?.title}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="h-[500px] overflow-auto border rounded-md">
+              {renderPreview()}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsPreviewDialogOpen(false)}>
+                Đóng
+              </Button>
+              {documentToPreview && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsPreviewDialogOpen(false);
+                    openEditDialog(documentToPreview);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Chỉnh sửa
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Xác nhận xóa */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Xác nhận xóa tài liệu</DialogTitle>
+              <DialogDescription>
+                Hành động này không thể hoàn tác
+              </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <p>Bạn có chắc chắn muốn xóa tài liệu "{documentToDelete?.title}"?</p>

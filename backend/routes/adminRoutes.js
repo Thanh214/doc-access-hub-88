@@ -19,4 +19,7 @@ router.get('/transactions', verifyToken, adminController.getTransactions);
 // Get transaction summary
 router.get('/transaction-summary', verifyToken, adminController.getTransactionSummary);
 
+// Preview document (thêm mới)
+router.get('/documents/:id/preview', verifyToken, adminController.previewDocument);
+
 module.exports = router;

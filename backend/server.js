@@ -28,6 +28,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Make uploads directory accessible
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Phục vụ tài liệu trực tiếp cho mục đích xem trước
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/documents', require('./routes/documents'));
