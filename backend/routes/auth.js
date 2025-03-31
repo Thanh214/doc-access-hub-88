@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -64,62 +65,6 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
-});
-
-// Đăng nhập admin
-router.post('/admin/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        const query = 'SELECT * FROM users WHERE email = ? AND role = "admin"';
-        db.query(query, [email], async (err, results) => {
-            if (err) {
-                return res.status(500).json({ message: 'Lỗi server', error: err.message });
-            }
-            
-            if (results.length === 0) {
-                return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
-            }
-
-            const user = results[0];
-            const validPassword = await bcrypt.compare(password, user.password);
-            
-            if (!validPassword) {
-                return res.status(401).json({ message: 'Email hoặc mật khẩu không đúng' });
-            }
-
-            const token = jwt.sign(
-                { id: user.id, email: user.email, role: user.role },
-                process.env.JWT_SECRET,
-                { expiresIn: process.env.JWT_EXPIRES_IN }
-            );
-
-            // Lưu token vào cookie
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 24 * 60 * 60 * 1000 // 1 day
-            });
-
-            res.json({
-                token,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.full_name,
-                    role: user.role
-                }
-            });
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
-    }
-});
-
-// Đăng xuất
-router.post('/logout', (req, res) => {
-    res.clearCookie('token');
-    res.json({ message: 'Đăng xuất thành công' });
 });
 
 // Lấy thông tin profile
