@@ -25,6 +25,7 @@ const DocumentDetail: React.FC = () => {
     const [document, setDocument] = useState<Document | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [previewError, setPreviewError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchDocument = async () => {
@@ -54,6 +55,46 @@ const DocumentDetail: React.FC = () => {
             link.remove();
         } catch (err: any) {
             setError(err.response?.data?.message || 'Có lỗi xảy ra khi tải tài liệu');
+        }
+    };
+
+    const handlePreviewError = () => {
+        setPreviewError('Không thể xem trước tài liệu này');
+    };
+
+    const renderPreview = () => {
+        if (!document) return null;
+
+        const fileType = document.file_type.toLowerCase();
+        
+        if (fileType.includes('pdf') || fileType.includes('image')) {
+            return (
+                <iframe
+                    src={`/api/documents/preview/${id}`}
+                    className="w-full h-full border-0"
+                    title="Document preview"
+                    onError={handlePreviewError}
+                />
+            );
+        } else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
+            return (
+                <div className="w-full h-full bg-white p-4 overflow-auto">
+                    <object
+                        data={`/api/documents/preview/${id}`}
+                        type={document.file_type}
+                        className="w-full h-full"
+                        onError={handlePreviewError}
+                    >
+                        <p>Không thể xem trước tài liệu này</p>
+                    </object>
+                </div>
+            );
+        } else {
+            return (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Không hỗ trợ xem trước loại file này</p>
+                </div>
+            );
         }
     };
 
@@ -135,11 +176,13 @@ const DocumentDetail: React.FC = () => {
                         <div>
                             <h3 className="text-sm font-medium text-gray-500 mb-2">Xem trước</h3>
                             <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                                <iframe
-                                    src={`/api/documents/preview/${id}`}
-                                    className="w-full h-full"
-                                    title="Document preview"
-                                />
+                                {previewError ? (
+                                    <div className="flex items-center justify-center h-full">
+                                        <p className="text-red-500">{previewError}</p>
+                                    </div>
+                                ) : (
+                                    renderPreview()
+                                )}
                             </div>
                         </div>
 
