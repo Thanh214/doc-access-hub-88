@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { FileText, Plus, Search, RefreshCw, Eye, Trash2, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -337,7 +336,7 @@ const AdminDocuments = () => {
       );
     }
 
-    const fileType = documentToPreview.file_type.toLowerCase();
+    const fileType = documentToPreview.file_type?.toLowerCase() || '';
 
     if (fileType.includes('pdf')) {
       return (

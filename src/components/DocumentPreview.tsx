@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Lock, AlertCircle } from "lucide-react";
+import { Download, Lock, AlertCircle, FileText, Image, FileQuestion } from "lucide-react";
 import { motion } from "framer-motion";
 import { PaymentModal } from "./PaymentModal";
+import API from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentPreviewProps {
   id: string;
@@ -13,12 +15,14 @@ interface DocumentPreviewProps {
   description: string;
   category: string;
   thumbnail?: string;
-  previewContent: string;
+  previewContent?: string;
+  file_path?: string;
+  file_type?: string;
   price: number;
   isFree: boolean;
-  pages: number;
-  fileSize: string;
-  dateAdded: string;
+  pages?: number;
+  fileSize?: string;
+  dateAdded?: string;
 }
 
 const DocumentPreview = ({
@@ -28,17 +32,135 @@ const DocumentPreview = ({
   category,
   thumbnail,
   previewContent,
+  file_path,
+  file_type,
   price,
   isFree,
-  pages,
-  fileSize,
-  dateAdded,
+  pages = 0,
+  fileSize = "0 KB",
+  dateAdded = new Date().toLocaleDateString(),
 }: DocumentPreviewProps) => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  };
+
+  useEffect(() => {
+    // Lấy URL xem trước khi component được tải
+    const loadPreview = async () => {
+      if (!id) return;
+      
+      setIsLoading(true);
+      setPreviewError(null);
+      
+      try {
+        // Xây dựng URL để xem trước tài liệu
+        const previewEndpoint = `/documents/preview/${id}`;
+        const url = `${API.defaults.baseURL}${previewEndpoint}`;
+        setPreviewUrl(url);
+      } catch (error) {
+        console.error("Error getting preview URL:", error);
+        setPreviewError("Không thể tải xem trước tài liệu");
+        toast({
+          variant: "destructive",
+          title: "Lỗi",
+          description: "Không thể tải xem trước tài liệu. Vui lòng thử lại sau.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadPreview();
+  }, [id, toast]);
+  
+  // Xác định loại file để hiển thị icon phù hợp
+  const getFileIcon = () => {
+    if (!file_type) return <FileQuestion className="h-6 w-6" />;
+    
+    const type = file_type.toLowerCase();
+    
+    if (type.includes('pdf')) {
+      return <FileText className="h-6 w-6 text-red-500" />;
+    } else if (type.includes('image')) {
+      return <Image className="h-6 w-6 text-blue-500" />;
+    } else if (type.includes('word') || type.includes('doc')) {
+      return <FileText className="h-6 w-6 text-blue-700" />;
+    } else if (type.includes('excel') || type.includes('xls')) {
+      return <FileText className="h-6 w-6 text-green-700" />;
+    } else {
+      return <FileText className="h-6 w-6 text-gray-500" />;
+    }
+  };
+  
+  // Render phần xem trước tài liệu
+  const renderPreview = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-60">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      );
+    }
+    
+    if (previewError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-60 text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <p className="text-destructive">{previewError}</p>
+        </div>
+      );
+    }
+    
+    if (!previewUrl) {
+      return (
+        <div className="flex flex-col items-center justify-center h-60 text-center">
+          <FileQuestion className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Không có xem trước cho tài liệu này</p>
+        </div>
+      );
+    }
+    
+    if (file_type && file_type.toLowerCase().includes('pdf')) {
+      return (
+        <iframe 
+          src={previewUrl} 
+          className="w-full h-[500px] border-0 rounded" 
+          title={`Preview of ${title}`}
+        />
+      );
+    } else if (file_type && file_type.toLowerCase().includes('image')) {
+      return (
+        <div className="flex items-center justify-center">
+          <img 
+            src={previewUrl} 
+            alt={title} 
+            className="max-w-full max-h-[500px] object-contain" 
+          />
+        </div>
+      );
+    } else if (previewContent) {
+      // Nếu có nội dung preview text
+      return (
+        <div className={`prose max-w-none ${isPreviewExpanded ? '' : 'max-h-[500px] overflow-hidden'}`}>
+          <div dangerouslySetInnerHTML={{ __html: previewContent }} />
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex flex-col items-center justify-center h-60 text-center">
+          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Không hỗ trợ xem trước cho định dạng này</p>
+          <p className="text-sm text-muted-foreground mt-2">({file_type || 'Không xác định'})</p>
+        </div>
+      );
+    }
   };
   
   return (
@@ -67,7 +189,7 @@ const DocumentPreview = ({
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
                 <Badge variant="secondary" className="bg-vibrant-1 text-white">{category}</Badge>
-                <Badge variant="outline">{pages} trang</Badge>
+                {pages > 0 && <Badge variant="outline">{pages} trang</Badge>}
                 <Badge variant="outline">{fileSize}</Badge>
                 <Badge variant="outline">Ngày thêm: {dateAdded}</Badge>
               </motion.div>
@@ -109,27 +231,9 @@ const DocumentPreview = ({
                   </motion.div>
                 )}
                 
-                {isFree && !isPreviewExpanded && (
-                  <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-background to-transparent flex items-end justify-center p-4">
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => setIsPreviewExpanded(true)}
-                    >
-                      Xem Thêm
-                    </Button>
-                  </div>
-                )}
+                {renderPreview()}
                 
-                <motion.div 
-                  className={`prose max-w-none ${isPreviewExpanded ? '' : 'max-h-[500px] overflow-hidden'}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                >
-                  <div dangerouslySetInnerHTML={{ __html: previewContent }} />
-                </motion.div>
-                
-                {isPreviewExpanded && (
+                {(previewContent && isPreviewExpanded) && (
                   <div className="mt-6 text-center">
                     <Button 
                       variant="ghost" 
@@ -151,12 +255,17 @@ const DocumentPreview = ({
         >
           <Card className="sticky top-24 shadow-md hover:shadow-lg transition-all duration-300 border-accent/30">
             <div className="p-6">
-              {thumbnail && (
+              {thumbnail ? (
                 <img 
                   src={thumbnail} 
                   alt={title} 
                   className="w-full h-40 object-cover rounded-md mb-6 shadow-sm"
                 />
+              ) : (
+                <div className="w-full h-40 bg-muted flex items-center justify-center rounded-md mb-6 shadow-sm">
+                  {getFileIcon()}
+                  <span className="ml-2 text-muted-foreground">{file_type || 'Tài liệu'}</span>
+                </div>
               )}
               
               <div className="mb-6">
@@ -266,6 +375,7 @@ const DocumentPreview = ({
           isFree={isFree}
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
+          onSuccess={() => {}}
         />
       )}
     </>

@@ -28,4 +28,23 @@ API.interceptors.response.use(
   }
 );
 
+// Thêm phương thức để lấy đường dẫn đầy đủ tới file
+API.getFileUrl = (filePath) => {
+  if (!filePath) return null;
+  
+  // Nếu đã là URL đầy đủ, trả về nguyên vẹn
+  if (filePath.startsWith('http')) return filePath;
+  
+  // Nếu là đường dẫn tương đối, thêm baseURL
+  // Thay thế /api trong baseURL với /uploads nếu cần
+  const baseUploadUrl = API.defaults.baseURL.replace('/api', '');
+  
+  // Đảm bảo filePath không bắt đầu bằng dấu / nếu baseUploadUrl đã kết thúc bằng /
+  if (filePath.startsWith('/') && baseUploadUrl.endsWith('/')) {
+    filePath = filePath.substring(1);
+  }
+  
+  return `${baseUploadUrl}/${filePath}`;
+};
+
 export default API;

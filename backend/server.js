@@ -25,10 +25,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Make uploads directory accessible
+// Make uploads directory accessible - đảm bảo đường dẫn chính xác
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Phục vụ tài liệu trực tiếp cho mục đích xem trước
+// Phục vụ tài liệu trực tiếp cho mục đích xem trước - đảm bảo đường dẫn này được cấu hình đúng
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes

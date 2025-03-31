@@ -383,65 +383,65 @@ router.get('/featured/latest', async (req, res) => {
     }
 });
 
-// Xem trước tài liệu
-router.get('/preview/:id', auth, async (req, res) => {
-    try {
-        const documentId = req.params.id;
+// Xem trước tài liệu - cập nhật để sửa lỗi
+router.get('/preview/:id', async (req, res) => {
+  try {
+    const documentId = req.params.id;
 
-        // Kiểm tra tài liệu có tồn tại không
-        const docQuery = 'SELECT * FROM documents WHERE id = ?';
-        db.query(docQuery, [documentId], async (err, results) => {
-            if (err || results.length === 0) {
-                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
-            }
+    // Kiểm tra tài liệu có tồn tại không
+    const docQuery = 'SELECT * FROM documents WHERE id = ?';
+    db.query(docQuery, [documentId], async (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+      }
 
-            const document = results[0];
-            const filePath = document.file_path.replace(/\\/g, '/');
-            
-            // Kiểm tra file có tồn tại không
-            if (!fs.existsSync(document.file_path)) {
-                console.error('File không tồn tại:', document.file_path);
-                return res.status(404).json({ message: 'File không tồn tại trên server' });
-            }
+      const document = results[0];
+      const filePath = document.file_path;
+      
+      // Đảm bảo đường dẫn file là hợp lệ
+      if (!filePath || !fs.existsSync(filePath)) {
+        console.error('File không tồn tại:', filePath);
+        return res.status(404).json({ message: 'File không tồn tại trên server' });
+      }
 
-            // Xử lý theo loại file
-            const fileType = document.file_type.toLowerCase();
-            
-            if (fileType.includes('pdf')) {
-                // PDF files
-                res.setHeader('Content-Type', 'application/pdf');
-                res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
-                fs.createReadStream(document.file_path).pipe(res);
-            } 
-            else if (fileType.includes('image')) {
-                // Image files
-                res.setHeader('Content-Type', document.file_type);
-                res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
-                fs.createReadStream(document.file_path).pipe(res);
-            }
-            else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
-                // Text files
-                fs.readFile(document.file_path, 'utf8', (err, data) => {
-                    if (err) {
-                        console.error('Lỗi đọc file:', err);
-                        return res.status(500).json({ message: 'Lỗi đọc file' });
-                    }
-                    res.setHeader('Content-Type', 'text/plain');
-                    res.send(data);
-                });
-            }
-            else {
-                // Các loại file khác - trả về thông báo không hỗ trợ xem trước
-                res.status(400).json({ 
-                    message: 'Không hỗ trợ xem trước loại file này',
-                    fileType: document.file_type
-                });
-            }
+      // Xử lý theo loại file
+      const fileType = document.file_type.toLowerCase();
+      
+      if (fileType.includes('pdf')) {
+        // PDF files
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
+        fs.createReadStream(filePath).pipe(res);
+      } 
+      else if (fileType.includes('image')) {
+        // Image files
+        res.setHeader('Content-Type', document.file_type);
+        res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
+        fs.createReadStream(filePath).pipe(res);
+      }
+      else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
+        // Text files
+        fs.readFile(filePath, 'utf8', (err, data) => {
+          if (err) {
+            console.error('Lỗi đọc file:', err);
+            return res.status(500).json({ message: 'Lỗi đọc file' });
+          }
+          res.setHeader('Content-Type', 'text/plain');
+          res.send(data);
         });
-    } catch (error) {
-        console.error('Lỗi server:', error);
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
-    }
+      }
+      else {
+        // Các loại file khác - trả về thông báo không hỗ trợ xem trước
+        res.status(400).json({ 
+          message: 'Không hỗ trợ xem trước loại file này',
+          fileType: document.file_type
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Lỗi server:', error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
 });
 
 module.exports = router;
