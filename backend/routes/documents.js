@@ -376,4 +376,41 @@ router.get('/featured/latest', async (req, res) => {
     }
 });
 
+// Xem trước tài liệu
+router.get('/preview/:id', auth, async (req, res) => {
+    try {
+        const documentId = req.params.id;
+
+        // Kiểm tra tài liệu có tồn tại không
+        const docQuery = 'SELECT * FROM documents WHERE id = ?';
+        db.query(docQuery, [documentId], async (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+            }
+
+            const document = results[0];
+            const filePath = document.file_path.replace(/\\/g, '/');
+            
+            // Kiểm tra file có tồn tại không
+            if (!fs.existsSync(document.file_path)) {
+                console.error('File không tồn tại:', document.file_path);
+                return res.status(404).json({ message: 'File không tồn tại trên server' });
+            }
+
+            // Đọc file và gửi về client
+            const fileContent = fs.readFileSync(document.file_path);
+            
+            // Set header dựa vào loại file
+            res.setHeader('Content-Type', document.file_type);
+            res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
+            
+            // Gửi nội dung file
+            res.send(fileContent);
+        });
+    } catch (error) {
+        console.error('Lỗi server:', error);
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
 module.exports = router;
