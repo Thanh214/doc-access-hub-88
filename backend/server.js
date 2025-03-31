@@ -31,11 +31,25 @@ app.use((req, res, next) => {
   next();
 });
 
-// Make uploads directory accessible - đảm bảo đường dẫn chính xác
+// Make uploads directory accessible
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Phục vụ tài liệu trực tiếp cho mục đích xem trước - đảm bảo đường dẫn này được cấu hình đúng
+// Serve documents directly for preview
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Expose the full file path for direct access (debugging)
+app.get('/file-path/:filePath(*)', (req, res) => {
+  const filePath = req.params.filePath;
+  const fullPath = path.join(__dirname, filePath);
+  
+  console.log('Accessing file path:', fullPath);
+  
+  if (!fs.existsSync(fullPath)) {
+    return res.status(404).json({ message: 'File not found', path: fullPath });
+  }
+  
+  res.sendFile(fullPath);
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -48,5 +62,5 @@ app.use('/api/admin/documents', require('./routes/adminDocuments'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server đang chạy trên port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

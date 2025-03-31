@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
@@ -27,18 +26,18 @@ router.get('/documents/:id/preview', verifyToken, (req, res) => {
   const documentId = req.params.id;
   
   try {
-    // Gọi controller để lấy thông tin về tài liệu
+    // Get document information from database
     const db = require('../config/database');
     
-    // Tìm tài liệu theo ID
+    // Find document by ID
     db.query('SELECT * FROM documents WHERE id = ?', [documentId], (err, results) => {
       if (err) {
-        console.error('Lỗi truy vấn database:', err);
-        return res.status(500).json({ message: 'Lỗi server', error: err.message });
+        console.error('Database query error:', err);
+        return res.status(500).json({ message: 'Server error', error: err.message });
       }
       
       if (results.length === 0) {
-        return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+        return res.status(404).json({ message: 'Document not found' });
       }
       
       const document = results[0];
@@ -46,52 +45,63 @@ router.get('/documents/:id/preview', verifyToken, (req, res) => {
       
       console.log('File path in adminRoutes:', filePath);
       
-      // Kiểm tra file có tồn tại không
+      // Check if file exists
       if (!fs.existsSync(filePath)) {
-        console.error('File không tồn tại:', filePath);
-        return res.status(404).json({ message: 'File không tồn tại', path: filePath });
+        console.error('File does not exist:', filePath);
+        return res.status(404).json({ message: 'File does not exist', path: filePath });
       }
       
-      // Xác định loại file và xử lý phù hợp
-      const fileType = document.file_type.toLowerCase();
+      // Determine file type and handle accordingly
+      const fileType = document.file_type ? document.file_type.toLowerCase() : '';
       console.log('File type:', fileType);
       
+      // For PDFs
       if (fileType.includes('pdf')) {
-        // PDF files
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
         fs.createReadStream(filePath).pipe(res);
       } 
+      // For images
       else if (fileType.includes('image')) {
-        // Image files
         res.setHeader('Content-Type', document.file_type);
         res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
         fs.createReadStream(filePath).pipe(res);
       }
+      // For text files
       else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
-        // Text files
         fs.readFile(filePath, 'utf8', (err, data) => {
           if (err) {
-            console.error('Lỗi đọc file:', err);
-            return res.status(500).json({ message: 'Lỗi đọc file' });
+            console.error('Error reading file:', err);
+            return res.status(500).json({ message: 'Error reading file' });
           }
           res.setHeader('Content-Type', 'text/plain');
           res.send(data);
         });
-      } else {
-        // Các loại file khác - trả về file trực tiếp
+      } 
+      // For MS Office documents (PowerPoint, Word, Excel)
+      else if (fileType.includes('officedocument') || fileType.includes('pptx') || fileType.includes('docx') || fileType.includes('xlsx')) {
+        // For Office documents, just send the file directly
+        res.download(filePath, path.basename(filePath), (err) => {
+          if (err) {
+            console.error('Error sending file:', err);
+            return res.status(500).json({ message: 'Error sending file', error: err.message });
+          }
+        });
+      }
+      else {
+        // Other file types - return the file directly
         res.sendFile(path.resolve(filePath), (err) => {
           if (err) {
-            console.error('Lỗi gửi file:', err);
-            return res.status(500).json({ message: 'Lỗi gửi file', error: err.message });
+            console.error('Error sending file:', err);
+            return res.status(500).json({ message: 'Error sending file', error: err.message });
           }
         });
       }
     });
     
   } catch (error) {
-    console.error('Lỗi server:', error);
-    res.status(500).json({ message: 'Lỗi server', error: error.message });
+    console.error('Server error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

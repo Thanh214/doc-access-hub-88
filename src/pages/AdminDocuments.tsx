@@ -91,7 +91,8 @@ const AdminDocuments = () => {
       const formattedDocuments = documentsResponse.data.map((doc: any) => ({
         ...doc,
         file_size: parseInt(doc.file_size) || 0,
-        category_name: doc.category_name || "Chưa phân loại"
+        category_name: doc.category_name || "Chưa phân loại",
+        is_premium: doc.is_premium === 1 || doc.is_premium === true
       }));
       
       setDocuments(formattedDocuments);
@@ -378,13 +379,23 @@ const AdminDocuments = () => {
             }}
           >
             <p>Không hỗ trợ xem trước tài liệu này trong trình duyệt của bạn</p>
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+              Tải xuống để xem
+            </a>
           </object>
         </div>
       );
     } else {
       return (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center justify-center h-full space-y-4">
           <p className="text-gray-500">Không hỗ trợ xem trước loại file {documentToPreview.file_type}</p>
+          <a 
+            href={previewUrl} 
+            download={documentToPreview.title}
+            className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+          >
+            Tải xuống file
+          </a>
         </div>
       );
     }
@@ -703,7 +714,7 @@ const AdminDocuments = () => {
                   <Label htmlFor="edit-category">Danh mục</Label>
                   <Select 
                     onValueChange={handleEditSelectChange}
-                    defaultValue={editDocument.category_id}
+                    value={editDocument.category_id}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Chọn danh mục" />

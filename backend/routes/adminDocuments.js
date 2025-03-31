@@ -6,7 +6,7 @@ const fs = require('fs');
 const db = require('../config/database');
 const auth = require('../middleware/auth');
 
-// Cấu hình multer cho upload file
+// Multer configuration for file upload
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const dir = path.join(__dirname, '../uploads/documents');
@@ -22,12 +22,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Lấy danh sách tài liệu (chỉ admin)
+// Get all documents (admin only)
 router.get('/', auth, async (req, res) => {
     try {
-        // Kiểm tra quyền admin
+        // Check admin rights
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Không có quyền truy cập' });
+            return res.status(403).json({ message: 'Access denied' });
         }
 
         const query = `
@@ -39,28 +39,28 @@ router.get('/', auth, async (req, res) => {
         `;
         db.query(query, (err, results) => {
             if (err) {
-                return res.status(500).json({ message: 'Lỗi server', error: err.message });
+                return res.status(500).json({ message: 'Server error', error: err.message });
             }
             res.json(results);
         });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-// Upload tài liệu mới (chỉ admin)
+// Upload new document (admin only)
 router.post('/', auth, upload.single('file'), async (req, res) => {
     try {
-        // Kiểm tra quyền admin
+        // Check admin rights
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Không có quyền truy cập' });
+            return res.status(403).json({ message: 'Access denied' });
         }
 
         const { title, description, category_id, is_premium, price } = req.body;
         const file = req.file;
 
         if (!file) {
-            return res.status(400).json({ message: 'Vui lòng chọn file để upload' });
+            return res.status(400).json({ message: 'Please select a file to upload' });
         }
 
         const query = `
@@ -80,37 +80,47 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
             category_id || null,
             is_premium === 'true',
             price || null,
-            req.user.id  // Thêm ID người dùng đăng tài liệu
+            req.user.id  // Add user ID who uploaded the document
         ], (err, result) => {
             if (err) {
-                return res.status(400).json({ message: 'Lỗi upload tài liệu', error: err.message });
+                return res.status(400).json({ message: 'Error uploading document', error: err.message });
             }
             res.status(201).json({ 
-                message: 'Upload tài liệu thành công',
+                message: 'Document uploaded successfully',
                 document_id: result.insertId
             });
         });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-// Cập nhật tài liệu (chỉ admin)
+// Update document (admin only)
 router.put('/:id', auth, upload.single('file'), async (req, res) => {
     try {
-        // Kiểm tra quyền admin
+        // Check admin rights
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Không có quyền truy cập' });
+            return res.status(403).json({ message: 'Access denied' });
         }
 
         const { id } = req.params;
         const { title, description, category_id, is_premium, price } = req.body;
         const file = req.file;
 
-        // Kiểm tra tài liệu có tồn tại không
+        console.log('Update document request:', {
+            id,
+            title,
+            description,
+            category_id,
+            is_premium,
+            price,
+            hasFile: !!file
+        });
+
+        // Check if document exists
         db.query('SELECT * FROM documents WHERE id = ?', [id], (err, results) => {
             if (err || results.length === 0) {
-                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+                return res.status(404).json({ message: 'Document not found' });
             }
 
             const document = results[0];
@@ -118,9 +128,9 @@ router.put('/:id', auth, upload.single('file'), async (req, res) => {
             let fileSize = document.file_size;
             let fileType = document.file_type;
 
-            // Nếu có file mới, cập nhật thông tin file
+            // If there's a new file, update file info
             if (file) {
-                // Xóa file cũ nếu tồn tại
+                // Delete old file if it exists
                 if (fs.existsSync(document.file_path)) {
                     fs.unlinkSync(document.file_path);
                 }
@@ -148,59 +158,61 @@ router.put('/:id', auth, upload.single('file'), async (req, res) => {
                 id
             ], (err, result) => {
                 if (err) {
-                    return res.status(400).json({ message: 'Lỗi cập nhật tài liệu', error: err.message });
+                    console.error('Error updating document:', err);
+                    return res.status(400).json({ message: 'Error updating document', error: err.message });
                 }
-                res.json({ message: 'Cập nhật tài liệu thành công' });
+                res.json({ message: 'Document updated successfully' });
             });
         });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-// Xóa tài liệu (chỉ admin)
+// Delete document (admin only)
 router.delete('/:id', auth, async (req, res) => {
     try {
-        // Kiểm tra quyền admin
+        // Check admin rights
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Không có quyền truy cập' });
+            return res.status(403).json({ message: 'Access denied' });
         }
 
         const { id } = req.params;
 
-        // Kiểm tra tài liệu có tồn tại không
+        // Check if document exists
         db.query('SELECT * FROM documents WHERE id = ?', [id], (err, results) => {
             if (err || results.length === 0) {
-                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+                return res.status(404).json({ message: 'Document not found' });
             }
 
             const document = results[0];
 
-            // Xóa file nếu tồn tại
+            // Delete file if it exists
             if (fs.existsSync(document.file_path)) {
                 fs.unlinkSync(document.file_path);
             }
 
-            // Xóa dữ liệu từ database
+            // Delete from database
             db.query('DELETE FROM documents WHERE id = ?', [id], (err, result) => {
                 if (err) {
-                    return res.status(400).json({ message: 'Lỗi xóa tài liệu', error: err.message });
+                    return res.status(400).json({ message: 'Error deleting document', error: err.message });
                 }
-                res.json({ message: 'Xóa tài liệu thành công' });
+                res.json({ message: 'Document deleted successfully' });
             });
         });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-// Preview tài liệu (chỉ admin)
+// Preview document (admin only)
 router.get('/:id/preview', auth, async (req, res) => {
     try {
         console.log('Accessed admin document preview route');
-        // Kiểm tra quyền admin
+        // Check admin rights
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ message: 'Không có quyền truy cập' });
+            return res.status(403).json({ message: 'Access denied' });
         }
 
         const { id } = req.params;
@@ -208,11 +220,11 @@ router.get('/:id/preview', auth, async (req, res) => {
         db.query('SELECT * FROM documents WHERE id = ?', [id], (err, results) => {
             if (err) {
                 console.error('Database error:', err);
-                return res.status(500).json({ message: 'Lỗi truy vấn database', error: err.message });
+                return res.status(500).json({ message: 'Database query error', error: err.message });
             }
             
             if (results.length === 0) {
-                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+                return res.status(404).json({ message: 'Document not found' });
             }
             
             const document = results[0];
@@ -220,72 +232,88 @@ router.get('/:id/preview', auth, async (req, res) => {
             
             console.log('File path:', filePath);
             
-            // Kiểm tra file có tồn tại không
+            // Check if file exists
             if (!fs.existsSync(filePath)) {
-                console.error('File không tồn tại:', filePath);
-                return res.status(404).json({ message: 'File không tồn tại' });
+                console.error('File does not exist:', filePath);
+                return res.status(404).json({ message: 'File does not exist', path: filePath });
             }
             
-            // Xác định loại file và xử lý phù hợp
-            const fileType = document.file_type?.toLowerCase() || '';
+            // Determine file type and handle accordingly
+            const fileType = document.file_type ? document.file_type.toLowerCase() : '';
             console.log('File type:', fileType);
             
+            // For PDFs
             if (fileType.includes('pdf')) {
-                // PDF files
                 res.setHeader('Content-Type', 'application/pdf');
                 res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
                 fs.createReadStream(filePath).pipe(res);
             } 
+            // For images
             else if (fileType.includes('image')) {
-                // Image files
                 res.setHeader('Content-Type', document.file_type);
                 res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
                 fs.createReadStream(filePath).pipe(res);
             }
+            // For text files
             else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
-                // Text files
                 fs.readFile(filePath, 'utf8', (err, data) => {
                     if (err) {
-                        console.error('Lỗi đọc file:', err);
-                        return res.status(500).json({ message: 'Lỗi đọc file' });
+                        console.error('Error reading file:', err);
+                        return res.status(500).json({ message: 'Error reading file' });
                     }
                     res.setHeader('Content-Type', 'text/plain');
                     res.send(data);
                 });
-            } else {
-                // Các loại file khác - trả về thông báo không hỗ trợ xem trước
-                res.status(200).sendFile(filePath); // Thử gửi file trực tiếp
+            } 
+            // For MS Office documents (PowerPoint, Word, Excel)
+            else if (fileType.includes('officedocument') || fileType.includes('pptx') || fileType.includes('docx') || fileType.includes('xlsx')) {
+                // For Office documents, just send the file directly
+                res.download(filePath, path.basename(filePath), (err) => {
+                    if (err) {
+                        console.error('Error sending file:', err);
+                        return res.status(500).json({ message: 'Error sending file', error: err.message });
+                    }
+                });
+            }
+            else {
+                // Other file types - return the file directly
+                res.sendFile(path.resolve(filePath), (err) => {
+                    if (err) {
+                        console.error('Error sending file:', err);
+                        return res.status(500).json({ message: 'Error sending file', error: err.message });
+                    }
+                });
             }
         });
     } catch (error) {
-        console.error('Lỗi server:', error);
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
+        console.error('Server error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
-// Thêm route download tài liệu
+// Download document
 router.get('/download/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
         
         db.query('SELECT file_path, file_type, title FROM documents WHERE id = ?', [id], (err, results) => {
             if (err || results.length === 0) {
-                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+                return res.status(404).json({ message: 'Document not found' });
             }
             
             const document = results[0];
             if (!fs.existsSync(document.file_path)) {
-                return res.status(404).json({ message: 'File không tồn tại' });
+                return res.status(404).json({ message: 'File does not exist' });
             }
             
-            // Cập nhật số lượt tải
+            // Update download count
             db.query('UPDATE documents SET download_count = download_count + 1 WHERE id = ?', [id], (err) => {
                 if (err) {
-                    console.error('Lỗi cập nhật lượt tải:', err);
+                    console.error('Error updating download count:', err);
                 }
             });
             
-            // Trả về file cho người dùng tải xuống
+            // Return file for user to download
             const fileName = path.basename(document.file_path);
             res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
             res.setHeader('Content-Type', document.file_type);
@@ -294,7 +322,34 @@ router.get('/download/:id', auth, async (req, res) => {
             fileStream.pipe(res);
         });
     } catch (error) {
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Debug endpoint to check file existence
+router.get('/debug/file-exists', auth, async (req, res) => {
+    try {
+        // Check admin rights
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+        
+        const { path: filePath } = req.query;
+        
+        if (!filePath) {
+            return res.status(400).json({ message: 'No file path provided' });
+        }
+        
+        const exists = fs.existsSync(filePath);
+        
+        res.json({
+            path: filePath,
+            exists,
+            absolutePath: path.resolve(filePath),
+            stats: exists ? fs.statSync(filePath) : null
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
 
