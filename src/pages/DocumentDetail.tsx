@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { formatCurrency, formatFileSize, formatDate } from '../utils/format';
+import { useToast } from "@/hooks/use-toast";
 
 interface Document {
     id: number;
@@ -18,6 +19,7 @@ interface Document {
     status: string;
     thumbnail: string | null;
     uploader_name: string;
+    uploader_id?: number;
 }
 
 const DocumentDetail: React.FC = () => {
@@ -26,6 +28,8 @@ const DocumentDetail: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [previewError, setPreviewError] = useState<string | null>(null);
+    const [downloading, setDownloading] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => {
         const fetchDocument = async () => {
@@ -43,18 +47,47 @@ const DocumentDetail: React.FC = () => {
     }, [id]);
 
     const handlePurchase = async () => {
+        if (!document) return;
+        
+        setDownloading(true);
         try {
-            const response = await axios.get(`/api/documents/download/${id}`);
+            const response = await axios.get(`/api/documents/download/${id}`, {
+                responseType: 'blob'
+            });
+            
             // Tạo URL từ blob và tải xuống
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const blob = new Blob([response.data]);
+            const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', document?.title || 'document');
+            link.setAttribute('download', `${document.title}.${document.file_type.split('/').pop()}`);
             document.body.appendChild(link);
             link.click();
             link.remove();
+            
+            toast({
+                title: "Tải xuống thành công",
+                description: "Tài liệu đã được tải xuống thành công",
+            });
+            
+            // Cập nhật số lượt tải trong giao diện
+            setDocument(prev => {
+                if (!prev) return null;
+                return {
+                    ...prev,
+                    download_count: prev.download_count + 1
+                };
+            });
         } catch (err: any) {
+            console.error("Lỗi tải xuống:", err);
             setError(err.response?.data?.message || 'Có lỗi xảy ra khi tải tài liệu');
+            toast({
+                title: "Lỗi tải xuống",
+                description: err.response?.data?.message || 'Có lỗi xảy ra khi tải tài liệu',
+                variant: "destructive",
+            });
+        } finally {
+            setDownloading(false);
         }
     };
 
@@ -66,21 +99,33 @@ const DocumentDetail: React.FC = () => {
         if (!document) return null;
 
         const fileType = document.file_type.toLowerCase();
+        const previewUrl = `/api/documents/preview/${id}`;
         
-        if (fileType.includes('pdf') || fileType.includes('image')) {
+        if (fileType.includes('pdf')) {
             return (
                 <iframe
-                    src={`/api/documents/preview/${id}`}
+                    src={previewUrl}
                     className="w-full h-full border-0"
-                    title="Document preview"
+                    title="PDF preview"
                     onError={handlePreviewError}
                 />
+            );
+        } else if (fileType.includes('image')) {
+            return (
+                <div className="w-full h-full flex items-center justify-center">
+                    <img 
+                        src={previewUrl} 
+                        alt={document.title}
+                        className="max-w-full max-h-full object-contain" 
+                        onError={handlePreviewError}
+                    />
+                </div>
             );
         } else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
             return (
                 <div className="w-full h-full bg-white p-4 overflow-auto">
                     <object
-                        data={`/api/documents/preview/${id}`}
+                        data={previewUrl}
                         type={document.file_type}
                         className="w-full h-full"
                         onError={handlePreviewError}
@@ -136,7 +181,7 @@ const DocumentDetail: React.FC = () => {
                             {document.is_premium ? 'Premium' : 'Miễn phí'}
                         </span>
                         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                            {document.category_name}
+                            {document.category_name || "Chưa phân loại"}
                         </span>
                     </div>
                 </div>
@@ -151,11 +196,11 @@ const DocumentDetail: React.FC = () => {
                         <dl className="mt-2 space-y-2">
                             <div className="flex justify-between">
                                 <dt className="text-sm text-gray-600">Kích thước:</dt>
-                                <dd className="text-sm font-medium">{formatFileSize(document.file_size)}</dd>
+                                <dd className="text-sm font-medium">{document.file_size ? formatFileSize(document.file_size) : "Không rõ"}</dd>
                             </div>
                             <div className="flex justify-between">
                                 <dt className="text-sm text-gray-600">Định dạng:</dt>
-                                <dd className="text-sm font-medium">{document.file_type}</dd>
+                                <dd className="text-sm font-medium">{document.file_type || "Không rõ"}</dd>
                             </div>
                             <div className="flex justify-between">
                                 <dt className="text-sm text-gray-600">Lượt tải:</dt>
@@ -167,8 +212,14 @@ const DocumentDetail: React.FC = () => {
                             </div>
                             <div className="flex justify-between">
                                 <dt className="text-sm text-gray-600">Người đăng:</dt>
-                                <dd className="text-sm font-medium">{document.uploader_name}</dd>
+                                <dd className="text-sm font-medium">{document.uploader_name || "Không xác định"}</dd>
                             </div>
+                            {document.uploader_id && (
+                                <div className="flex justify-between">
+                                    <dt className="text-sm text-gray-600">ID người đăng:</dt>
+                                    <dd className="text-sm font-medium">{document.uploader_id}</dd>
+                                </div>
+                            )}
                         </dl>
                     </div>
 
@@ -195,9 +246,20 @@ const DocumentDetail: React.FC = () => {
                             </div>
                             <button
                                 onClick={handlePurchase}
-                                className="w-full py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                                className="w-full py-2 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                                disabled={downloading}
                             >
-                                {document.is_premium ? 'Mua ngay' : 'Tải xuống'}
+                                {downloading ? (
+                                    <span className="flex items-center justify-center">
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Đang tải...
+                                    </span>
+                                ) : (
+                                    document.is_premium ? 'Mua ngay' : 'Tải xuống'
+                                )}
                             </button>
                         </div>
                     </div>
@@ -207,4 +269,4 @@ const DocumentDetail: React.FC = () => {
     );
 };
 
-export default DocumentDetail; 
+export default DocumentDetail;
