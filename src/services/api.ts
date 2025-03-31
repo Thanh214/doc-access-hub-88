@@ -1,5 +1,10 @@
 
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
+
+// Extend the AxiosInstance interface to include our custom method
+interface CustomAxiosInstance extends AxiosInstance {
+  getFileUrl: (filePath: string) => string | null;
+}
 
 // Tạo một instance axios với URL cơ sở API
 const API = axios.create({
@@ -7,7 +12,7 @@ const API = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-});
+}) as CustomAxiosInstance;
 
 // Interceptor để thêm token vào header nếu người dùng đã đăng nhập
 API.interceptors.request.use((config) => {
