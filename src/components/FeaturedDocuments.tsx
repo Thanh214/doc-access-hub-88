@@ -5,12 +5,12 @@ import DocumentCard from "./DocumentCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Document, getFeaturedDocuments } from "@/services/document.service";
+import { DocumentResponse, getFeaturedDocuments } from "@/services/document.service";
 import { useToast } from "@/hooks/use-toast";
 
 const FeaturedDocuments = () => {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [visibleDocuments, setVisibleDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<DocumentResponse[]>([]);
+  const [visibleDocuments, setVisibleDocuments] = useState<DocumentResponse[]>([]);
   const [isShowingAll, setIsShowingAll] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -94,7 +94,16 @@ const FeaturedDocuments = () => {
             >
               {visibleDocuments.map((doc) => (
                 <motion.div key={doc.id} variants={item}>
-                  <DocumentCard {...doc} />
+                  <DocumentCard 
+                    id={doc.id}
+                    title={doc.title}
+                    description={doc.description}
+                    category={doc.category}
+                    thumbnail={doc.thumbnail}
+                    price={doc.price}
+                    isFree={doc.isFree}
+                    previewAvailable={doc.previewAvailable}
+                  />
                 </motion.div>
               ))}
             </motion.div>
