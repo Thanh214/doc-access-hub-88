@@ -167,8 +167,8 @@ router.post('/', auth, upload.fields([
     }
 });
 
-// Middleware kiểm tra quyền truy cập tài liệu
-const checkDocumentAccess = async (req, res, next) => {
+// Tải tài liệu
+router.get('/download/:id', auth, async (req, res) => {
     try {
         const documentId = req.params.id;
         const userId = req.user.id;
@@ -181,111 +181,103 @@ const checkDocumentAccess = async (req, res, next) => {
             }
 
             const document = results[0];
-
-            // Nếu là tài liệu miễn phí, cho phép truy cập
-            if (!document.is_premium) {
-                req.document = document;
-                return next();
+            const filePath = document.file_path.replace(/\\/g, '/');
+            
+            // Kiểm tra file có tồn tại không
+            if (!fs.existsSync(document.file_path)) {
+                console.error('File không tồn tại:', document.file_path);
+                return res.status(404).json({ message: 'File không tồn tại trên server' });
             }
 
-            // Nếu là tài liệu premium, kiểm tra người dùng đã mua chưa
-            const purchaseQuery = `
-                SELECT * FROM document_purchases 
-                WHERE document_id = ? AND user_id = ? AND status = 'completed'
-            `;
-            
-            db.query(purchaseQuery, [documentId, userId], (err, purchases) => {
-                if (err) {
-                    console.error('Lỗi kiểm tra mua tài liệu:', err);
-                    return res.status(500).json({ message: 'Lỗi server' });
-                }
+            // Kiểm tra nếu là tài liệu premium
+            if (document.is_premium) {
+                // Kiểm tra số dư người dùng
+                const userQuery = 'SELECT balance FROM users WHERE id = ?';
+                db.query(userQuery, [userId], (err, userResults) => {
+                    if (err || userResults.length === 0) {
+                        return res.status(400).json({ message: 'Lỗi kiểm tra số dư' });
+                    }
 
-                if (purchases.length === 0) {
-                    return res.status(403).json({ 
-                        message: 'Bạn cần mua tài liệu này để có thể xem và tải xuống',
-                        error: 'DOCUMENT_NOT_PURCHASED'
-                    });
-                }
+                    const userBalance = userResults[0].balance;
+                    if (userBalance < document.price) {
+                        return res.status(400).json({ message: 'Số dư không đủ' });
+                    }
 
-                req.document = document;
-                next();
-            });
+                    // Trừ tiền và ghi nhận giao dịch
+                    const transactionQuery = `
+                        INSERT INTO transactions (user_id, type, amount, status, description)
+                        VALUES (?, 'purchase', ?, 'completed', ?)
+                    `;
+                    db.query(transactionQuery, [
+                        userId,
+                        document.price,
+                        `Mua tài liệu: ${document.title}`
+                    ]);
+
+                    // Cập nhật số dư
+                    const updateBalanceQuery = 'UPDATE users SET balance = balance - ? WHERE id = ?';
+                    db.query(updateBalanceQuery, [document.price, userId]);
+
+                    // Ghi nhận lịch sử tải
+                    const downloadQuery = `
+                        INSERT INTO download_history (user_id, document_id, is_premium, amount_paid)
+                        VALUES (?, ?, true, ?)
+                    `;
+                    db.query(downloadQuery, [userId, documentId, document.price]);
+
+                    // Tăng số lượt tải
+                    const updateDownloadQuery = 'UPDATE documents SET download_count = download_count + 1 WHERE id = ?';
+                    db.query(updateDownloadQuery, [documentId]);
+
+                    // Trả về file cho client
+                    res.download(document.file_path, path.basename(document.file_path));
+                });
+            } else {
+                // Kiểm tra giới hạn tải của gói đăng ký
+                const subscriptionQuery = `
+                    SELECT us.*, sp.download_limit 
+                    FROM user_subscriptions us
+                    JOIN subscription_packages sp ON us.package_id = sp.id
+                    WHERE us.user_id = ? AND us.status = 'active' AND us.end_date > NOW()
+                `;
+                db.query(subscriptionQuery, [userId], (err, subResults) => {
+                    if (err) {
+                        return res.status(400).json({ message: 'Lỗi kiểm tra gói đăng ký', error: err.message });
+                    }
+                    
+                    if (subResults.length === 0) {
+                        return res.status(400).json({ message: 'Bạn cần đăng ký gói để tải tài liệu' });
+                    }
+
+                    const subscription = subResults[0];
+                    if (subscription.remaining_downloads <= 0) {
+                        return res.status(400).json({ message: 'Bạn đã hết lượt tải trong gói hiện tại' });
+                    }
+
+                    // Cập nhật số lượt tải còn lại
+                    const updateDownloadsQuery = `
+                        UPDATE user_subscriptions 
+                        SET remaining_downloads = remaining_downloads - 1 
+                        WHERE id = ?
+                    `;
+                    db.query(updateDownloadsQuery, [subscription.id]);
+
+                    // Ghi nhận lịch sử tải
+                    const downloadQuery = `
+                        INSERT INTO download_history (user_id, document_id, is_premium)
+                        VALUES (?, ?, false)
+                    `;
+                    db.query(downloadQuery, [userId, documentId]);
+
+                    // Tăng số lượt tải
+                    const updateDownloadQuery = 'UPDATE documents SET download_count = download_count + 1 WHERE id = ?';
+                    db.query(updateDownloadQuery, [documentId]);
+
+                    // Trả về file cho client
+                    res.download(document.file_path, path.basename(document.file_path));
+                });
+            }
         });
-    } catch (error) {
-        console.error('Lỗi kiểm tra quyền truy cập:', error);
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
-    }
-};
-
-// Xem trước tài liệu
-router.get('/preview/:id', auth, checkDocumentAccess, async (req, res) => {
-    try {
-        const document = req.document;
-        const filePath = document.file_path.replace(/\\/g, '/');
-        
-        // Kiểm tra file có tồn tại không
-        if (!fs.existsSync(document.file_path)) {
-            console.error('File không tồn tại:', document.file_path);
-            return res.status(404).json({ message: 'File không tồn tại trên server' });
-        }
-
-        // Xử lý theo loại file
-        const fileType = document.file_type.toLowerCase();
-        
-        if (fileType.includes('pdf')) {
-            // PDF files
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
-            fs.createReadStream(document.file_path).pipe(res);
-        } 
-        else if (fileType.includes('image')) {
-            // Image files
-            res.setHeader('Content-Type', document.file_type);
-            res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
-            fs.createReadStream(document.file_path).pipe(res);
-        }
-        else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
-            // Text files
-            fs.readFile(document.file_path, 'utf8', (err, data) => {
-                if (err) {
-                    console.error('Lỗi đọc file:', err);
-                    return res.status(500).json({ message: 'Lỗi đọc file' });
-                }
-                res.setHeader('Content-Type', 'text/plain');
-                res.send(data);
-            });
-        }
-        else {
-            // Các loại file khác - trả về thông báo không hỗ trợ xem trước
-            res.status(400).json({ 
-                message: 'Không hỗ trợ xem trước loại file này',
-                fileType: document.file_type
-            });
-        }
-    } catch (error) {
-        console.error('Lỗi server:', error);
-        res.status(500).json({ message: 'Lỗi server', error: error.message });
-    }
-});
-
-// Tải tài liệu
-router.get('/download/:id', auth, checkDocumentAccess, async (req, res) => {
-    try {
-        const document = req.document;
-        const filePath = document.file_path.replace(/\\/g, '/');
-        
-        // Kiểm tra file có tồn tại không
-        if (!fs.existsSync(document.file_path)) {
-            console.error('File không tồn tại:', document.file_path);
-            return res.status(404).json({ message: 'File không tồn tại trên server' });
-        }
-
-        // Cập nhật số lượt tải
-        const updateQuery = 'UPDATE documents SET download_count = download_count + 1 WHERE id = ?';
-        db.query(updateQuery, [document.id]);
-
-        // Gửi file cho client
-        res.download(document.file_path);
     } catch (error) {
         console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -387,6 +379,67 @@ router.get('/featured/latest', async (req, res) => {
             res.json(results);
         });
     } catch (error) {
+        res.status(500).json({ message: 'Lỗi server', error: error.message });
+    }
+});
+
+// Xem trước tài liệu
+router.get('/preview/:id', auth, async (req, res) => {
+    try {
+        const documentId = req.params.id;
+
+        // Kiểm tra tài liệu có tồn tại không
+        const docQuery = 'SELECT * FROM documents WHERE id = ?';
+        db.query(docQuery, [documentId], async (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
+            }
+
+            const document = results[0];
+            const filePath = document.file_path.replace(/\\/g, '/');
+            
+            // Kiểm tra file có tồn tại không
+            if (!fs.existsSync(document.file_path)) {
+                console.error('File không tồn tại:', document.file_path);
+                return res.status(404).json({ message: 'File không tồn tại trên server' });
+            }
+
+            // Xử lý theo loại file
+            const fileType = document.file_type.toLowerCase();
+            
+            if (fileType.includes('pdf')) {
+                // PDF files
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
+                fs.createReadStream(document.file_path).pipe(res);
+            } 
+            else if (fileType.includes('image')) {
+                // Image files
+                res.setHeader('Content-Type', document.file_type);
+                res.setHeader('Content-Disposition', `inline; filename="${path.basename(document.file_path)}"`);
+                fs.createReadStream(document.file_path).pipe(res);
+            }
+            else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
+                // Text files
+                fs.readFile(document.file_path, 'utf8', (err, data) => {
+                    if (err) {
+                        console.error('Lỗi đọc file:', err);
+                        return res.status(500).json({ message: 'Lỗi đọc file' });
+                    }
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.send(data);
+                });
+            }
+            else {
+                // Các loại file khác - trả về thông báo không hỗ trợ xem trước
+                res.status(400).json({ 
+                    message: 'Không hỗ trợ xem trước loại file này',
+                    fileType: document.file_type
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });
