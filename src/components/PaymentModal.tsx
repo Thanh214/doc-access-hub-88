@@ -23,6 +23,7 @@ interface PaymentModalProps {
   isFree: boolean;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 export const PaymentModal = ({
@@ -32,6 +33,7 @@ export const PaymentModal = ({
   isFree,
   isOpen,
   onClose,
+  onSuccess,
 }: PaymentModalProps) => {
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<"subscription" | "purchase">(
@@ -39,7 +41,8 @@ export const PaymentModal = ({
   );
   const [selectedPlan, setSelectedPlan] = useState<string>("monthly");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"momo" | "zalopay">("momo");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"momo" | "zalopay" | "balance">("momo");
+  const [useAccountBalance, setUseAccountBalance] = useState(false);
   
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
@@ -51,6 +54,10 @@ export const PaymentModal = ({
     { id: "biannual", name: "6 Tháng", price: 60000, duration: "6 tháng", savings: "67%" },
     { id: "annual", name: "12 Tháng", price: 90000, duration: "năm", savings: "75%" },
   ];
+  
+  // Giả lập số dư tài khoản người dùng
+  const accountBalance = 50000;
+  const canUseBalance = !isFree && accountBalance >= docPrice;
   
   const handlePayment = () => {
     setIsProcessing(true);
@@ -67,7 +74,11 @@ export const PaymentModal = ({
         variant: "default",
       });
       
-      onClose();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        onClose();
+      }
     }, 1500);
   };
   
@@ -151,61 +162,78 @@ export const PaymentModal = ({
                 </div>
               </div>
             </div>
+            
+            {canUseBalance && (
+              <div className="flex items-center space-x-2 py-2">
+                <input
+                  type="checkbox"
+                  id="use-balance"
+                  checked={useAccountBalance}
+                  onChange={() => setUseAccountBalance(!useAccountBalance)}
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="use-balance" className="text-sm">
+                  Sử dụng số dư tài khoản ({formatPrice(accountBalance)})
+                </label>
+              </div>
+            )}
           </div>
         )}
         
-        <div className="space-y-4">
-          <div>
-            <h4 className="font-medium mb-3">Phương Thức Thanh Toán</h4>
-            <RadioGroup 
-              defaultValue="momo" 
-              className="grid grid-cols-2 gap-4"
-              onValueChange={(value) => setSelectedPaymentMethod(value as "momo" | "zalopay")}
-            >
-              <div>
-                <RadioGroupItem 
-                  value="momo" 
-                  id="momo" 
-                  className="sr-only" 
-                />
-                <Label
-                  htmlFor="momo"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
-                    selectedPaymentMethod === "momo" ? "border-primary" : ""
-                  }`}
-                >
-                  <Smartphone className="mb-3 h-6 w-6 text-pink-500" />
-                  <span className="text-sm font-medium">Momo</span>
-                </Label>
-              </div>
-              
-              <div>
-                <RadioGroupItem
-                  value="zalopay"
-                  id="zalopay"
-                  className="sr-only"
-                />
-                <Label
-                  htmlFor="zalopay"
-                  className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
-                    selectedPaymentMethod === "zalopay" ? "border-primary" : ""
-                  }`}
-                >
-                  <CreditCard className="mb-3 h-6 w-6 text-blue-500" />
-                  <span className="text-sm font-medium">ZaloPay</span>
-                </Label>
-              </div>
-            </RadioGroup>
+        {!useAccountBalance && (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-3">Phương Thức Thanh Toán</h4>
+              <RadioGroup 
+                defaultValue="momo" 
+                className="grid grid-cols-2 gap-4"
+                onValueChange={(value) => setSelectedPaymentMethod(value as "momo" | "zalopay" | "balance")}
+              >
+                <div>
+                  <RadioGroupItem 
+                    value="momo" 
+                    id="momo" 
+                    className="sr-only" 
+                  />
+                  <Label
+                    htmlFor="momo"
+                    className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
+                      selectedPaymentMethod === "momo" ? "border-primary" : ""
+                    }`}
+                  >
+                    <Smartphone className="mb-3 h-6 w-6 text-pink-500" />
+                    <span className="text-sm font-medium">Momo</span>
+                  </Label>
+                </div>
+                
+                <div>
+                  <RadioGroupItem
+                    value="zalopay"
+                    id="zalopay"
+                    className="sr-only"
+                  />
+                  <Label
+                    htmlFor="zalopay"
+                    className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
+                      selectedPaymentMethod === "zalopay" ? "border-primary" : ""
+                    }`}
+                  >
+                    <CreditCard className="mb-3 h-6 w-6 text-blue-500" />
+                    <span className="text-sm font-medium">ZaloPay</span>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 flex items-start">
+              <AlertCircle className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-yellow-700">
+                Đây là bản demo. Không có thanh toán thực tế nào được xử lý. Trong ứng dụng thực tế, 
+                bạn sẽ được chuyển hướng đến nhà cung cấp thanh toán đã chọn.
+              </p>
+            </div>
           </div>
-          
-          <div className="bg-yellow-50 border border-yellow-100 rounded-md p-3 flex items-start">
-            <AlertCircle className="h-4 w-4 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-yellow-700">
-              Đây là bản demo. Không có thanh toán thực tế nào được xử lý. Trong ứng dụng thực tế, 
-              bạn sẽ được chuyển hướng đến nhà cung cấp thanh toán đã chọn.
-            </p>
-          </div>
-        </div>
+        )}
         
         <DialogFooter>
           <Button 
@@ -219,7 +247,9 @@ export const PaymentModal = ({
             onClick={handlePayment}
             disabled={isProcessing}
           >
-            {isProcessing ? "Đang xử lý..." : isFree ? "Đăng Ký Ngay" : "Hoàn Tất Mua Hàng"}
+            {isProcessing ? "Đang xử lý..." : 
+              useAccountBalance ? "Thanh toán bằng số dư" : 
+              isFree ? "Đăng Ký Ngay" : "Hoàn Tất Mua Hàng"}
           </Button>
         </DialogFooter>
       </DialogContent>
