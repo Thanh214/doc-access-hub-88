@@ -4,31 +4,35 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { formatCurrency } from "@/utils/format";
 
 interface SubscriptionCardProps {
   title: string;
+  description?: string;
   price: number;
   duration: string;
+  billingPeriod?: "monthly" | "yearly";
   features: string[];
   popular?: boolean;
+  highlighted?: boolean;
+  badge?: string;
+  planId?: string;
   onSelect: () => void;
 }
 
 const SubscriptionCard = ({
   title,
+  description,
   price,
   duration,
   features,
   popular = false,
+  highlighted = false,
+  badge,
+  planId,
   onSelect,
 }: SubscriptionCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
-  
-  const formattedPrice = new Intl.NumberFormat('vi-VN', { 
-    style: 'currency', 
-    currency: 'VND',
-    maximumFractionDigits: 0
-  }).format(price);
   
   return (
     <motion.div
@@ -40,25 +44,25 @@ const SubscriptionCard = ({
       <Card 
         className={`relative overflow-hidden transition-transform duration-300 h-full flex flex-col ${
           isHovered ? "translate-y-[-8px] shadow-lg" : ""
-        } ${popular ? "border-primary shadow-md" : ""}`}
+        } ${popular || highlighted ? "border-primary shadow-md" : ""}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {popular && (
+        {(badge || popular) && (
           <div className="absolute top-5 right-0 bg-primary text-white text-xs px-3 py-1 rounded-l-full shadow-sm">
-            Phổ Biến Nhất
+            {badge || "Phổ Biến Nhất"}
           </div>
         )}
         
         <CardHeader className="pb-4">
           <h3 className="text-xl font-semibold mb-1">{title}</h3>
-          <p className="text-muted-foreground text-sm">Tải xuống tài liệu miễn phí</p>
+          <p className="text-muted-foreground text-sm">{description || "Tải xuống tài liệu miễn phí"}</p>
         </CardHeader>
         
         <CardContent className="flex-grow pb-6">
           <div className="mb-6">
             <div className="flex items-baseline">
-              <span className="text-3xl font-bold">{formattedPrice}</span>
+              <span className="text-3xl font-bold">{formatCurrency(price)}</span>
               <span className="text-muted-foreground ml-2">/{duration}</span>
             </div>
           </div>
@@ -77,8 +81,8 @@ const SubscriptionCard = ({
         
         <CardFooter>
           <Button 
-            className={`w-full ${popular ? "" : "bg-secondary text-primary hover:bg-secondary/80"}`}
-            variant={popular ? "default" : "outline"}
+            className={`w-full ${popular || highlighted ? "" : "bg-secondary text-primary hover:bg-secondary/80"}`}
+            variant={(popular || highlighted) ? "default" : "outline"}
             onClick={onSelect}
           >
             Đăng Ký Ngay
