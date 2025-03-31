@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -60,9 +59,13 @@ const DocumentPreview = ({
       setPreviewError(null);
       
       try {
+        console.log("Loading preview for document ID:", id);
+        
         // Xây dựng URL để xem trước tài liệu
         const previewEndpoint = `/documents/preview/${id}`;
         const url = `${API.defaults.baseURL}${previewEndpoint}`;
+        console.log("Preview URL:", url);
+        
         setPreviewUrl(url);
       } catch (error) {
         console.error("Error getting preview URL:", error);
@@ -127,12 +130,19 @@ const DocumentPreview = ({
       );
     }
     
+    console.log("Rendering preview with URL:", previewUrl);
+    console.log("File type:", file_type);
+    
     if (file_type && file_type.toLowerCase().includes('pdf')) {
       return (
         <iframe 
           src={previewUrl} 
           className="w-full h-[500px] border-0 rounded" 
           title={`Preview of ${title}`}
+          onError={(e) => {
+            console.error("Error loading PDF iframe:", e);
+            setPreviewError("Không thể tải PDF. Vui lòng thử lại sau.");
+          }}
         />
       );
     } else if (file_type && file_type.toLowerCase().includes('image')) {
@@ -142,6 +152,10 @@ const DocumentPreview = ({
             src={previewUrl} 
             alt={title} 
             className="max-w-full max-h-[500px] object-contain" 
+            onError={() => {
+              console.error("Error loading image");
+              setPreviewError("Không thể tải hình ảnh. Vui lòng thử lại sau.");
+            }}
           />
         </div>
       );

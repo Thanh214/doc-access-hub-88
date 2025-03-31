@@ -23,6 +23,7 @@ router.get('/transaction-summary', verifyToken, adminController.getTransactionSu
 
 // Preview document
 router.get('/documents/:id/preview', verifyToken, (req, res) => {
+  console.log('Accessed preview document route in adminRoutes.js');
   const documentId = req.params.id;
   
   try {
@@ -43,14 +44,17 @@ router.get('/documents/:id/preview', verifyToken, (req, res) => {
       const document = results[0];
       const filePath = document.file_path;
       
+      console.log('File path in adminRoutes:', filePath);
+      
       // Kiểm tra file có tồn tại không
       if (!fs.existsSync(filePath)) {
         console.error('File không tồn tại:', filePath);
-        return res.status(404).json({ message: 'File không tồn tại' });
+        return res.status(404).json({ message: 'File không tồn tại', path: filePath });
       }
       
       // Xác định loại file và xử lý phù hợp
       const fileType = document.file_type.toLowerCase();
+      console.log('File type:', fileType);
       
       if (fileType.includes('pdf')) {
         // PDF files
@@ -75,10 +79,12 @@ router.get('/documents/:id/preview', verifyToken, (req, res) => {
           res.send(data);
         });
       } else {
-        // Các loại file khác - trả về thông báo không hỗ trợ xem trước
-        res.status(400).json({ 
-          message: 'Không hỗ trợ xem trước loại file này',
-          fileType: document.file_type
+        // Các loại file khác - trả về file trực tiếp
+        res.sendFile(path.resolve(filePath), (err) => {
+          if (err) {
+            console.error('Lỗi gửi file:', err);
+            return res.status(500).json({ message: 'Lỗi gửi file', error: err.message });
+          }
         });
       }
     });

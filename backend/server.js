@@ -25,6 +25,12 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
 // Make uploads directory accessible - đảm bảo đường dẫn chính xác
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

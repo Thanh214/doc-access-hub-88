@@ -9,7 +9,7 @@ const auth = require('../middleware/auth');
 // Cấu hình multer cho upload file
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dir = 'uploads/documents';
+        const dir = path.join(__dirname, '../uploads/documents');
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -194,32 +194,71 @@ router.delete('/:id', auth, async (req, res) => {
     }
 });
 
-// Thêm route xem trước tài liệu
-router.get('/preview/:id', auth, async (req, res) => {
+// Preview tài liệu (chỉ admin)
+router.get('/:id/preview', auth, async (req, res) => {
     try {
+        console.log('Accessed admin document preview route');
+        // Kiểm tra quyền admin
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({ message: 'Không có quyền truy cập' });
+        }
+
         const { id } = req.params;
         
-        db.query('SELECT file_path, file_type FROM documents WHERE id = ?', [id], (err, results) => {
-            if (err || results.length === 0) {
+        db.query('SELECT * FROM documents WHERE id = ?', [id], (err, results) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ message: 'Lỗi truy vấn database', error: err.message });
+            }
+            
+            if (results.length === 0) {
                 return res.status(404).json({ message: 'Không tìm thấy tài liệu' });
             }
             
             const document = results[0];
-            if (!fs.existsSync(document.file_path)) {
+            const filePath = document.file_path;
+            
+            console.log('File path:', filePath);
+            
+            // Kiểm tra file có tồn tại không
+            if (!fs.existsSync(filePath)) {
+                console.error('File không tồn tại:', filePath);
                 return res.status(404).json({ message: 'File không tồn tại' });
             }
             
-            // Đọc file và trả về nội dung
-            fs.readFile(document.file_path, (err, data) => {
-                if (err) {
-                    return res.status(500).json({ message: 'Lỗi đọc file', error: err.message });
-                }
-                
+            // Xác định loại file và xử lý phù hợp
+            const fileType = document.file_type?.toLowerCase() || '';
+            console.log('File type:', fileType);
+            
+            if (fileType.includes('pdf')) {
+                // PDF files
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
+                fs.createReadStream(filePath).pipe(res);
+            } 
+            else if (fileType.includes('image')) {
+                // Image files
                 res.setHeader('Content-Type', document.file_type);
-                res.send(data);
-            });
+                res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
+                fs.createReadStream(filePath).pipe(res);
+            }
+            else if (fileType.includes('text') || fileType.includes('rtf') || fileType.includes('msword')) {
+                // Text files
+                fs.readFile(filePath, 'utf8', (err, data) => {
+                    if (err) {
+                        console.error('Lỗi đọc file:', err);
+                        return res.status(500).json({ message: 'Lỗi đọc file' });
+                    }
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.send(data);
+                });
+            } else {
+                // Các loại file khác - trả về thông báo không hỗ trợ xem trước
+                res.status(200).sendFile(filePath); // Thử gửi file trực tiếp
+            }
         });
     } catch (error) {
+        console.error('Lỗi server:', error);
         res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
 });

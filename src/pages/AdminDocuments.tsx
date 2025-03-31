@@ -86,16 +86,18 @@ const AdminDocuments = () => {
     setIsLoading(true);
     try {
       const documentsResponse = await API.get("/admin/documents");
+      console.log("Documents response:", documentsResponse.data);
       
-      const formattedDocuments = documentsResponse.data.map(doc => ({
+      const formattedDocuments = documentsResponse.data.map((doc: any) => ({
         ...doc,
-        file_size: doc.file_size || 0,
+        file_size: parseInt(doc.file_size) || 0,
         category_name: doc.category_name || "Chưa phân loại"
       }));
       
       setDocuments(formattedDocuments);
       
       const categoriesResponse = await API.get("/categories");
+      console.log("Categories response:", categoriesResponse.data);
       setCategories(categoriesResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -120,7 +122,6 @@ const AdminDocuments = () => {
       const file = e.target.files[0];
       setSelectedFile(file);
       
-      // Hiển thị kích thước file đã chọn ngay lập tức
       const fileSize = formatFileSize(file.size);
       console.log(`Selected file: ${file.name}, size: ${fileSize}`);
     }
@@ -301,13 +302,12 @@ const AdminDocuments = () => {
     setIsPreviewDialogOpen(true);
     
     try {
-      // Đối với các file có thể xem trước (PDF, hình ảnh, văn bản)
       if (document.file_path) {
-        const fileType = document.file_type.toLowerCase();
+        console.log("Opening preview for document:", document);
         
-        // Tạo URL xem trước
         const previewEndpoint = `/admin/documents/${document.id}/preview`;
         const url = `${API.defaults.baseURL}${previewEndpoint}`;
+        console.log("Preview URL:", url);
         
         setPreviewUrl(url);
       } else {
@@ -337,6 +337,7 @@ const AdminDocuments = () => {
     }
 
     const fileType = documentToPreview.file_type?.toLowerCase() || '';
+    console.log("Rendering preview for file type:", fileType);
 
     if (fileType.includes('pdf')) {
       return (
@@ -344,7 +345,10 @@ const AdminDocuments = () => {
           src={previewUrl}
           className="w-full h-full border-0"
           title="PDF preview"
-          onError={() => setPreviewError("Không thể xem trước PDF này")}
+          onError={() => {
+            console.error("Error loading PDF");
+            setPreviewError("Không thể xem trước PDF này");
+          }}
         />
       );
     } else if (fileType.includes('image')) {
@@ -354,7 +358,10 @@ const AdminDocuments = () => {
             src={previewUrl} 
             alt={documentToPreview.title}
             className="max-w-full max-h-full object-contain" 
-            onError={() => setPreviewError("Không thể tải hình ảnh này")}
+            onError={() => {
+              console.error("Error loading image");
+              setPreviewError("Không thể tải hình ảnh này");
+            }}
           />
         </div>
       );
@@ -365,7 +372,10 @@ const AdminDocuments = () => {
             data={previewUrl}
             type={documentToPreview.file_type}
             className="w-full h-full"
-            onError={() => setPreviewError("Không thể xem trước tài liệu này")}
+            onError={() => {
+              console.error("Error loading document");
+              setPreviewError("Không thể xem trước tài liệu này");
+            }}
           >
             <p>Không hỗ trợ xem trước tài liệu này trong trình duyệt của bạn</p>
           </object>
@@ -468,8 +478,8 @@ const AdminDocuments = () => {
                               {doc.is_premium ? "Premium" : "Miễn phí"}
                             </Badge>
                           </TableCell>
-                          <TableCell>{doc.category_name || "Chưa phân loại"}</TableCell>
-                          <TableCell>{doc.file_size ? formatFileSize(doc.file_size) : "0 B"}</TableCell>
+                          <TableCell>{doc.category_name}</TableCell>
+                          <TableCell>{formatFileSize(doc.file_size)}</TableCell>
                           <TableCell>{doc.is_premium ? formatCurrency(doc.price || 0) : "Miễn phí"}</TableCell>
                           <TableCell>{doc.download_count || 0}</TableCell>
                           <TableCell>{formatDate(doc.created_at)}</TableCell>
@@ -552,7 +562,6 @@ const AdminDocuments = () => {
           </Card>
         )}
 
-        {/* Dialog Thêm tài liệu */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -656,7 +665,6 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Chỉnh sửa tài liệu */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -768,7 +776,6 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Xem chi tiết */}
         <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -882,7 +889,6 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Xem trước tài liệu */}
         <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
           <DialogContent className="sm:max-w-[800px] sm:max-h-[80vh]">
             <DialogHeader>
@@ -914,7 +920,6 @@ const AdminDocuments = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Dialog Xác nhận xóa */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>

@@ -41,15 +41,12 @@ API.getFileUrl = (filePath) => {
   if (filePath.startsWith('http')) return filePath;
   
   // Nếu là đường dẫn tương đối, thêm baseURL
-  // Thay thế /api trong baseURL với /uploads nếu cần
-  const baseUploadUrl = API.defaults.baseURL.replace('/api', '');
+  const baseUrl = 'http://localhost:5000'; // Sử dụng base URL của server (không phải API)
   
   // Đảm bảo filePath không bắt đầu bằng dấu / nếu baseUploadUrl đã kết thúc bằng /
-  if (filePath.startsWith('/') && baseUploadUrl.endsWith('/')) {
-    filePath = filePath.substring(1);
-  }
+  const cleanedPath = filePath.startsWith('/') ? filePath.substring(1) : filePath;
   
-  return `${baseUploadUrl}/${filePath}`;
+  return `${baseUrl}/${cleanedPath}`;
 };
 
 export default API;
