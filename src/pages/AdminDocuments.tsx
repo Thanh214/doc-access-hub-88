@@ -81,7 +81,14 @@ const AdminDocuments = () => {
     setIsLoading(true);
     try {
       const documentsResponse = await API.get("/admin/documents");
-      setDocuments(documentsResponse.data);
+      
+      const formattedDocuments = documentsResponse.data.map(doc => ({
+        ...doc,
+        file_size: doc.file_size || 0,
+        category_name: doc.category_name || "Chưa phân loại"
+      }));
+      
+      setDocuments(formattedDocuments);
       
       const categoriesResponse = await API.get("/categories");
       setCategories(categoriesResponse.data);
@@ -366,9 +373,9 @@ const AdminDocuments = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>{doc.category_name || "Chưa phân loại"}</TableCell>
-                          <TableCell>{formatFileSize(doc.file_size)}</TableCell>
-                          <TableCell>{doc.is_premium ? formatCurrency(doc.price) : "Miễn phí"}</TableCell>
-                          <TableCell>{doc.download_count}</TableCell>
+                          <TableCell>{doc.file_size ? formatFileSize(doc.file_size) : "0 B"}</TableCell>
+                          <TableCell>{doc.is_premium ? formatCurrency(doc.price || 0) : "Miễn phí"}</TableCell>
+                          <TableCell>{doc.download_count || 0}</TableCell>
                           <TableCell>{formatDate(doc.created_at)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
@@ -681,7 +688,7 @@ const AdminDocuments = () => {
                 <div className="grid w-full grid-cols-3 gap-4">
                   <div className="col-span-1 font-medium">Giá:</div>
                   <div className="col-span-2">
-                    {documentToView.is_premium ? formatCurrency(documentToView.price) : "Miễn phí"}
+                    {documentToView.is_premium ? formatCurrency(documentToView.price || 0) : "Miễn phí"}
                   </div>
                 </div>
 

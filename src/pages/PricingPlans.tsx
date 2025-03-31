@@ -1,243 +1,274 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckIcon } from "lucide-react";
-import { PaymentModal } from "@/components/PaymentModal";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Check, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import API from "@/services/api";
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  price_monthly: number;
+  price_yearly: number;
+  features: string[];
+  highlighted: boolean;
+  badge?: string;
+}
 
 const PricingPlans = () => {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  
-  // Dữ liệu gói đăng ký
-  const subscriptionPlans = {
-    monthly: [
-      {
-        title: "Cơ Bản",
-        price: 30000,
-        duration: "tháng",
-        features: [
-          "Tải xuống 10 tài liệu miễn phí mỗi tháng",
-          "Xem trước tất cả tài liệu",
-          "Hỗ trợ cơ bản qua email",
-        ],
-        popular: false,
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsLoaded(true);
+
+    // Fetch subscription plans from the database
+    const fetchSubscriptionPlans = async () => {
+      try {
+        setIsLoading(true);
+        const response = await API.get('/subscriptions/plans');
+        setPlans(response.data);
+      } catch (error) {
+        console.error("Error fetching subscription plans:", error);
+        toast({
+          variant: "destructive",
+          title: "Lỗi tải dữ liệu",
+          description: "Không thể tải dữ liệu gói đăng ký. Sử dụng dữ liệu mặc định.",
+        });
+        
+        // Use default plans if API fails
+        setPlans([
+          {
+            id: "free",
+            name: "Miễn phí",
+            description: "Dành cho người mới bắt đầu và học sinh, sinh viên",
+            price_monthly: 0,
+            price_yearly: 0,
+            features: [
+              "Truy cập tài liệu miễn phí",
+              "Tải xuống tối đa 5 tài liệu mỗi tháng",
+              "Xem trước tất cả tài liệu premium"
+            ],
+            highlighted: false
+          },
+          {
+            id: "standard",
+            name: "Tiêu chuẩn",
+            description: "Dành cho người dùng chuyên nghiệp",
+            price_monthly: 99000,
+            price_yearly: 999000,
+            features: [
+              "Truy cập tất cả tài liệu tiêu chuẩn",
+              "Tải xuống không giới hạn tài liệu tiêu chuẩn",
+              "Xem trước tất cả tài liệu premium",
+              "Giảm 20% khi mua tài liệu premium"
+            ],
+            highlighted: true,
+            badge: "Phổ biến nhất"
+          },
+          {
+            id: "premium",
+            name: "Cao cấp",
+            description: "Dành cho doanh nghiệp và tổ chức",
+            price_monthly: 199000,
+            price_yearly: 1999000,
+            features: [
+              "Tất cả tính năng của gói Tiêu chuẩn",
+              "Truy cập tất cả tài liệu premium",
+              "Tải xuống không giới hạn",
+              "Hỗ trợ kỹ thuật ưu tiên",
+              "Cập nhật tài liệu mới nhất"
+            ],
+            highlighted: false
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSubscriptionPlans();
+  }, [toast]);
+
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
       },
-      {
-        title: "Tiêu Chuẩn",
-        price: 60000,
-        duration: "tháng",
-        features: [
-          "Tải xuống không giới hạn tài liệu miễn phí",
-          "Giảm 10% khi mua tài liệu cao cấp",
-          "Hỗ trợ ưu tiên",
-          "Không quảng cáo",
-        ],
-        popular: true,
-      },
-      {
-        title: "Cao Cấp",
-        price: 100000,
-        duration: "tháng",
-        features: [
-          "Tất cả tính năng của gói Tiêu Chuẩn",
-          "Giảm 25% khi mua tài liệu cao cấp",
-          "5 tài liệu cao cấp miễn phí hàng tháng",
-          "Hỗ trợ 24/7",
-          "Truy cập sớm vào tài liệu mới",
-        ],
-        popular: false,
-      },
-    ],
-    yearly: [
-      {
-        title: "Cơ Bản",
-        price: 300000,
-        duration: "năm",
-        features: [
-          "Tải xuống 15 tài liệu miễn phí mỗi tháng",
-          "Xem trước tất cả tài liệu",
-          "Hỗ trợ cơ bản qua email",
-          "Tiết kiệm 17% so với thanh toán hàng tháng",
-        ],
-        popular: false,
-      },
-      {
-        title: "Tiêu Chuẩn",
-        price: 600000,
-        duration: "năm",
-        features: [
-          "Tải xuống không giới hạn tài liệu miễn phí",
-          "Giảm 15% khi mua tài liệu cao cấp",
-          "Hỗ trợ ưu tiên",
-          "Không quảng cáo",
-          "Tiết kiệm 17% so với thanh toán hàng tháng",
-        ],
-        popular: true,
-      },
-      {
-        title: "Cao Cấp",
-        price: 990000,
-        duration: "năm",
-        features: [
-          "Tất cả tính năng của gói Tiêu Chuẩn",
-          "Giảm 30% khi mua tài liệu cao cấp",
-          "7 tài liệu cao cấp miễn phí hàng tháng",
-          "Hỗ trợ 24/7",
-          "Truy cập sớm vào tài liệu mới",
-          "Tiết kiệm 18% so với thanh toán hàng tháng",
-        ],
-        popular: false,
-      },
-    ],
+    }),
   };
-  
-  const handleSelectPlan = (planName: string) => {
-    setSelectedPlan(planName);
-    setShowPaymentModal(true);
-  };
-  
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className={`min-h-screen flex flex-col transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
       <Navbar />
       
-      <main className="flex-grow pt-28 pb-20">
+      <main className="flex-grow pt-24 pb-20">
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <motion.h1 
-              className="text-4xl font-bold mb-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              Gói Đăng Ký Phù Hợp Với Nhu Cầu Của Bạn
-            </motion.h1>
-            <motion.p 
-              className="text-xl text-muted-foreground mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              Chọn gói đăng ký phù hợp và bắt đầu truy cập bộ sưu tập tài liệu đa dạng của chúng tôi ngay hôm nay.
-            </motion.p>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-block"
-            >
-              <Tabs
-                defaultValue="monthly"
-                onValueChange={(value) => setBillingCycle(value as "monthly" | "yearly")}
-                className="bg-muted inline-flex p-1 rounded-lg"
-              >
-                <TabsList className="bg-transparent grid grid-cols-2 w-[300px]">
-                  <TabsTrigger value="monthly">Hàng Tháng</TabsTrigger>
-                  <TabsTrigger value="yearly">Hàng Năm</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              
-              {billingCycle === "yearly" && (
-                <div className="mt-2 text-sm text-green-600 font-medium">
-                  Tiết kiệm tới 18% với thanh toán hàng năm
-                </div>
-              )}
-            </motion.div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {subscriptionPlans[billingCycle].map((plan, index) => (
-              <SubscriptionCard
-                key={`${plan.title}-${billingCycle}`}
-                title={plan.title}
-                price={plan.price}
-                duration={plan.duration}
-                features={plan.features}
-                popular={plan.popular}
-                onSelect={() => handleSelectPlan(plan.title)}
-              />
-            ))}
-          </div>
-          
-          <motion.div 
-            className="mt-20 bg-muted/50 rounded-xl p-8 max-w-4xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-4">Câu Hỏi Thường Gặp</h2>
-              <p className="text-muted-foreground">
-                Giải đáp những thắc mắc phổ biến về gói đăng ký của chúng tôi
-              </p>
-            </div>
-            
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold mb-2">Tôi có thể hủy đăng ký bất cứ lúc nào không?</h3>
-                <p className="text-muted-foreground">
-                  Có, bạn có thể hủy đăng ký của mình bất cứ lúc nào. Khi hủy, bạn vẫn có thể sử dụng gói đăng ký cho đến hết thời hạn thanh toán hiện tại.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">Tôi có thể nâng cấp hoặc hạ cấp gói đăng ký không?</h3>
-                <p className="text-muted-foreground">
-                  Có, bạn có thể dễ dàng nâng cấp hoặc hạ cấp gói đăng ký của mình bất cứ lúc nào. Khi nâng cấp, bạn sẽ chỉ phải trả phần chênh lệch cho thời gian còn lại.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">Tài liệu cao cấp có gì khác biệt so với tài liệu miễn phí?</h3>
-                <p className="text-muted-foreground">
-                  Tài liệu cao cấp thường là nội dung độc quyền, nghiên cứu chuyên sâu hoặc tài liệu chuyên môn có giá trị cao được tạo bởi các chuyên gia hàng đầu trong lĩnh vực. Chúng cung cấp thông tin chi tiết và chuyên môn hơn so với tài liệu miễn phí.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">Làm thế nào để thanh toán?</h3>
-                <p className="text-muted-foreground">
-                  Chúng tôi chấp nhận thanh toán qua các hình thức phổ biến như Momo, ZaloPay, thẻ tín dụng, và chuyển khoản ngân hàng. Tất cả các giao dịch đều được bảo mật.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-          
-          <motion.div 
-            className="mt-20 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-2xl font-bold mb-4">Vẫn Còn Thắc Mắc?</h2>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Liên hệ với đội ngũ hỗ trợ của chúng tôi. Chúng tôi luôn sẵn sàng giải đáp mọi thắc mắc của bạn.
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h1 className="text-4xl font-bold mb-4">Chọn Gói Phù Hợp Với Bạn</h1>
+            <p className="text-lg text-muted-foreground">
+              Nhận quyền truy cập không giới hạn vào kho tài liệu đa dạng với các gói đăng ký linh hoạt
             </p>
-            <Button size="lg">Liên Hệ Hỗ Trợ</Button>
-          </motion.div>
+          </div>
+          
+          <div className="flex justify-center mb-10">
+            <Tabs
+              value={billingPeriod}
+              onValueChange={(value) => setBillingPeriod(value as "monthly" | "yearly")}
+              className="bg-muted/50 p-1 rounded-lg"
+            >
+              <TabsList className="grid grid-cols-2 w-[300px]">
+                <TabsTrigger value="monthly">Thanh toán hàng tháng</TabsTrigger>
+                <TabsTrigger value="yearly">
+                  Thanh toán hàng năm
+                  <span className="ml-1.5 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                    Tiết kiệm 20%
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {plans.map((plan, index) => (
+                <motion.div
+                  key={plan.id}
+                  custom={index}
+                  variants={fadeIn}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
+                >
+                  <SubscriptionCard
+                    title={plan.name}
+                    description={plan.description}
+                    price={billingPeriod === "monthly" ? plan.price_monthly : plan.price_yearly}
+                    billingPeriod={billingPeriod}
+                    features={plan.features}
+                    highlighted={plan.highlighted}
+                    badge={plan.badge}
+                    planId={plan.id}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
+          
+          <div className="mt-16 bg-muted/30 rounded-2xl p-6 md:p-10 max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold mb-6 text-center">So Sánh Các Gói</h2>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-4 px-4 font-medium">Tính năng</th>
+                    {plans.map(plan => (
+                      <th key={plan.id} className="px-4 py-4 font-medium text-center">
+                        {plan.name}
+                        <div className="text-sm font-normal text-muted-foreground">
+                          {billingPeriod === "monthly" 
+                            ? `${plan.price_monthly.toLocaleString()} đ/tháng` 
+                            : `${plan.price_yearly.toLocaleString()} đ/năm`}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-4 px-4">Tài liệu miễn phí</td>
+                    {plans.map(plan => (
+                      <td key={plan.id} className="px-4 py-4 text-center">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-4 px-4">Tài liệu tiêu chuẩn</td>
+                    <td className="px-4 py-4 text-center">
+                      <X className="mx-auto h-5 w-5 text-muted-foreground" />
+                    </td>
+                    {plans.slice(1).map(plan => (
+                      <td key={plan.id} className="px-4 py-4 text-center">
+                        <Check className="mx-auto h-5 w-5 text-primary" />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-4 px-4">Tài liệu cao cấp</td>
+                    <td className="px-4 py-4 text-center">
+                      <X className="mx-auto h-5 w-5 text-muted-foreground" />
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <X className="mx-auto h-5 w-5 text-muted-foreground" />
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <Check className="mx-auto h-5 w-5 text-primary" />
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-4 px-4">Giới hạn tải xuống</td>
+                    <td className="px-4 py-4 text-center">
+                      5/tháng
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      Không giới hạn
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      Không giới hạn
+                    </td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-4 px-4">Hỗ trợ</td>
+                    <td className="px-4 py-4 text-center">
+                      Email
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      Email & Chat
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      Ưu tiên 24/7
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <h3 className="text-xl font-semibold mb-4">Bạn có câu hỏi về gói đăng ký?</h3>
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+              Nếu bạn vẫn không chắc chắn về gói nào phù hợp nhất với nhu cầu của mình, 
+              hãy liên hệ với chúng tôi và chúng tôi sẽ giúp bạn lựa chọn.
+            </p>
+            <Button variant="outline" size="lg">
+              Liên hệ hỗ trợ
+            </Button>
+          </div>
         </div>
       </main>
       
       <Footer />
-      
-      {showPaymentModal && (
-        <PaymentModal 
-          docId="subscription"
-          docTitle={`Gói ${selectedPlan} (${billingCycle === "monthly" ? "Hàng Tháng" : "Hàng Năm"})`}
-          docPrice={subscriptionPlans[billingCycle].find(plan => plan.title === selectedPlan)?.price || 0}
-          isFree={false}
-          isOpen={showPaymentModal}
-          onClose={() => setShowPaymentModal(false)}
-        />
-      )}
     </div>
   );
 };

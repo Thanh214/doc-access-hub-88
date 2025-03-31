@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -115,7 +116,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
             <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{document.description}</p>
             
             <div className="flex flex-wrap gap-y-2 gap-x-4 text-xs text-muted-foreground mt-auto">
-              {document.file_size && (
+              {document.file_size !== undefined && document.file_size !== null && document.file_size > 0 && (
                 <div className="flex items-center">
                   <FileText className="h-3.5 w-3.5 mr-1 text-primary/70" />
                   <span>{formatFileSize(document.file_size)}</span>
@@ -125,10 +126,12 @@ const DocumentList: React.FC<DocumentListProps> = ({
                 <Download className="h-3.5 w-3.5 mr-1 text-primary/70" />
                 <span>{document.download_count || 0} lượt tải</span>
               </div>
-              <div className="flex items-center">
-                <Clock className="h-3.5 w-3.5 mr-1 text-primary/70" />
-                <span>{formatDate(document.created_at)}</span>
-              </div>
+              {document.created_at && (
+                <div className="flex items-center">
+                  <Clock className="h-3.5 w-3.5 mr-1 text-primary/70" />
+                  <span>{formatDate(document.created_at)}</span>
+                </div>
+              )}
               {document.uploader_name && (
                 <div className="flex items-center">
                   <User className="h-3.5 w-3.5 mr-1 text-primary/70" />
@@ -140,7 +143,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
           
           <div className="px-6 py-4 border-t border-primary/10 bg-primary/5 flex justify-between items-center">
             <div className="font-medium text-primary">
-              {document.is_premium ? formatCurrency(document.price) : 'Miễn phí'}
+              {document.is_premium ? formatCurrency(document.price || 0) : 'Miễn phí'}
             </div>
             
             {isAdmin ? (
