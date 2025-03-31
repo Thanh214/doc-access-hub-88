@@ -21,7 +21,10 @@ if (!fs.existsSync(documentsDir)) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:8080', 'http://localhost:5173'],
+  credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -36,6 +39,11 @@ app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/admin/documents', require('./routes/adminDocuments'));
+
+// Basic health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
